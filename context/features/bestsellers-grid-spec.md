@@ -1,0 +1,8 @@
+## 4. Bestsellers Product Grid
+
+A 4-up product grid (4→3→2→1 responsive) with images, ratings, name, material tags, and price. Hover reveals a quick-add CTA.
+
+### Recreation prompt
+> Build a "Bestsellers" product grid section titled "Trending now / Bestsellers from **sweet** berries." in a 4-column responsive grid (4→3→2→1). Each card has an 18px-radius dark surface with 1px subtle border. Top: 1:1 square image with overflow:hidden. Image overlays: top-left a small tag pill (variants: white-on-black "New", pink-gradient "Bestseller", gold-gradient "Studio pick"); top-right a 34px circular wishlist heart button on translucent background; bottom (hidden until card hover) a white pill "Quick add +" button that slides up and flips to hot pink on its own hover. Card body: 5-star line in gold + "4.9 · 412 reviews" subtitle, then product name in 18px Playfair, then 1–2 small material chips (9px uppercase, pink-tinted background, e.g., "Titanium Safe", "Hypoallergenic", "14k Gold"), then a price row showing struck-through old price + current price in 19px Playfair. On card hover: lift 4px, border turns hot pink, soft pink glow shadow, image scales 1.06×. Include 8 products with realistic names like "Berry Glow Belly Curve", "Sherry Heart Septum Clicker", "Halo Cartilage Hoop", etc. Wrap each card so the image area links to a product page but the wishlist + quick-add buttons stay independently clickable.
+
+---
