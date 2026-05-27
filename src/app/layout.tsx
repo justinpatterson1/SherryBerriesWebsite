@@ -36,6 +36,7 @@ const caveat = Caveat({
 export const metadata: Metadata = {
   title: "SherryBerries",
   description: "Luxury body jewelry and aftercare from Trinidad and Tobago.",
+  viewport: "width=device-width, initial-scale=1",
 };
 
 export default function RootLayout({
