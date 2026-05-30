@@ -1,0 +1,747 @@
+- generic [active] [ref=e1]:
+  - banner:
+    - generic [ref=e2]:
+      - link "SherryBerries home" [ref=e3] [cursor=pointer]:
+        - /url: /
+        - text: SherryBerries
+      - navigation "Primary" [ref=e4]:
+        - link "Products" [ref=e5] [cursor=pointer]:
+          - /url: /products
+        - link "Bestsellers" [ref=e6] [cursor=pointer]:
+          - /url: /bestsellers
+        - link "Our Story" [ref=e7] [cursor=pointer]:
+          - /url: /our-story
+        - link "Learn" [ref=e8] [cursor=pointer]:
+          - /url: /learn
+        - link "Community" [ref=e9] [cursor=pointer]:
+          - /url: /community
+      - generic [ref=e10]:
+        - button "Switch to light mode" [ref=e11] [cursor=pointer]:
+          - img [ref=e12]
+        - button "Search" [ref=e15] [cursor=pointer]:
+          - img [ref=e16]
+        - link "Account" [ref=e19] [cursor=pointer]:
+          - /url: /account
+          - img [ref=e20]
+        - link "Wishlist (0)" [ref=e23] [cursor=pointer]:
+          - /url: /wishlist
+          - img [ref=e24]
+        - link "Bag (0)" [ref=e27] [cursor=pointer]:
+          - /url: /cart
+          - img [ref=e28]
+          - generic [ref=e31]: Bag
+          - generic [ref=e32]: "0"
+  - main [ref=e33]:
+    - generic [ref=e34]:
+      - text: All products
+      - heading "Sweet pieces, picked from the studio." [level=1] [ref=e35]
+    - navigation "Filter by category" [ref=e36]:
+      - list [ref=e37]:
+        - listitem [ref=e38]:
+          - link "All" [ref=e39] [cursor=pointer]:
+            - /url: /products
+        - listitem [ref=e40]:
+          - link "Accessories" [ref=e41] [cursor=pointer]:
+            - /url: /products?category=accessories
+        - listitem [ref=e42]:
+          - link "Aftercare" [ref=e43] [cursor=pointer]:
+            - /url: /products?category=aftercare
+        - listitem [ref=e44]:
+          - link "Belly Rings" [ref=e45] [cursor=pointer]:
+            - /url: /products?category=belly-rings
+        - listitem [ref=e46]:
+          - link "Cartilage Jewelry" [ref=e47] [cursor=pointer]:
+            - /url: /products?category=cartilage-jewelry
+        - listitem [ref=e48]:
+          - link "Elixirs" [ref=e49] [cursor=pointer]:
+            - /url: /products?category=elixirs
+        - listitem [ref=e50]:
+          - link "Merch" [ref=e51] [cursor=pointer]:
+            - /url: /products?category=merch
+        - listitem [ref=e52]:
+          - link "Nose Rings" [ref=e53] [cursor=pointer]:
+            - /url: /products?category=nose-rings
+        - listitem [ref=e54]:
+          - link "Septum Jewelry" [ref=e55] [cursor=pointer]:
+            - /url: /products?category=septum-jewelry
+    - generic [ref=e56]: 58 pieces
+    - generic [ref=e57]:
+      - link "Sherry Bloom Captive Featured 3.0 out of 5 stars 3.0 · 1 Sherry Bloom Captive Nose Rings $66.31" [ref=e58] [cursor=pointer]:
+        - /url: /products/sherry-bloom-captive-55
+        - generic [ref=e59]:
+          - img "Sherry Bloom Captive" [ref=e60]
+          - generic [ref=e61]: Featured
+        - generic [ref=e62]:
+          - generic [ref=e63]:
+            - generic "3.0 out of 5 stars" [ref=e64]: ★★★☆☆
+            - generic [ref=e65]: 3.0 · 1
+          - generic [ref=e66]: Sherry Bloom Captive
+          - generic [ref=e67]: Nose Rings
+          - generic [ref=e69]: $66.31
+      - link "Velvet Sweet Berry Tee Featured 4.0 out of 5 stars 4.0 · 2 Velvet Sweet Berry Tee Merch $158.86" [ref=e70] [cursor=pointer]:
+        - /url: /products/velvet-sweet-berry-tee-53
+        - generic [ref=e71]:
+          - img "Velvet Sweet Berry Tee" [ref=e72]
+          - generic [ref=e73]: Featured
+        - generic [ref=e74]:
+          - generic [ref=e75]:
+            - generic "4.0 out of 5 stars" [ref=e76]: ★★★★☆
+            - generic [ref=e77]: 4.0 · 2
+          - generic [ref=e78]: Velvet Sweet Berry Tee
+          - generic [ref=e79]: Merch
+          - generic [ref=e81]: $158.86
+      - link "Pearl Lace Edge Ring Featured 0.0 out of 5 stars Pearl Lace Edge Ring Septum Jewelry $90.27" [ref=e82] [cursor=pointer]:
+        - /url: /products/pearl-lace-edge-ring-51
+        - generic [ref=e83]:
+          - img "Pearl Lace Edge Ring" [ref=e84]
+          - generic [ref=e85]: Featured
+        - generic [ref=e86]:
+          - generic "0.0 out of 5 stars" [ref=e88]: ☆☆☆☆☆
+          - generic [ref=e89]: Pearl Lace Edge Ring
+          - generic [ref=e90]: Septum Jewelry
+          - generic [ref=e92]: $90.27
+      - link "Sherry Constellation Helix Featured 0.0 out of 5 stars Sherry Constellation Helix Cartilage Jewelry $85.22" [ref=e93] [cursor=pointer]:
+        - /url: /products/sherry-constellation-helix-47
+        - generic [ref=e94]:
+          - img "Sherry Constellation Helix" [ref=e95]
+          - generic [ref=e96]: Featured
+        - generic [ref=e97]:
+          - generic "0.0 out of 5 stars" [ref=e99]: ☆☆☆☆☆
+          - generic [ref=e100]: Sherry Constellation Helix
+          - generic [ref=e101]: Cartilage Jewelry
+          - generic [ref=e103]: $85.22
+      - link "Mauve Constellation Helix Featured 0.0 out of 5 stars Mauve Constellation Helix Cartilage Jewelry $95.69" [ref=e104] [cursor=pointer]:
+        - /url: /products/mauve-constellation-helix-40
+        - generic [ref=e105]:
+          - img "Mauve Constellation Helix" [ref=e106]
+          - generic [ref=e107]: Featured
+        - generic [ref=e108]:
+          - generic "0.0 out of 5 stars" [ref=e110]: ☆☆☆☆☆
+          - generic [ref=e111]: Mauve Constellation Helix
+          - generic [ref=e112]: Cartilage Jewelry
+          - generic [ref=e114]: $95.69
+      - link "Pearl Soft Coil Featured 3.0 out of 5 stars 3.0 · 1 Pearl Soft Coil Nose Rings $135.90" [ref=e115] [cursor=pointer]:
+        - /url: /products/pearl-soft-coil-32
+        - generic [ref=e116]:
+          - img "Pearl Soft Coil" [ref=e117]
+          - generic [ref=e118]: Featured
+        - generic [ref=e119]:
+          - generic [ref=e120]:
+            - generic "3.0 out of 5 stars" [ref=e121]: ★★★☆☆
+            - generic [ref=e122]: 3.0 · 1
+          - generic [ref=e123]: Pearl Soft Coil
+          - generic [ref=e124]: Nose Rings
+          - generic [ref=e126]: $135.90
+      - link "Pearl Midnight Repair Elixir Featured 0.0 out of 5 stars Pearl Midnight Repair Elixir Elixirs $135.47" [ref=e127] [cursor=pointer]:
+        - /url: /products/pearl-midnight-repair-elixir-29
+        - generic [ref=e128]:
+          - img "Pearl Midnight Repair Elixir" [ref=e129]
+          - generic [ref=e130]: Featured
+        - generic [ref=e131]:
+          - generic "0.0 out of 5 stars" [ref=e133]: ☆☆☆☆☆
+          - generic [ref=e134]: Pearl Midnight Repair Elixir
+          - generic [ref=e135]: Elixirs
+          - generic [ref=e137]: $135.47
+      - link "Pearl Drop Veil Clicker Featured 5.0 out of 5 stars 5.0 · 1 Pearl Drop Veil Clicker Septum Jewelry $46.94 $39.28" [ref=e138] [cursor=pointer]:
+        - /url: /products/pearl-drop-veil-clicker-23
+        - generic [ref=e139]:
+          - img "Pearl Drop Veil Clicker" [ref=e140]
+          - generic [ref=e141]: Featured
+        - generic [ref=e142]:
+          - generic [ref=e143]:
+            - generic "5.0 out of 5 stars" [ref=e144]: ★★★★★
+            - generic [ref=e145]: 5.0 · 1
+          - generic [ref=e146]: Pearl Drop Veil Clicker
+          - generic [ref=e147]: Septum Jewelry
+          - generic [ref=e148]:
+            - generic [ref=e149]: $46.94
+            - generic [ref=e150]: $39.28
+      - link "Honey Berry Glow Curve Featured 0.0 out of 5 stars Honey Berry Glow Curve Belly Rings $118.79 $89.75" [ref=e151] [cursor=pointer]:
+        - /url: /products/honey-berry-glow-curve-13
+        - generic [ref=e152]:
+          - img "Honey Berry Glow Curve" [ref=e153]
+          - generic [ref=e154]: Featured
+        - generic [ref=e155]:
+          - generic "0.0 out of 5 stars" [ref=e157]: ☆☆☆☆☆
+          - generic [ref=e158]: Honey Berry Glow Curve
+          - generic [ref=e159]: Belly Rings
+          - generic [ref=e160]:
+            - generic [ref=e161]: $118.79
+            - generic [ref=e162]: $89.75
+      - link "Sunset Sweet Berry Tee Featured 0.0 out of 5 stars Sunset Sweet Berry Tee Merch $126.03" [ref=e163] [cursor=pointer]:
+        - /url: /products/sunset-sweet-berry-tee-7
+        - generic [ref=e164]:
+          - img "Sunset Sweet Berry Tee" [ref=e165]
+          - generic [ref=e166]: Featured
+        - generic [ref=e167]:
+          - generic "0.0 out of 5 stars" [ref=e169]: ☆☆☆☆☆
+          - generic [ref=e170]: Sunset Sweet Berry Tee
+          - generic [ref=e171]: Merch
+          - generic [ref=e173]: $126.03
+      - link "Sherry Sunset Drop 4.0 out of 5 stars 4.0 · 1 Sherry Sunset Drop Belly Rings $166.61" [ref=e174] [cursor=pointer]:
+        - /url: /products/sherry-sunset-drop-60
+        - img "Sherry Sunset Drop" [ref=e176]
+        - generic [ref=e177]:
+          - generic [ref=e178]:
+            - generic "4.0 out of 5 stars" [ref=e179]: ★★★★☆
+            - generic [ref=e180]: 4.0 · 1
+          - generic [ref=e181]: Sherry Sunset Drop
+          - generic [ref=e182]: Belly Rings
+          - generic [ref=e184]: $166.61
+      - link "Twilight Soft Wipes Tin 0.0 out of 5 stars Twilight Soft Wipes Tin Accessories $115.47 $96.19" [ref=e185] [cursor=pointer]:
+        - /url: /products/twilight-soft-wipes-tin-59
+        - img "Twilight Soft Wipes Tin" [ref=e187]
+        - generic [ref=e188]:
+          - generic "0.0 out of 5 stars" [ref=e190]: ☆☆☆☆☆
+          - generic [ref=e191]: Twilight Soft Wipes Tin
+          - generic [ref=e192]: Accessories
+          - generic [ref=e193]:
+            - generic [ref=e194]: $115.47
+            - generic [ref=e195]: $96.19
+      - link "Sherry Rose Quartz Elixir 0.0 out of 5 stars Sherry Rose Quartz Elixir Elixirs $200.03 $142.08" [ref=e196] [cursor=pointer]:
+        - /url: /products/sherry-rose-quartz-elixir-58
+        - img "Sherry Rose Quartz Elixir" [ref=e198]
+        - generic [ref=e199]:
+          - generic "0.0 out of 5 stars" [ref=e201]: ☆☆☆☆☆
+          - generic [ref=e202]: Sherry Rose Quartz Elixir
+          - generic [ref=e203]: Elixirs
+          - generic [ref=e204]:
+            - generic [ref=e205]: $200.03
+            - generic [ref=e206]: $142.08
+      - link "Pearl Honey Drip Ring 5.0 out of 5 stars 5.0 · 1 Pearl Honey Drip Ring Cartilage Jewelry $80.23" [ref=e207] [cursor=pointer]:
+        - /url: /products/pearl-honey-drip-ring-57
+        - img "Pearl Honey Drip Ring" [ref=e209]
+        - generic [ref=e210]:
+          - generic [ref=e211]:
+            - generic "5.0 out of 5 stars" [ref=e212]: ★★★★★
+            - generic [ref=e213]: 5.0 · 1
+          - generic [ref=e214]: Pearl Honey Drip Ring
+          - generic [ref=e215]: Cartilage Jewelry
+          - generic [ref=e217]: $80.23
+      - link "Sherry Twinkle Pin 0.0 out of 5 stars Sherry Twinkle Pin Nose Rings $67.51 $45.28" [ref=e218] [cursor=pointer]:
+        - /url: /products/sherry-twinkle-pin-56
+        - img "Sherry Twinkle Pin" [ref=e220]
+        - generic [ref=e221]:
+          - generic "0.0 out of 5 stars" [ref=e223]: ☆☆☆☆☆
+          - generic [ref=e224]: Sherry Twinkle Pin
+          - generic [ref=e225]: Nose Rings
+          - generic [ref=e226]:
+            - generic [ref=e227]: $67.51
+            - generic [ref=e228]: $45.28
+      - link "Honey Halo Hoop 0.0 out of 5 stars Honey Halo Hoop Cartilage Jewelry $66.71" [ref=e229] [cursor=pointer]:
+        - /url: /products/honey-halo-hoop-54
+        - img "Honey Halo Hoop" [ref=e231]
+        - generic [ref=e232]:
+          - generic "0.0 out of 5 stars" [ref=e234]: ☆☆☆☆☆
+          - generic [ref=e235]: Honey Halo Hoop
+          - generic [ref=e236]: Cartilage Jewelry
+          - generic [ref=e238]: $66.71
+      - link "Pearl Petite Lotus 0.0 out of 5 stars Pearl Petite Lotus Nose Rings $201.05 $140.37" [ref=e239] [cursor=pointer]:
+        - /url: /products/pearl-petite-lotus-52
+        - img "Pearl Petite Lotus" [ref=e241]
+        - generic [ref=e242]:
+          - generic "0.0 out of 5 stars" [ref=e244]: ☆☆☆☆☆
+          - generic [ref=e245]: Pearl Petite Lotus
+          - generic [ref=e246]: Nose Rings
+          - generic [ref=e247]:
+            - generic [ref=e248]: $201.05
+            - generic [ref=e249]: $140.37
+      - link "Sunset Storm Horseshoe 0.0 out of 5 stars Sunset Storm Horseshoe Septum Jewelry $178.09" [ref=e250] [cursor=pointer]:
+        - /url: /products/sunset-storm-horseshoe-50
+        - img "Sunset Storm Horseshoe" [ref=e252]
+        - generic [ref=e253]:
+          - generic "0.0 out of 5 stars" [ref=e255]: ☆☆☆☆☆
+          - generic [ref=e256]: Sunset Storm Horseshoe
+          - generic [ref=e257]: Septum Jewelry
+          - generic [ref=e259]: $178.09
+      - link "Petal Sweet Berry Tee 0.0 out of 5 stars Petal Sweet Berry Tee Merch $198.32 $160.00" [ref=e260] [cursor=pointer]:
+        - /url: /products/petal-sweet-berry-tee-49
+        - img "Petal Sweet Berry Tee" [ref=e262]
+        - generic [ref=e263]:
+          - generic "0.0 out of 5 stars" [ref=e265]: ☆☆☆☆☆
+          - generic [ref=e266]: Petal Sweet Berry Tee
+          - generic [ref=e267]: Merch
+          - generic [ref=e268]:
+            - generic [ref=e269]: $198.32
+            - generic [ref=e270]: $160.00
+      - link "Velvet Bloom Captive 0.0 out of 5 stars Velvet Bloom Captive Nose Rings $165.47 $114.81" [ref=e271] [cursor=pointer]:
+        - /url: /products/velvet-bloom-captive-48
+        - img "Velvet Bloom Captive" [ref=e273]
+        - generic [ref=e274]:
+          - generic "0.0 out of 5 stars" [ref=e276]: ☆☆☆☆☆
+          - generic [ref=e277]: Velvet Bloom Captive
+          - generic [ref=e278]: Nose Rings
+          - generic [ref=e279]:
+            - generic [ref=e280]: $165.47
+            - generic [ref=e281]: $114.81
+      - link "Twilight Bloom Captive 0.0 out of 5 stars Twilight Bloom Captive Nose Rings $91.78" [ref=e282] [cursor=pointer]:
+        - /url: /products/twilight-bloom-captive-46
+        - img "Twilight Bloom Captive" [ref=e284]
+        - generic [ref=e285]:
+          - generic "0.0 out of 5 stars" [ref=e287]: ☆☆☆☆☆
+          - generic [ref=e288]: Twilight Bloom Captive
+          - generic [ref=e289]: Nose Rings
+          - generic [ref=e291]: $91.78
+      - link "Berry Storm Horseshoe 0.0 out of 5 stars Berry Storm Horseshoe Septum Jewelry $176.93 $142.48" [ref=e292] [cursor=pointer]:
+        - /url: /products/berry-storm-horseshoe-45
+        - img "Berry Storm Horseshoe" [ref=e294]
+        - generic [ref=e295]:
+          - generic "0.0 out of 5 stars" [ref=e297]: ☆☆☆☆☆
+          - generic [ref=e298]: Berry Storm Horseshoe
+          - generic [ref=e299]: Septum Jewelry
+          - generic [ref=e300]:
+            - generic [ref=e301]: $176.93
+            - generic [ref=e302]: $142.48
+      - link "Velvet Constellation Helix 0.0 out of 5 stars Velvet Constellation Helix Cartilage Jewelry $140.22 $110.51" [ref=e303] [cursor=pointer]:
+        - /url: /products/velvet-constellation-helix-44
+        - img "Velvet Constellation Helix" [ref=e305]
+        - generic [ref=e306]:
+          - generic "0.0 out of 5 stars" [ref=e308]: ☆☆☆☆☆
+          - generic [ref=e309]: Velvet Constellation Helix
+          - generic [ref=e310]: Cartilage Jewelry
+          - generic [ref=e311]:
+            - generic [ref=e312]: $140.22
+            - generic [ref=e313]: $110.51
+      - link "Pearl Storage Pouch 0.0 out of 5 stars Pearl Storage Pouch Accessories $43.13" [ref=e314] [cursor=pointer]:
+        - /url: /products/pearl-storage-pouch-43
+        - img "Pearl Storage Pouch" [ref=e316]
+        - generic [ref=e317]:
+          - generic "0.0 out of 5 stars" [ref=e319]: ☆☆☆☆☆
+          - generic [ref=e320]: Pearl Storage Pouch
+          - generic [ref=e321]: Accessories
+          - generic [ref=e323]: $43.13
+      - link "Petal Tote Bag 0.0 out of 5 stars Petal Tote Bag Merch $94.58" [ref=e324] [cursor=pointer]:
+        - /url: /products/petal-tote-bag-42
+        - img "Petal Tote Bag" [ref=e326]
+        - generic [ref=e327]:
+          - generic "0.0 out of 5 stars" [ref=e329]: ☆☆☆☆☆
+          - generic [ref=e330]: Petal Tote Bag
+          - generic [ref=e331]: Merch
+          - generic [ref=e333]: $94.58
+      - link "Sunset Drop Veil Clicker 4.0 out of 5 stars 4.0 · 1 Sunset Drop Veil Clicker Septum Jewelry $87.99 $72.31" [ref=e334] [cursor=pointer]:
+        - /url: /products/sunset-drop-veil-clicker-41
+        - img "Sunset Drop Veil Clicker" [ref=e336]
+        - generic [ref=e337]:
+          - generic [ref=e338]:
+            - generic "4.0 out of 5 stars" [ref=e339]: ★★★★☆
+            - generic [ref=e340]: 4.0 · 1
+          - generic [ref=e341]: Sunset Drop Veil Clicker
+          - generic [ref=e342]: Septum Jewelry
+          - generic [ref=e343]:
+            - generic [ref=e344]: $87.99
+            - generic [ref=e345]: $72.31
+      - link "Honey Constellation Helix 4.0 out of 5 stars 4.0 · 1 Honey Constellation Helix Cartilage Jewelry $177.11 $149.11" [ref=e346] [cursor=pointer]:
+        - /url: /products/honey-constellation-helix-39
+        - img "Honey Constellation Helix" [ref=e348]
+        - generic [ref=e349]:
+          - generic [ref=e350]:
+            - generic "4.0 out of 5 stars" [ref=e351]: ★★★★☆
+            - generic [ref=e352]: 4.0 · 1
+          - generic [ref=e353]: Honey Constellation Helix
+          - generic [ref=e354]: Cartilage Jewelry
+          - generic [ref=e355]:
+            - generic [ref=e356]: $177.11
+            - generic [ref=e357]: $149.11
+      - link "Opal Opal Tide Dangle 3.0 out of 5 stars 3.0 · 1 Opal Opal Tide Dangle Belly Rings $50.76 $43.12" [ref=e358] [cursor=pointer]:
+        - /url: /products/opal-opal-tide-dangle-38
+        - img "Opal Opal Tide Dangle" [ref=e360]
+        - generic [ref=e361]:
+          - generic [ref=e362]:
+            - generic "3.0 out of 5 stars" [ref=e363]: ★★★☆☆
+            - generic [ref=e364]: 3.0 · 1
+          - generic [ref=e365]: Opal Opal Tide Dangle
+          - generic [ref=e366]: Belly Rings
+          - generic [ref=e367]:
+            - generic [ref=e368]: $50.76
+            - generic [ref=e369]: $43.12
+      - link "Pearl Tote Bag 4.0 out of 5 stars 4.0 · 1 Pearl Tote Bag Merch $171.56" [ref=e370] [cursor=pointer]:
+        - /url: /products/pearl-tote-bag-37
+        - img "Pearl Tote Bag" [ref=e372]
+        - generic [ref=e373]:
+          - generic [ref=e374]:
+            - generic "4.0 out of 5 stars" [ref=e375]: ★★★★☆
+            - generic [ref=e376]: 4.0 · 1
+          - generic [ref=e377]: Pearl Tote Bag
+          - generic [ref=e378]: Merch
+          - generic [ref=e380]: $171.56
+      - link "Petal Honey Drip Ring 0.0 out of 5 stars Petal Honey Drip Ring Cartilage Jewelry $213.45 $162.02" [ref=e381] [cursor=pointer]:
+        - /url: /products/petal-honey-drip-ring-36
+        - img "Petal Honey Drip Ring" [ref=e383]
+        - generic [ref=e384]:
+          - generic "0.0 out of 5 stars" [ref=e386]: ☆☆☆☆☆
+          - generic [ref=e387]: Petal Honey Drip Ring
+          - generic [ref=e388]: Cartilage Jewelry
+          - generic [ref=e389]:
+            - generic [ref=e390]: $213.45
+            - generic [ref=e391]: $162.02
+      - link "Opal Velvet Travel Case 0.0 out of 5 stars Opal Velvet Travel Case Accessories $36.37" [ref=e392] [cursor=pointer]:
+        - /url: /products/opal-velvet-travel-case-35
+        - img "Opal Velvet Travel Case" [ref=e394]
+        - generic [ref=e395]:
+          - generic "0.0 out of 5 stars" [ref=e397]: ☆☆☆☆☆
+          - generic [ref=e398]: Opal Velvet Travel Case
+          - generic [ref=e399]: Accessories
+          - generic [ref=e401]: $36.37
+      - link "Pearl Halo Hoop 0.0 out of 5 stars Pearl Halo Hoop Cartilage Jewelry $68.46" [ref=e402] [cursor=pointer]:
+        - /url: /products/pearl-halo-hoop-34
+        - img "Pearl Halo Hoop" [ref=e404]
+        - generic [ref=e405]:
+          - generic "0.0 out of 5 stars" [ref=e407]: ☆☆☆☆☆
+          - generic [ref=e408]: Pearl Halo Hoop
+          - generic [ref=e409]: Cartilage Jewelry
+          - generic [ref=e411]: $68.46
+      - link "Petal Crescent Halo 0.0 out of 5 stars Petal Crescent Halo Belly Rings $216.38 $171.04" [ref=e412] [cursor=pointer]:
+        - /url: /products/petal-crescent-halo-33
+        - img "Petal Crescent Halo" [ref=e414]
+        - generic [ref=e415]:
+          - generic "0.0 out of 5 stars" [ref=e417]: ☆☆☆☆☆
+          - generic [ref=e418]: Petal Crescent Halo
+          - generic [ref=e419]: Belly Rings
+          - generic [ref=e420]:
+            - generic [ref=e421]: $216.38
+            - generic [ref=e422]: $171.04
+      - link "Pearl Opal Tide Dangle 0.0 out of 5 stars Pearl Opal Tide Dangle Belly Rings $52.14 $37.31" [ref=e423] [cursor=pointer]:
+        - /url: /products/pearl-opal-tide-dangle-31
+        - img "Pearl Opal Tide Dangle" [ref=e425]
+        - generic [ref=e426]:
+          - generic "0.0 out of 5 stars" [ref=e428]: ☆☆☆☆☆
+          - generic [ref=e429]: Pearl Opal Tide Dangle
+          - generic [ref=e430]: Belly Rings
+          - generic [ref=e431]:
+            - generic [ref=e432]: $52.14
+            - generic [ref=e433]: $37.31
+      - link "Velvet Sunset Drop 0.0 out of 5 stars Velvet Sunset Drop Belly Rings $232.71 $161.54" [ref=e434] [cursor=pointer]:
+        - /url: /products/velvet-sunset-drop-30
+        - img "Velvet Sunset Drop" [ref=e436]
+        - generic [ref=e437]:
+          - generic "0.0 out of 5 stars" [ref=e439]: ☆☆☆☆☆
+          - generic [ref=e440]: Velvet Sunset Drop
+          - generic [ref=e441]: Belly Rings
+          - generic [ref=e442]:
+            - generic [ref=e443]: $232.71
+            - generic [ref=e444]: $161.54
+      - link "Sherry Storm Horseshoe 0.0 out of 5 stars Sherry Storm Horseshoe Septum Jewelry $183.60 $146.51" [ref=e445] [cursor=pointer]:
+        - /url: /products/sherry-storm-horseshoe-28
+        - img "Sherry Storm Horseshoe" [ref=e447]
+        - generic [ref=e448]:
+          - generic "0.0 out of 5 stars" [ref=e450]: ☆☆☆☆☆
+          - generic [ref=e451]: Sherry Storm Horseshoe
+          - generic [ref=e452]: Septum Jewelry
+          - generic [ref=e453]:
+            - generic [ref=e454]: $183.60
+            - generic [ref=e455]: $146.51
+      - link "Mauve Bloom Captive 3.0 out of 5 stars 3.0 · 1 Mauve Bloom Captive Nose Rings $216.49 $152.00" [ref=e456] [cursor=pointer]:
+        - /url: /products/mauve-bloom-captive-27
+        - img "Mauve Bloom Captive" [ref=e458]
+        - generic [ref=e459]:
+          - generic [ref=e460]:
+            - generic "3.0 out of 5 stars" [ref=e461]: ★★★☆☆
+            - generic [ref=e462]: 3.0 · 1
+          - generic [ref=e463]: Mauve Bloom Captive
+          - generic [ref=e464]: Nose Rings
+          - generic [ref=e465]:
+            - generic [ref=e466]: $216.49
+            - generic [ref=e467]: $152.00
+      - link "Mauve Velvet Travel Case 5.0 out of 5 stars 5.0 · 2 Mauve Velvet Travel Case Accessories $120.64 $97.27" [ref=e468] [cursor=pointer]:
+        - /url: /products/mauve-velvet-travel-case-26
+        - img "Mauve Velvet Travel Case" [ref=e470]
+        - generic [ref=e471]:
+          - generic [ref=e472]:
+            - generic "5.0 out of 5 stars" [ref=e473]: ★★★★★
+            - generic [ref=e474]: 5.0 · 2
+          - generic [ref=e475]: Mauve Velvet Travel Case
+          - generic [ref=e476]: Accessories
+          - generic [ref=e477]:
+            - generic [ref=e478]: $120.64
+            - generic [ref=e479]: $97.27
+      - link "Twilight Pearl Veil 0.0 out of 5 stars Twilight Pearl Veil Belly Rings $26.67" [ref=e480] [cursor=pointer]:
+        - /url: /products/twilight-pearl-veil-25
+        - img "Twilight Pearl Veil" [ref=e482]
+        - generic [ref=e483]:
+          - generic "0.0 out of 5 stars" [ref=e485]: ☆☆☆☆☆
+          - generic [ref=e486]: Twilight Pearl Veil
+          - generic [ref=e487]: Belly Rings
+          - generic [ref=e489]: $26.67
+      - link "Sunset Pearl Veil 0.0 out of 5 stars Sunset Pearl Veil Belly Rings $165.26" [ref=e490] [cursor=pointer]:
+        - /url: /products/sunset-pearl-veil-24
+        - img "Sunset Pearl Veil" [ref=e492]
+        - generic [ref=e493]:
+          - generic "0.0 out of 5 stars" [ref=e495]: ☆☆☆☆☆
+          - generic [ref=e496]: Sunset Pearl Veil
+          - generic [ref=e497]: Belly Rings
+          - generic [ref=e499]: $165.26
+      - link "Berry Storm Horseshoe 3.0 out of 5 stars 3.0 · 1 Berry Storm Horseshoe Septum Jewelry $148.14" [ref=e500] [cursor=pointer]:
+        - /url: /products/berry-storm-horseshoe-22
+        - img "Berry Storm Horseshoe" [ref=e502]
+        - generic [ref=e503]:
+          - generic [ref=e504]:
+            - generic "3.0 out of 5 stars" [ref=e505]: ★★★☆☆
+            - generic [ref=e506]: 3.0 · 1
+          - generic [ref=e507]: Berry Storm Horseshoe
+          - generic [ref=e508]: Septum Jewelry
+          - generic [ref=e510]: $148.14
+      - link "Berry Velvet Travel Case 0.0 out of 5 stars Berry Velvet Travel Case Accessories $111.00" [ref=e511] [cursor=pointer]:
+        - /url: /products/berry-velvet-travel-case-21
+        - img "Berry Velvet Travel Case" [ref=e513]
+        - generic [ref=e514]:
+          - generic "0.0 out of 5 stars" [ref=e516]: ☆☆☆☆☆
+          - generic [ref=e517]: Berry Velvet Travel Case
+          - generic [ref=e518]: Accessories
+          - generic [ref=e520]: $111.00
+      - link "Opal Lace Edge Ring 0.0 out of 5 stars Opal Lace Edge Ring Septum Jewelry $113.92" [ref=e521] [cursor=pointer]:
+        - /url: /products/opal-lace-edge-ring-20
+        - img "Opal Lace Edge Ring" [ref=e523]
+        - generic [ref=e524]:
+          - generic "0.0 out of 5 stars" [ref=e526]: ☆☆☆☆☆
+          - generic [ref=e527]: Opal Lace Edge Ring
+          - generic [ref=e528]: Septum Jewelry
+          - generic [ref=e530]: $113.92
+      - link "Sherry Lace Edge Ring 0.0 out of 5 stars Sherry Lace Edge Ring Septum Jewelry $104.67" [ref=e531] [cursor=pointer]:
+        - /url: /products/sherry-lace-edge-ring-19
+        - img "Sherry Lace Edge Ring" [ref=e533]
+        - generic [ref=e534]:
+          - generic "0.0 out of 5 stars" [ref=e536]: ☆☆☆☆☆
+          - generic [ref=e537]: Sherry Lace Edge Ring
+          - generic [ref=e538]: Septum Jewelry
+          - generic [ref=e540]: $104.67
+      - link "Sunset Sunset Drop 0.0 out of 5 stars Sunset Sunset Drop Belly Rings $142.69 $102.85" [ref=e541] [cursor=pointer]:
+        - /url: /products/sunset-sunset-drop-18
+        - img "Sunset Sunset Drop" [ref=e543]
+        - generic [ref=e544]:
+          - generic "0.0 out of 5 stars" [ref=e546]: ☆☆☆☆☆
+          - generic [ref=e547]: Sunset Sunset Drop
+          - generic [ref=e548]: Belly Rings
+          - generic [ref=e549]:
+            - generic [ref=e550]: $142.69
+            - generic [ref=e551]: $102.85
+      - link "Sunset Sunset Drop 0.0 out of 5 stars Sunset Sunset Drop Belly Rings $115.26 $86.20" [ref=e552] [cursor=pointer]:
+        - /url: /products/sunset-sunset-drop-17
+        - img "Sunset Sunset Drop" [ref=e554]
+        - generic [ref=e555]:
+          - generic "0.0 out of 5 stars" [ref=e557]: ☆☆☆☆☆
+          - generic [ref=e558]: Sunset Sunset Drop
+          - generic [ref=e559]: Belly Rings
+          - generic [ref=e560]:
+            - generic [ref=e561]: $115.26
+            - generic [ref=e562]: $86.20
+      - link "Sherry Midnight Repair Elixir 0.0 out of 5 stars Sherry Midnight Repair Elixir Elixirs $134.70 $116.52" [ref=e563] [cursor=pointer]:
+        - /url: /products/sherry-midnight-repair-elixir-16
+        - img "Sherry Midnight Repair Elixir" [ref=e565]
+        - generic [ref=e566]:
+          - generic "0.0 out of 5 stars" [ref=e568]: ☆☆☆☆☆
+          - generic [ref=e569]: Sherry Midnight Repair Elixir
+          - generic [ref=e570]: Elixirs
+          - generic [ref=e571]:
+            - generic [ref=e572]: $134.70
+            - generic [ref=e573]: $116.52
+      - link "Petal Moonbeam Daith 4.0 out of 5 stars 4.0 · 1 Petal Moonbeam Daith Cartilage Jewelry $139.08 $113.46" [ref=e574] [cursor=pointer]:
+        - /url: /products/petal-moonbeam-daith-15
+        - img "Petal Moonbeam Daith" [ref=e576]
+        - generic [ref=e577]:
+          - generic [ref=e578]:
+            - generic "4.0 out of 5 stars" [ref=e579]: ★★★★☆
+            - generic [ref=e580]: 4.0 · 1
+          - generic [ref=e581]: Petal Moonbeam Daith
+          - generic [ref=e582]: Cartilage Jewelry
+          - generic [ref=e583]:
+            - generic [ref=e584]: $139.08
+            - generic [ref=e585]: $113.46
+      - link "Velvet Pearl Veil 0.0 out of 5 stars Velvet Pearl Veil Belly Rings $179.47 $122.29" [ref=e586] [cursor=pointer]:
+        - /url: /products/velvet-pearl-veil-12
+        - img "Velvet Pearl Veil" [ref=e588]
+        - generic [ref=e589]:
+          - generic "0.0 out of 5 stars" [ref=e591]: ☆☆☆☆☆
+          - generic [ref=e592]: Velvet Pearl Veil
+          - generic [ref=e593]: Belly Rings
+          - generic [ref=e594]:
+            - generic [ref=e595]: $179.47
+            - generic [ref=e596]: $122.29
+      - link "Twilight Soft Coil 0.0 out of 5 stars Twilight Soft Coil Nose Rings $176.35" [ref=e597] [cursor=pointer]:
+        - /url: /products/twilight-soft-coil-11
+        - img "Twilight Soft Coil" [ref=e599]
+        - generic [ref=e600]:
+          - generic "0.0 out of 5 stars" [ref=e602]: ☆☆☆☆☆
+          - generic [ref=e603]: Twilight Soft Coil
+          - generic [ref=e604]: Nose Rings
+          - generic [ref=e606]: $176.35
+      - link "Petal Storage Pouch 0.0 out of 5 stars Petal Storage Pouch Accessories $113.69 $80.45" [ref=e607] [cursor=pointer]:
+        - /url: /products/petal-storage-pouch-10
+        - img "Petal Storage Pouch" [ref=e609]
+        - generic [ref=e610]:
+          - generic "0.0 out of 5 stars" [ref=e612]: ☆☆☆☆☆
+          - generic [ref=e613]: Petal Storage Pouch
+          - generic [ref=e614]: Accessories
+          - generic [ref=e615]:
+            - generic [ref=e616]: $113.69
+            - generic [ref=e617]: $80.45
+      - link "Petal Rose Quartz Elixir 0.0 out of 5 stars Petal Rose Quartz Elixir Elixirs $224.45 $155.91" [ref=e618] [cursor=pointer]:
+        - /url: /products/petal-rose-quartz-elixir-9
+        - img "Petal Rose Quartz Elixir" [ref=e620]
+        - generic [ref=e621]:
+          - generic "0.0 out of 5 stars" [ref=e623]: ☆☆☆☆☆
+          - generic [ref=e624]: Petal Rose Quartz Elixir
+          - generic [ref=e625]: Elixirs
+          - generic [ref=e626]:
+            - generic [ref=e627]: $224.45
+            - generic [ref=e628]: $155.91
+      - link "Sunset Calm Compress 0.0 out of 5 stars Sunset Calm Compress Aftercare $46.08" [ref=e629] [cursor=pointer]:
+        - /url: /products/sunset-calm-compress-8
+        - img "Sunset Calm Compress" [ref=e631]
+        - generic [ref=e632]:
+          - generic "0.0 out of 5 stars" [ref=e634]: ☆☆☆☆☆
+          - generic [ref=e635]: Sunset Calm Compress
+          - generic [ref=e636]: Aftercare
+          - generic [ref=e638]: $46.08
+      - link "Mauve Midnight Repair Elixir 3.0 out of 5 stars 3.0 · 1 Mauve Midnight Repair Elixir Elixirs $96.33" [ref=e639] [cursor=pointer]:
+        - /url: /products/mauve-midnight-repair-elixir-6
+        - img "Mauve Midnight Repair Elixir" [ref=e641]
+        - generic [ref=e642]:
+          - generic [ref=e643]:
+            - generic "3.0 out of 5 stars" [ref=e644]: ★★★☆☆
+            - generic [ref=e645]: 3.0 · 1
+          - generic [ref=e646]: Mauve Midnight Repair Elixir
+          - generic [ref=e647]: Elixirs
+          - generic [ref=e649]: $96.33
+      - link "Opal Honey Drip Ring 4.0 out of 5 stars 4.0 · 1 Opal Honey Drip Ring Cartilage Jewelry $120.86 $85.10" [ref=e650] [cursor=pointer]:
+        - /url: /products/opal-honey-drip-ring-5
+        - img "Opal Honey Drip Ring" [ref=e652]
+        - generic [ref=e653]:
+          - generic [ref=e654]:
+            - generic "4.0 out of 5 stars" [ref=e655]: ★★★★☆
+            - generic [ref=e656]: 4.0 · 1
+          - generic [ref=e657]: Opal Honey Drip Ring
+          - generic [ref=e658]: Cartilage Jewelry
+          - generic [ref=e659]:
+            - generic [ref=e660]: $120.86
+            - generic [ref=e661]: $85.10
+      - link "Petal Calm Compress 0.0 out of 5 stars Petal Calm Compress Aftercare $47.12" [ref=e662] [cursor=pointer]:
+        - /url: /products/petal-calm-compress-4
+        - img "Petal Calm Compress" [ref=e664]
+        - generic [ref=e665]:
+          - generic "0.0 out of 5 stars" [ref=e667]: ☆☆☆☆☆
+          - generic [ref=e668]: Petal Calm Compress
+          - generic [ref=e669]: Aftercare
+          - generic [ref=e671]: $47.12
+      - link "Honey Sherry Cap 0.0 out of 5 stars Honey Sherry Cap Merch $255.22 $173.08" [ref=e672] [cursor=pointer]:
+        - /url: /products/honey-sherry-cap-2
+        - img "Honey Sherry Cap" [ref=e674]
+        - generic [ref=e675]:
+          - generic "0.0 out of 5 stars" [ref=e677]: ☆☆☆☆☆
+          - generic [ref=e678]: Honey Sherry Cap
+          - generic [ref=e679]: Merch
+          - generic [ref=e680]:
+            - generic [ref=e681]: $255.22
+            - generic [ref=e682]: $173.08
+      - link "Opal Petal Press Stud 0.0 out of 5 stars Opal Petal Press Stud Cartilage Jewelry $246.72 $172.26" [ref=e683] [cursor=pointer]:
+        - /url: /products/opal-petal-press-stud-1
+        - img "Opal Petal Press Stud" [ref=e685]
+        - generic [ref=e686]:
+          - generic "0.0 out of 5 stars" [ref=e688]: ☆☆☆☆☆
+          - generic [ref=e689]: Opal Petal Press Stud
+          - generic [ref=e690]: Cartilage Jewelry
+          - generic [ref=e691]:
+            - generic [ref=e692]: $246.72
+            - generic [ref=e693]: $172.26
+  - contentinfo [ref=e694]:
+    - generic [ref=e695]:
+      - generic [ref=e696]:
+        - link "SherryBerries" [ref=e697] [cursor=pointer]:
+          - /url: /
+        - paragraph [ref=e698]: Luxury body jewelry & piercing aftercare — made with love in Brooklyn & Bridgetown.
+        - generic [ref=e699]:
+          - link "Instagram" [ref=e700] [cursor=pointer]:
+            - /url: https://instagram.com
+            - img [ref=e701]
+          - link "TikTok" [ref=e705] [cursor=pointer]:
+            - /url: https://tiktok.com
+            - img [ref=e706]
+          - link "Pinterest" [ref=e708] [cursor=pointer]:
+            - /url: https://pinterest.com
+            - img [ref=e709]
+          - link "YouTube" [ref=e713] [cursor=pointer]:
+            - /url: https://youtube.com
+            - img [ref=e714]
+        - generic "Accepted payment methods" [ref=e716]:
+          - generic [ref=e717]: VISA
+          - generic [ref=e718]: MC
+          - generic [ref=e719]: AMEX
+          - generic [ref=e720]: AFTERPAY
+      - generic [ref=e721]:
+        - heading "Shop" [level=4] [ref=e722]
+        - list [ref=e723]:
+          - listitem [ref=e724]:
+            - link "Belly Rings" [ref=e725] [cursor=pointer]:
+              - /url: /products?category=belly-rings
+          - listitem [ref=e726]:
+            - link "Nose Rings" [ref=e727] [cursor=pointer]:
+              - /url: /products?category=nose-rings
+          - listitem [ref=e728]:
+            - link "Cartilage" [ref=e729] [cursor=pointer]:
+              - /url: /products?category=tragus
+          - listitem [ref=e730]:
+            - link "Septum" [ref=e731] [cursor=pointer]:
+              - /url: /products?category=septum
+          - listitem [ref=e732]:
+            - link "Waistbeads" [ref=e733] [cursor=pointer]:
+              - /url: /products?category=waistbeads
+      - generic [ref=e734]:
+        - heading "Care" [level=4] [ref=e735]
+        - list [ref=e736]:
+          - listitem [ref=e737]:
+            - link "Aftercare Shop" [ref=e738] [cursor=pointer]:
+              - /url: /products?category=aftercare
+          - listitem [ref=e739]:
+            - link "Healing Guide" [ref=e740] [cursor=pointer]:
+              - /url: /aftercare-guide
+          - listitem [ref=e741]:
+            - link "Materials Glossary" [ref=e742] [cursor=pointer]:
+              - /url: /learn/materials
+          - listitem [ref=e743]:
+            - link "Sizing Guide" [ref=e744] [cursor=pointer]:
+              - /url: /learn/sizing
+      - generic [ref=e745]:
+        - heading "Help" [level=4] [ref=e746]
+        - list [ref=e747]:
+          - listitem [ref=e748]:
+            - link "Contact" [ref=e749] [cursor=pointer]:
+              - /url: /contact
+          - listitem [ref=e750]:
+            - link "Shipping" [ref=e751] [cursor=pointer]:
+              - /url: /help/shipping
+          - listitem [ref=e752]:
+            - link "Returns" [ref=e753] [cursor=pointer]:
+              - /url: /help/returns
+          - listitem [ref=e754]:
+            - link "Order Status" [ref=e755] [cursor=pointer]:
+              - /url: /account/orders
+          - listitem [ref=e756]:
+            - link "FAQ" [ref=e757] [cursor=pointer]:
+              - /url: /#faq
+      - generic [ref=e758]:
+        - heading "Follow" [level=4] [ref=e759]
+        - list [ref=e760]:
+          - listitem [ref=e761]:
+            - link "Instagram" [ref=e762] [cursor=pointer]:
+              - /url: https://instagram.com
+          - listitem [ref=e763]:
+            - link "TikTok" [ref=e764] [cursor=pointer]:
+              - /url: https://tiktok.com
+          - listitem [ref=e765]:
+            - link "Pinterest" [ref=e766] [cursor=pointer]:
+              - /url: https://pinterest.com
+          - listitem [ref=e767]:
+            - link "YouTube" [ref=e768] [cursor=pointer]:
+              - /url: https://youtube.com
+          - listitem [ref=e769]:
+            - link "Berry List" [ref=e770] [cursor=pointer]:
+              - /url: /#newsletter
+    - generic [ref=e771]:
+      - generic [ref=e772]: © 2026 SherryBerries Atelier · Made with ♡in Brooklyn & Bridgetown
+      - navigation "Legal" [ref=e773]:
+        - link "Privacy" [ref=e774] [cursor=pointer]:
+          - /url: /privacy
+        - link "Terms" [ref=e775] [cursor=pointer]:
+          - /url: /terms
+        - link "Accessibility" [ref=e776] [cursor=pointer]:
+          - /url: /accessibility
+  - alert [ref=e777]

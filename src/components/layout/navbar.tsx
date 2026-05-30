@@ -17,7 +17,7 @@ const NAV_LINKS = [
 type Theme = "dark" | "light";
 
 const navRowBase =
-  "pointer-events-auto w-full max-w-[60vw] flex items-center gap-7 " +
+  "pointer-events-auto w-fit max-w-[calc(100vw-2rem)] flex items-center gap-7 " +
   "py-[calc(10px+0.5rem)] pl-7 pr-[18px] rounded-full " +
   "border border-white/[0.06] backdrop-blur-[20px] backdrop-saturate-150 " +
   "shadow-[0_12px_40px_rgba(0,0,0,0.45),0_1px_0_rgba(255,255,255,0.04)_inset,0_0_0_1px_rgba(255,79,163,0.08)_inset,0_0_60px_rgba(255,79,163,0.08)_inset] " +
@@ -62,7 +62,7 @@ export function Navbar() {
 
         <nav
           aria-label="Primary"
-          className="flex items-center gap-7 ml-2 flex-1 justify-center max-[980px]:hidden"
+          className="flex items-center gap-7 ml-2 flex-1 min-w-0 justify-center max-[980px]:hidden"
         >
           {NAV_LINKS.map((link) => (
             <Link

@@ -1,0 +1,495 @@
+- generic [active] [ref=e1]:
+  - banner:
+    - generic [ref=e2]:
+      - link "SherryBerries home" [ref=e3] [cursor=pointer]:
+        - /url: /
+        - text: SherryBerries
+      - navigation "Primary" [ref=e4]:
+        - link "Products" [ref=e5] [cursor=pointer]:
+          - /url: /products
+        - link "Bestsellers" [ref=e6] [cursor=pointer]:
+          - /url: /bestsellers
+        - link "Our Story" [ref=e7] [cursor=pointer]:
+          - /url: /our-story
+        - link "Learn" [ref=e8] [cursor=pointer]:
+          - /url: /learn
+        - link "Community" [ref=e9] [cursor=pointer]:
+          - /url: /community
+      - generic [ref=e10]:
+        - button "Switch to light mode" [ref=e11] [cursor=pointer]:
+          - img [ref=e12]
+        - button "Search" [ref=e15] [cursor=pointer]:
+          - img [ref=e16]
+        - link "Account" [ref=e19] [cursor=pointer]:
+          - /url: /account
+          - img [ref=e20]
+        - link "Wishlist (0)" [ref=e23] [cursor=pointer]:
+          - /url: /wishlist
+          - img [ref=e24]
+        - link "Bag (0)" [ref=e27] [cursor=pointer]:
+          - /url: /cart
+          - img [ref=e28]
+          - generic [ref=e31]: Bag
+          - generic [ref=e32]: "0"
+  - main [ref=e33]:
+    - generic [ref=e34]:
+      - generic [ref=e36]: Luxury Body Jewelry · Piercing Aftercare · Est. 2022
+      - generic [ref=e38]:
+        - img "SherryBerries luxury body jewelry editorial" [ref=e39]
+        - generic [ref=e40]:
+          - img [ref=e42]
+          - generic [ref=e45]:
+            - generic [ref=e46]: Hypoallergenic
+            - generic [ref=e47]: Skin-safe by design
+        - generic [ref=e48]:
+          - img [ref=e50]
+          - generic [ref=e52]:
+            - generic [ref=e53]: 4.9 / 5
+            - generic [ref=e54]: 2,400+ reviews
+      - generic [ref=e56]:
+        - generic [ref=e57]:
+          - heading "Luxury body jewelry & piercing care designed to make you glow confidently." [level=1] [ref=e58]
+          - paragraph [ref=e59]: Implant-grade titanium, gold-fill, and editorial-grade pieces — paired with aftercare that treats your piercing like skincare. Crafted in Trinidad, loved worldwide.
+        - generic [ref=e60]:
+          - generic [ref=e61]:
+            - link "Shop Jewelry" [ref=e62] [cursor=pointer]:
+              - /url: /products
+            - link "Shop Aftercare" [ref=e63] [cursor=pointer]:
+              - /url: /products?category=aftercare
+          - generic [ref=e70]:
+            - strong [ref=e71]: Trusted by 12,400+ sweet berries
+            - text: worldwide — and counting.
+      - generic [ref=e73]:
+        - generic [ref=e74]:
+          - generic [ref=e75]:
+            - generic [ref=e76]: Free shipping over $80
+            - generic [ref=e77]: ✦
+          - generic [ref=e78]:
+            - generic [ref=e79]: Implant-grade titanium
+            - generic [ref=e80]: ✦
+          - generic [ref=e81]:
+            - generic [ref=e82]: Hypoallergenic certified
+            - generic [ref=e83]: ✦
+          - generic [ref=e84]:
+            - generic [ref=e85]: Free piercing aftercare guide
+            - generic [ref=e86]: ✦
+          - generic [ref=e87]:
+            - generic [ref=e88]: Pay in 4 with Afterpay
+            - generic [ref=e89]: ✦
+        - generic [ref=e90]:
+          - generic [ref=e91]:
+            - generic [ref=e92]: Free shipping over $80
+            - generic [ref=e93]: ✦
+          - generic [ref=e94]:
+            - generic [ref=e95]: Implant-grade titanium
+            - generic [ref=e96]: ✦
+          - generic [ref=e97]:
+            - generic [ref=e98]: Hypoallergenic certified
+            - generic [ref=e99]: ✦
+          - generic [ref=e100]:
+            - generic [ref=e101]: Free piercing aftercare guide
+            - generic [ref=e102]: ✦
+          - generic [ref=e103]:
+            - generic [ref=e104]: Pay in 4 with Afterpay
+            - generic [ref=e105]: ✦
+    - region "Find your signature piece." [ref=e106]:
+      - generic [ref=e107]:
+        - generic [ref=e108]: Shop the collection
+        - heading "Find your signature piece." [level=2] [ref=e109]
+      - generic [ref=e110]:
+        - link "01 Accessories Cases, cleaning kits & pouches. Shop now" [ref=e111] [cursor=pointer]:
+          - /url: /products?category=accessories
+          - generic [ref=e113]: "01"
+          - generic [ref=e114]:
+            - heading "Accessories" [level=3] [ref=e115]
+            - paragraph [ref=e116]: Cases, cleaning kits & pouches.
+            - generic [ref=e117]:
+              - text: Shop now
+              - generic [ref=e118]: →
+        - link "02 Aftercare Saline mists, oils & healing essentials. Shop now" [ref=e119] [cursor=pointer]:
+          - /url: /products?category=aftercare
+          - generic [ref=e121]: "02"
+          - generic [ref=e122]:
+            - heading "Aftercare" [level=3] [ref=e123]
+            - paragraph [ref=e124]: Saline mists, oils & healing essentials.
+            - generic [ref=e125]:
+              - text: Shop now
+              - generic [ref=e126]: →
+        - link "03 Belly Rings Curved barbells, dangles & opal centerpieces. Shop now" [ref=e127] [cursor=pointer]:
+          - /url: /products?category=belly-rings
+          - generic [ref=e129]: "03"
+          - generic [ref=e130]:
+            - heading "Belly Rings" [level=3] [ref=e131]
+            - paragraph [ref=e132]: Curved barbells, dangles & opal centerpieces.
+            - generic [ref=e133]:
+              - text: Shop now
+              - generic [ref=e134]: →
+        - link "04 Cartilage Jewelry Helix, tragus, daith — delicate cartilage staples. Shop now" [ref=e135] [cursor=pointer]:
+          - /url: /products?category=cartilage-jewelry
+          - generic [ref=e137]: "04"
+          - generic [ref=e138]:
+            - heading "Cartilage Jewelry" [level=3] [ref=e139]
+            - paragraph [ref=e140]: Helix, tragus, daith — delicate cartilage staples.
+            - generic [ref=e141]:
+              - text: Shop now
+              - generic [ref=e142]: →
+        - link "05 Elixirs Premium serums for sensitive, healing skin. Shop now" [ref=e143] [cursor=pointer]:
+          - /url: /products?category=elixirs
+          - generic [ref=e145]: "05"
+          - generic [ref=e146]:
+            - heading "Elixirs" [level=3] [ref=e147]
+            - paragraph [ref=e148]: Premium serums for sensitive, healing skin.
+            - generic [ref=e149]:
+              - text: Shop now
+              - generic [ref=e150]: →
+        - link "06 Merch Apparel from the SherryBerries world. Shop now" [ref=e151] [cursor=pointer]:
+          - /url: /products?category=merch
+          - generic [ref=e153]: "06"
+          - generic [ref=e154]:
+            - heading "Merch" [level=3] [ref=e155]
+            - paragraph [ref=e156]: Apparel from the SherryBerries world.
+            - generic [ref=e157]:
+              - text: Shop now
+              - generic [ref=e158]: →
+        - link "07 Nose Rings Studs, hoops & feather-light captives. Shop now" [ref=e159] [cursor=pointer]:
+          - /url: /products?category=nose-rings
+          - generic [ref=e161]: "07"
+          - generic [ref=e162]:
+            - heading "Nose Rings" [level=3] [ref=e163]
+            - paragraph [ref=e164]: Studs, hoops & feather-light captives.
+            - generic [ref=e165]:
+              - text: Shop now
+              - generic [ref=e166]: →
+        - link "08 Septum Jewelry Clickers, horseshoes & statement rings. Shop now" [ref=e167] [cursor=pointer]:
+          - /url: /products?category=septum-jewelry
+          - generic [ref=e169]: "08"
+          - generic [ref=e170]:
+            - heading "Septum Jewelry" [level=3] [ref=e171]
+            - paragraph [ref=e172]: Clickers, horseshoes & statement rings.
+            - generic [ref=e173]:
+              - text: Shop now
+              - generic [ref=e174]: →
+    - region "Bestsellers from sweet berries." [ref=e175]:
+      - generic [ref=e176]:
+        - generic [ref=e177]: Trending now
+        - heading "Bestsellers from sweet berries." [level=2] [ref=e178]
+      - generic [ref=e179]:
+        - article [ref=e180]:
+          - link "Sherry Bloom Captive" [ref=e181] [cursor=pointer]:
+            - /url: /products/sherry-bloom-captive-55
+            - img "Sherry Bloom Captive" [ref=e182]
+          - generic [ref=e183]: Bestseller
+          - button "Add Sherry Bloom Captive to wishlist" [ref=e184] [cursor=pointer]:
+            - img [ref=e185]
+          - button "Quick add Sherry Bloom Captive" [ref=e187] [cursor=pointer]: Quick add +
+          - generic [ref=e188]:
+            - generic [ref=e189]:
+              - generic "3.0 out of 5 stars" [ref=e190]: ★★★☆☆
+              - generic [ref=e191]: 3.0 · 1 reviews
+            - link "Sherry Bloom Captive" [ref=e192] [cursor=pointer]:
+              - /url: /products/sherry-bloom-captive-55
+            - generic [ref=e194]: Titanium Safe
+            - generic [ref=e196]: $66.31
+        - article [ref=e197]:
+          - link "Velvet Sweet Berry Tee" [ref=e198] [cursor=pointer]:
+            - /url: /products/velvet-sweet-berry-tee-53
+            - img "Velvet Sweet Berry Tee" [ref=e199]
+          - generic [ref=e200]: New
+          - button "Add Velvet Sweet Berry Tee to wishlist" [ref=e201] [cursor=pointer]:
+            - img [ref=e202]
+          - button "Quick add Velvet Sweet Berry Tee" [ref=e204] [cursor=pointer]: Quick add +
+          - generic [ref=e205]:
+            - generic [ref=e206]:
+              - generic "4.0 out of 5 stars" [ref=e207]: ★★★★☆
+              - generic [ref=e208]: 4.0 · 2 reviews
+            - link "Velvet Sweet Berry Tee" [ref=e209] [cursor=pointer]:
+              - /url: /products/velvet-sweet-berry-tee-53
+            - generic [ref=e211]: 14k Gold
+            - generic [ref=e213]: $158.86
+        - article [ref=e214]:
+          - link "Pearl Lace Edge Ring" [ref=e215] [cursor=pointer]:
+            - /url: /products/pearl-lace-edge-ring-51
+            - img "Pearl Lace Edge Ring" [ref=e216]
+          - generic [ref=e217]: New
+          - button "Add Pearl Lace Edge Ring to wishlist" [ref=e218] [cursor=pointer]:
+            - img [ref=e219]
+          - button "Quick add Pearl Lace Edge Ring" [ref=e221] [cursor=pointer]: Quick add +
+          - generic [ref=e222]:
+            - generic [ref=e223]:
+              - generic "0.0 out of 5 stars" [ref=e224]: ☆☆☆☆☆
+              - generic [ref=e225]: 0.0 · 0 reviews
+            - link "Pearl Lace Edge Ring" [ref=e226] [cursor=pointer]:
+              - /url: /products/pearl-lace-edge-ring-51
+            - generic [ref=e228]: $90.27
+        - article [ref=e229]:
+          - link "Sherry Constellation Helix" [ref=e230] [cursor=pointer]:
+            - /url: /products/sherry-constellation-helix-47
+            - img "Sherry Constellation Helix" [ref=e231]
+          - generic [ref=e232]: Bestseller
+          - button "Add Sherry Constellation Helix to wishlist" [ref=e233] [cursor=pointer]:
+            - img [ref=e234]
+          - button "Quick add Sherry Constellation Helix" [ref=e236] [cursor=pointer]: Quick add +
+          - generic [ref=e237]:
+            - generic [ref=e238]:
+              - generic "0.0 out of 5 stars" [ref=e239]: ☆☆☆☆☆
+              - generic [ref=e240]: 0.0 · 0 reviews
+            - link "Sherry Constellation Helix" [ref=e241] [cursor=pointer]:
+              - /url: /products/sherry-constellation-helix-47
+            - generic [ref=e243]: $85.22
+        - article [ref=e244]:
+          - link "Mauve Constellation Helix" [ref=e245] [cursor=pointer]:
+            - /url: /products/mauve-constellation-helix-40
+            - img "Mauve Constellation Helix" [ref=e246]
+          - generic [ref=e247]: New
+          - button "Add Mauve Constellation Helix to wishlist" [ref=e248] [cursor=pointer]:
+            - img [ref=e249]
+          - button "Quick add Mauve Constellation Helix" [ref=e251] [cursor=pointer]: Quick add +
+          - generic [ref=e252]:
+            - generic [ref=e253]:
+              - generic "0.0 out of 5 stars" [ref=e254]: ☆☆☆☆☆
+              - generic [ref=e255]: 0.0 · 0 reviews
+            - link "Mauve Constellation Helix" [ref=e256] [cursor=pointer]:
+              - /url: /products/mauve-constellation-helix-40
+            - generic [ref=e258]: $95.69
+        - article [ref=e259]:
+          - link "Pearl Soft Coil" [ref=e260] [cursor=pointer]:
+            - /url: /products/pearl-soft-coil-32
+            - img "Pearl Soft Coil" [ref=e261]
+          - generic [ref=e262]: Bestseller
+          - button "Add Pearl Soft Coil to wishlist" [ref=e263] [cursor=pointer]:
+            - img [ref=e264]
+          - button "Quick add Pearl Soft Coil" [ref=e266] [cursor=pointer]: Quick add +
+          - generic [ref=e267]:
+            - generic [ref=e268]:
+              - generic "3.0 out of 5 stars" [ref=e269]: ★★★☆☆
+              - generic [ref=e270]: 3.0 · 1 reviews
+            - link "Pearl Soft Coil" [ref=e271] [cursor=pointer]:
+              - /url: /products/pearl-soft-coil-32
+            - generic [ref=e273]: Hypoallergenic
+            - generic [ref=e275]: $135.90
+        - article [ref=e276]:
+          - link "Pearl Midnight Repair Elixir" [ref=e277] [cursor=pointer]:
+            - /url: /products/pearl-midnight-repair-elixir-29
+            - img "Pearl Midnight Repair Elixir" [ref=e278]
+          - generic [ref=e279]: New
+          - button "Add Pearl Midnight Repair Elixir to wishlist" [ref=e280] [cursor=pointer]:
+            - img [ref=e281]
+          - button "Quick add Pearl Midnight Repair Elixir" [ref=e283] [cursor=pointer]: Quick add +
+          - generic [ref=e284]:
+            - generic [ref=e285]:
+              - generic "0.0 out of 5 stars" [ref=e286]: ☆☆☆☆☆
+              - generic [ref=e287]: 0.0 · 0 reviews
+            - link "Pearl Midnight Repair Elixir" [ref=e288] [cursor=pointer]:
+              - /url: /products/pearl-midnight-repair-elixir-29
+            - generic [ref=e290]: Titanium Safe
+            - generic [ref=e292]: $135.47
+        - article [ref=e293]:
+          - link "Pearl Drop Veil Clicker" [ref=e294] [cursor=pointer]:
+            - /url: /products/pearl-drop-veil-clicker-23
+            - img "Pearl Drop Veil Clicker" [ref=e295]
+          - generic [ref=e296]: Studio pick
+          - button "Add Pearl Drop Veil Clicker to wishlist" [ref=e297] [cursor=pointer]:
+            - img [ref=e298]
+          - button "Quick add Pearl Drop Veil Clicker" [ref=e300] [cursor=pointer]: Quick add +
+          - generic [ref=e301]:
+            - generic [ref=e302]:
+              - generic "5.0 out of 5 stars" [ref=e303]: ★★★★★
+              - generic [ref=e304]: 5.0 · 1 reviews
+            - link "Pearl Drop Veil Clicker" [ref=e305] [cursor=pointer]:
+              - /url: /products/pearl-drop-veil-clicker-23
+            - generic [ref=e306]:
+              - generic [ref=e307]: $46.94
+              - generic [ref=e308]: $39.28
+    - region "Designed for the way you shine." [ref=e309]:
+      - generic [ref=e315]:
+        - generic [ref=e316]: Our story
+        - heading "Designed for the way you shine." [level=2] [ref=e317]
+        - paragraph [ref=e318]: SherryBerries was created to make piercing care and self expression feel beautiful — never clinical.
+        - paragraph [ref=e319]: "Founder Sherry Antoine spent a decade behind the needle, frustrated by jewelry that looked like medical hardware and aftercare that smelled like a hospital. So she built the line she wished her clients could buy: studio-grade titanium and gold-fill pieces, healing essentials with skincare-grade ingredients, and a brand that treats your piercing like an act of softness, not a wound."
+        - link "Read the full story" [ref=e320] [cursor=pointer]:
+          - /url: /our-story
+          - text: Read the full story
+          - generic [ref=e321]: →
+        - generic [ref=e322]:
+          - generic [ref=e323]: Sherry A.
+          - generic [ref=e324]:
+            - text: Founder · Studio piercer
+            - text: Brooklyn · Bridgetown
+    - region "Everything you need to heal happy." [ref=e325]:
+      - generic [ref=e326]:
+        - generic [ref=e327]: Learn · Piercing 101
+        - heading "Everything you need to heal happy." [level=2] [ref=e328]
+      - generic [ref=e329]:
+        - generic [ref=e330]:
+          - generic [ref=e331]:
+            - button "How to clean a fresh piercing" [expanded] [ref=e332] [cursor=pointer]:
+              - generic [ref=e333]: How to clean a fresh piercing
+            - region [ref=e335]:
+              - generic [ref=e336]:
+                - paragraph [ref=e337]: Twice a day, spray a sterile saline mist over the piercing and let it air-dry — no twisting, no soap, no peroxide. If crust forms, soften it with saline first, then gently wipe with a clean gauze.
+                - paragraph [ref=e338]: Avoid touching the piercing with unwashed hands, and skip pools, hot tubs, and oceans until the studio has cleared the site.
+          - generic [ref=e339]:
+            - button "Jewelry sizing guide" [ref=e340] [cursor=pointer]:
+              - generic [ref=e341]: Jewelry sizing guide
+            - region:
+              - paragraph [ref=e344]: Body jewelry is measured by gauge (thickness) and length or diameter. Most fresh piercings start at 16G or 14G with extra length to accommodate swelling. Once healed, you can downsize to a shorter post for a flush, polished look. When in doubt, message us with your current piece's measurements.
+          - generic [ref=e345]:
+            - button "Fresh vs healed piercings" [ref=e346] [cursor=pointer]:
+              - generic [ref=e347]: Fresh vs healed piercings
+            - region:
+              - generic [ref=e349]:
+                - paragraph [ref=e350]: "How you treat a piercing depends on where it is in its healing journey:"
+                - list [ref=e351]:
+                  - listitem [ref=e352]:
+                    - strong [ref=e353]: "Fresh (0–6 weeks):"
+                    - text: longer post, daily saline, implant-grade titanium only.
+                  - listitem [ref=e354]:
+                    - strong [ref=e355]: "Healing (6 weeks–6 months):"
+                    - text: still saline, but you can start gentler material rotations.
+                  - listitem [ref=e356]:
+                    - strong [ref=e357]: "Healed:"
+                    - text: wear what makes you glow — gold-fill, opals, dangles, statement pieces.
+          - generic [ref=e358]:
+            - button "Signs of irritation" [ref=e359] [cursor=pointer]:
+              - generic [ref=e360]: Signs of irritation
+            - region:
+              - paragraph [ref=e363]: Mild redness, clear lymph fluid, and tenderness in the first few weeks are normal. Watch for thick yellow or green discharge, hot/painful swelling that worsens, bleeding after the first week, or angry bumps. Those are signs to message us or visit a piercer — never try to remove the jewelry on your own.
+          - generic [ref=e364]:
+            - button "Best jewelry materials" [ref=e365] [cursor=pointer]:
+              - generic [ref=e366]: Best jewelry materials
+            - region:
+              - paragraph [ref=e369]: "We only stock materials safe for long-term wear: implant-grade titanium (ASTM F-136), solid 14k gold, niobium, and nickel-free surgical-grade options. Avoid plated jewelry, sterling silver, and mystery alloys in fresh piercings — they off-gas and prolong healing."
+          - generic [ref=e370]:
+            - button "Piercing healing timeline" [ref=e371] [cursor=pointer]:
+              - generic [ref=e372]: Piercing healing timeline
+            - region:
+              - paragraph [ref=e375]: Earlobes heal in 6–10 weeks. Nostrils, septums, and most cartilage piercings take 4–9 months. Navels and nipples can take 9–12 months. Healing is not linear — you may feel fully healed and then have a flare-up. Stay consistent with aftercare and don't downsize too early.
+        - complementary [ref=e376]:
+          - img "Aftercare essentials kit" [ref=e378]
+          - heading "Free Aftercare Guide" [level=3] [ref=e379]
+          - paragraph [ref=e380]: A 12-page studio-tested guide to cleaning, healing, and downsizing — emailed straight to your inbox.
+          - link "Get yours free" [ref=e381] [cursor=pointer]:
+            - /url: /aftercare-guide
+            - text: Get yours free
+            - generic [ref=e382]: →
+    - region "Join the Berry List." [ref=e383]:
+      - generic [ref=e384]:
+        - generic [ref=e385]: The Berry List
+        - heading "Join the Berry List." [level=2] [ref=e386]
+        - paragraph [ref=e387]: Soft drops, healing tips, and members-only discounts — straight to your inbox, never too often.
+        - generic [ref=e388]:
+          - textbox "Email address" [ref=e389]:
+            - /placeholder: Your email
+          - button "Join now" [ref=e390] [cursor=pointer]:
+            - text: Join now
+            - generic [ref=e391]: →
+        - generic [ref=e392]:
+          - generic [ref=e393]:
+            - text: 10% off your first order
+            - generic [ref=e394]: ✦
+          - generic [ref=e395]:
+            - text: Early access drops
+            - generic [ref=e396]: ✦
+          - generic [ref=e397]: Free aftercare guide
+  - contentinfo [ref=e398]:
+    - generic [ref=e399]:
+      - generic [ref=e400]:
+        - link "SherryBerries" [ref=e401] [cursor=pointer]:
+          - /url: /
+        - paragraph [ref=e402]: Luxury body jewelry & piercing aftercare — made with love in Brooklyn & Bridgetown.
+        - generic [ref=e403]:
+          - link "Instagram" [ref=e404] [cursor=pointer]:
+            - /url: https://instagram.com
+            - img [ref=e405]
+          - link "TikTok" [ref=e409] [cursor=pointer]:
+            - /url: https://tiktok.com
+            - img [ref=e410]
+          - link "Pinterest" [ref=e412] [cursor=pointer]:
+            - /url: https://pinterest.com
+            - img [ref=e413]
+          - link "YouTube" [ref=e417] [cursor=pointer]:
+            - /url: https://youtube.com
+            - img [ref=e418]
+        - generic "Accepted payment methods" [ref=e420]:
+          - generic [ref=e421]: VISA
+          - generic [ref=e422]: MC
+          - generic [ref=e423]: AMEX
+          - generic [ref=e424]: AFTERPAY
+      - generic [ref=e425]:
+        - heading "Shop" [level=4] [ref=e426]
+        - list [ref=e427]:
+          - listitem [ref=e428]:
+            - link "Belly Rings" [ref=e429] [cursor=pointer]:
+              - /url: /products?category=belly-rings
+          - listitem [ref=e430]:
+            - link "Nose Rings" [ref=e431] [cursor=pointer]:
+              - /url: /products?category=nose-rings
+          - listitem [ref=e432]:
+            - link "Cartilage" [ref=e433] [cursor=pointer]:
+              - /url: /products?category=tragus
+          - listitem [ref=e434]:
+            - link "Septum" [ref=e435] [cursor=pointer]:
+              - /url: /products?category=septum
+          - listitem [ref=e436]:
+            - link "Waistbeads" [ref=e437] [cursor=pointer]:
+              - /url: /products?category=waistbeads
+      - generic [ref=e438]:
+        - heading "Care" [level=4] [ref=e439]
+        - list [ref=e440]:
+          - listitem [ref=e441]:
+            - link "Aftercare Shop" [ref=e442] [cursor=pointer]:
+              - /url: /products?category=aftercare
+          - listitem [ref=e443]:
+            - link "Healing Guide" [ref=e444] [cursor=pointer]:
+              - /url: /aftercare-guide
+          - listitem [ref=e445]:
+            - link "Materials Glossary" [ref=e446] [cursor=pointer]:
+              - /url: /learn/materials
+          - listitem [ref=e447]:
+            - link "Sizing Guide" [ref=e448] [cursor=pointer]:
+              - /url: /learn/sizing
+      - generic [ref=e449]:
+        - heading "Help" [level=4] [ref=e450]
+        - list [ref=e451]:
+          - listitem [ref=e452]:
+            - link "Contact" [ref=e453] [cursor=pointer]:
+              - /url: /contact
+          - listitem [ref=e454]:
+            - link "Shipping" [ref=e455] [cursor=pointer]:
+              - /url: /help/shipping
+          - listitem [ref=e456]:
+            - link "Returns" [ref=e457] [cursor=pointer]:
+              - /url: /help/returns
+          - listitem [ref=e458]:
+            - link "Order Status" [ref=e459] [cursor=pointer]:
+              - /url: /account/orders
+          - listitem [ref=e460]:
+            - link "FAQ" [ref=e461] [cursor=pointer]:
+              - /url: /#faq
+      - generic [ref=e462]:
+        - heading "Follow" [level=4] [ref=e463]
+        - list [ref=e464]:
+          - listitem [ref=e465]:
+            - link "Instagram" [ref=e466] [cursor=pointer]:
+              - /url: https://instagram.com
+          - listitem [ref=e467]:
+            - link "TikTok" [ref=e468] [cursor=pointer]:
+              - /url: https://tiktok.com
+          - listitem [ref=e469]:
+            - link "Pinterest" [ref=e470] [cursor=pointer]:
+              - /url: https://pinterest.com
+          - listitem [ref=e471]:
+            - link "YouTube" [ref=e472] [cursor=pointer]:
+              - /url: https://youtube.com
+          - listitem [ref=e473]:
+            - link "Berry List" [ref=e474] [cursor=pointer]:
+              - /url: /#newsletter
+    - generic [ref=e475]:
+      - generic [ref=e476]: © 2026 SherryBerries Atelier · Made with ♡in Brooklyn & Bridgetown
+      - navigation "Legal" [ref=e477]:
+        - link "Privacy" [ref=e478] [cursor=pointer]:
+          - /url: /privacy
+        - link "Terms" [ref=e479] [cursor=pointer]:
+          - /url: /terms
+        - link "Accessibility" [ref=e480] [cursor=pointer]:
+          - /url: /accessibility

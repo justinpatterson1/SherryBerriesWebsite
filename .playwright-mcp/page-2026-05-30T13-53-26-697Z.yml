@@ -1,0 +1,319 @@
+- generic [active] [ref=e1]:
+  - banner:
+    - generic [ref=e2]:
+      - link "SherryBerries home" [ref=e3] [cursor=pointer]:
+        - /url: /
+        - text: SherryBerries
+      - navigation "Primary" [ref=e4]:
+        - link "Products" [ref=e5] [cursor=pointer]:
+          - /url: /products
+        - link "Bestsellers" [ref=e6] [cursor=pointer]:
+          - /url: /bestsellers
+        - link "Our Story" [ref=e7] [cursor=pointer]:
+          - /url: /our-story
+        - link "Learn" [ref=e8] [cursor=pointer]:
+          - /url: /learn
+        - link "Community" [ref=e9] [cursor=pointer]:
+          - /url: /community
+      - generic [ref=e10]:
+        - button "Switch to light mode" [ref=e11] [cursor=pointer]:
+          - img [ref=e12]
+        - button "Search" [ref=e15] [cursor=pointer]:
+          - img [ref=e16]
+        - link "Account" [ref=e19] [cursor=pointer]:
+          - /url: /account
+          - img [ref=e20]
+        - link "Wishlist (0)" [ref=e23] [cursor=pointer]:
+          - /url: /wishlist
+          - img [ref=e24]
+        - link "Sign in" [ref=e26] [cursor=pointer]:
+          - /url: /login
+        - link "Bag (0)" [ref=e27] [cursor=pointer]:
+          - /url: /cart
+          - img [ref=e28]
+          - generic [ref=e31]: Bag
+          - generic [ref=e32]: "0"
+  - main [ref=e33]:
+    - navigation "Breadcrumb" [ref=e34]:
+      - list [ref=e35]:
+        - listitem [ref=e36]:
+          - link "Home" [ref=e37] [cursor=pointer]:
+            - /url: /
+        - listitem [ref=e38]: /
+        - listitem [ref=e39]:
+          - link "Septum Jewelry" [ref=e40] [cursor=pointer]:
+            - /url: /products?category=septum-jewelry
+        - listitem [ref=e41]: /
+        - listitem [ref=e42]: Septum
+        - listitem [ref=e43]: /
+        - listitem [ref=e44]: Pearl Drop Veil Clicker
+    - region "Pearl Drop Veil Clicker" [ref=e45]:
+      - generic [ref=e46]:
+        - tablist "Product images" [ref=e47]:
+          - tab "View image 1" [selected] [ref=e48] [cursor=pointer]:
+            - img "Electronic" [ref=e49]
+          - tab "View image 2" [ref=e50] [cursor=pointer]:
+            - img "Tasty" [ref=e51]
+          - tab "View image 3" [ref=e52] [cursor=pointer]:
+            - img "Gorgeous" [ref=e53]
+        - generic [ref=e54]:
+          - img "Electronic" [ref=e55]
+          - generic [ref=e56]: Hover to zoom ✦
+      - generic [ref=e57]:
+        - generic [ref=e58]:
+          - generic [ref=e59]: Septum Jewelry
+          - heading "Pearl Drop Veil Clicker" [level=1] [ref=e60]
+          - paragraph [ref=e61]: Carter-Fahey, McCullough and Conroy's most advanced Sausages technology increases well-groomed capabilities
+        - generic [ref=e62]:
+          - generic [ref=e63]:
+            - generic [ref=e64]: $39.28
+            - generic [ref=e65]: $46.94
+            - generic [ref=e66]: TTD
+          - generic [ref=e69]: Low stock — only 4 left
+          - generic [ref=e70]:
+            - generic [ref=e71]: Gauge
+            - radiogroup "Gauge" [ref=e72]:
+              - radio "12G" [checked] [ref=e73] [cursor=pointer]
+              - radio "16G" [ref=e74] [cursor=pointer]
+          - generic [ref=e75]:
+            - generic [ref=e76]: Quantity
+            - generic [ref=e77]:
+              - button "Decrease quantity" [disabled] [ref=e78]: −
+              - generic [ref=e79]: "1"
+              - button "Increase quantity" [ref=e80] [cursor=pointer]: +
+          - button "Add to bag · $39.28" [ref=e81] [cursor=pointer]
+          - status
+        - generic [ref=e82]:
+          - button "Save to wishlist" [ref=e83] [cursor=pointer]:
+            - img [ref=e84]
+            - text: Save
+          - status
+          - generic [ref=e86]: Crafted from 14k solid gold
+        - list [ref=e87]:
+          - listitem [ref=e88]:
+            - img [ref=e90]
+            - generic [ref=e94]:
+              - generic [ref=e95]: Free shipping
+              - generic [ref=e96]: On orders over $80 TTD
+          - listitem [ref=e97]:
+            - img [ref=e99]
+            - generic [ref=e102]:
+              - generic [ref=e103]: Hypoallergenic
+              - generic [ref=e104]: Implant-grade titanium & 14k gold
+          - listitem [ref=e105]:
+            - img [ref=e107]
+            - generic [ref=e110]:
+              - generic [ref=e111]: Easy returns
+              - generic [ref=e112]: Unworn pieces within 14 days
+        - generic [ref=e113]:
+          - generic [ref=e114]:
+            - button "Description" [expanded] [ref=e115] [cursor=pointer]:
+              - generic [ref=e116]: Description
+              - img [ref=e118]
+            - paragraph [ref=e123]: The Universal intangible architecture Soap offers reliable performance and superior design Acerbitas depopulo iure varietas corroboro commemoro. Communis doloribus tunc cumque arbustum aspicio ulciscor contego.
+          - generic [ref=e124]:
+            - button "Specifications" [ref=e125] [cursor=pointer]:
+              - generic [ref=e126]: Specifications
+              - img [ref=e128]
+            - generic [ref=e131]:
+              - generic [ref=e132]:
+                - term [ref=e133]: Material
+                - definition [ref=e134]: 14k solid gold
+              - generic [ref=e135]:
+                - term [ref=e136]: Jewelry type
+                - definition [ref=e137]: Septum
+              - generic [ref=e138]:
+                - term [ref=e139]: SKU
+                - definition [ref=e140]: SB-PEARLDROPVEILCLICKER23
+              - generic [ref=e141]:
+                - term [ref=e142]: In stock
+                - definition [ref=e143]: "25"
+              - generic [ref=e144]:
+                - term [ref=e145]: Recommended for
+                - definition [ref=e146]: healed
+          - generic [ref=e147]:
+            - button "Sizing & fit" [ref=e148] [cursor=pointer]:
+              - generic [ref=e149]: Sizing & fit
+              - img [ref=e151]
+            - paragraph [ref=e154]: Pick the gauge that matches your current jewelry. Not sure? Reach out to our studio team on WhatsApp — we'll match you to the right size.
+          - generic [ref=e155]:
+            - button "Care & cleaning" [ref=e156] [cursor=pointer]:
+              - generic [ref=e157]: Care & cleaning
+              - img [ref=e159]
+            - paragraph [ref=e162]: Rinse with saline twice daily for fresh piercings. Polish with a soft microfiber cloth. Avoid harsh chemicals, chlorine, and submersion until fully healed.
+          - generic [ref=e163]:
+            - button "Shipping & returns" [ref=e164] [cursor=pointer]:
+              - generic [ref=e165]: Shipping & returns
+              - img [ref=e167]
+            - paragraph [ref=e170]: Free shipping on TTD orders over $80. Trinidad & Tobago delivery in 2–4 business days. Unworn pieces returnable within 14 days for store credit.
+    - region "What berries are saying" [ref=e171]:
+      - generic [ref=e172]:
+        - heading "What berries are saying" [level=2] [ref=e173]
+        - generic [ref=e174]: 1 verified review
+      - generic [ref=e175]:
+        - complementary [ref=e176]:
+          - generic [ref=e177]:
+            - generic [ref=e178]: "5.0"
+            - generic [ref=e179]: / 5
+          - generic "5.0 out of 5 stars" [ref=e180]: ★★★★★
+          - generic [ref=e181]:
+            - generic [ref=e182]:
+              - generic [ref=e183]: "5"
+              - generic [ref=e186]: "1"
+            - generic [ref=e187]:
+              - generic [ref=e188]: "4"
+              - generic [ref=e190]: "0"
+            - generic [ref=e191]:
+              - generic [ref=e192]: "3"
+              - generic [ref=e194]: "0"
+            - generic [ref=e195]:
+              - generic [ref=e196]: "2"
+              - generic [ref=e198]: "0"
+            - generic [ref=e199]:
+              - generic [ref=e200]: "1"
+              - generic [ref=e202]: "0"
+        - article [ref=e204]:
+          - generic [ref=e205]:
+            - generic [ref=e206]:
+              - generic "5.0 out of 5 stars" [ref=e207]: ★★★★★
+              - generic [ref=e208]: Verified
+            - generic [ref=e209]: Feb 3, 2026
+          - heading "subito vulgo patrocinor delicate confido attonbitus" [level=3] [ref=e210]
+          - paragraph [ref=e211]: Color volo territo eligendi torqueo.
+          - generic [ref=e212]: — Alene Lehner
+    - region "More from the studio" [ref=e213]:
+      - generic [ref=e214]:
+        - generic [ref=e215]: You may also love
+        - heading "More from the studio" [level=2] [ref=e216]
+      - generic [ref=e217]:
+        - link "Pearl Lace Edge Ring Pearl Lace Edge Ring $90.27" [ref=e218] [cursor=pointer]:
+          - /url: /products/pearl-lace-edge-ring-51
+          - img "Pearl Lace Edge Ring" [ref=e220]
+          - generic [ref=e221]:
+            - generic [ref=e222]: Pearl Lace Edge Ring
+            - generic [ref=e224]: $90.27
+        - link "Sunset Storm Horseshoe Sunset Storm Horseshoe $178.09" [ref=e225] [cursor=pointer]:
+          - /url: /products/sunset-storm-horseshoe-50
+          - img "Sunset Storm Horseshoe" [ref=e227]
+          - generic [ref=e228]:
+            - generic [ref=e229]: Sunset Storm Horseshoe
+            - generic [ref=e231]: $178.09
+        - link "Berry Storm Horseshoe Berry Storm Horseshoe $176.93 $142.48" [ref=e232] [cursor=pointer]:
+          - /url: /products/berry-storm-horseshoe-45
+          - img "Berry Storm Horseshoe" [ref=e234]
+          - generic [ref=e235]:
+            - generic [ref=e236]: Berry Storm Horseshoe
+            - generic [ref=e237]:
+              - generic [ref=e238]: $176.93
+              - generic [ref=e239]: $142.48
+        - link "Sunset Drop Veil Clicker Sunset Drop Veil Clicker $87.99 $72.31" [ref=e240] [cursor=pointer]:
+          - /url: /products/sunset-drop-veil-clicker-41
+          - img "Sunset Drop Veil Clicker" [ref=e242]
+          - generic [ref=e243]:
+            - generic [ref=e244]: Sunset Drop Veil Clicker
+            - generic [ref=e245]:
+              - generic [ref=e246]: $87.99
+              - generic [ref=e247]: $72.31
+  - contentinfo [ref=e248]:
+    - generic [ref=e249]:
+      - generic [ref=e250]:
+        - link "SherryBerries" [ref=e251] [cursor=pointer]:
+          - /url: /
+        - paragraph [ref=e252]: Luxury body jewelry & piercing aftercare — made with love in Brooklyn & Bridgetown.
+        - generic [ref=e253]:
+          - link "Instagram" [ref=e254] [cursor=pointer]:
+            - /url: https://instagram.com
+            - img [ref=e255]
+          - link "TikTok" [ref=e259] [cursor=pointer]:
+            - /url: https://tiktok.com
+            - img [ref=e260]
+          - link "Pinterest" [ref=e262] [cursor=pointer]:
+            - /url: https://pinterest.com
+            - img [ref=e263]
+          - link "YouTube" [ref=e267] [cursor=pointer]:
+            - /url: https://youtube.com
+            - img [ref=e268]
+        - generic "Accepted payment methods" [ref=e270]:
+          - generic [ref=e271]: VISA
+          - generic [ref=e272]: MC
+          - generic [ref=e273]: AMEX
+          - generic [ref=e274]: AFTERPAY
+      - generic [ref=e275]:
+        - heading "Shop" [level=4] [ref=e276]
+        - list [ref=e277]:
+          - listitem [ref=e278]:
+            - link "Belly Rings" [ref=e279] [cursor=pointer]:
+              - /url: /products?category=belly-rings
+          - listitem [ref=e280]:
+            - link "Nose Rings" [ref=e281] [cursor=pointer]:
+              - /url: /products?category=nose-rings
+          - listitem [ref=e282]:
+            - link "Cartilage" [ref=e283] [cursor=pointer]:
+              - /url: /products?category=tragus
+          - listitem [ref=e284]:
+            - link "Septum" [ref=e285] [cursor=pointer]:
+              - /url: /products?category=septum
+          - listitem [ref=e286]:
+            - link "Waistbeads" [ref=e287] [cursor=pointer]:
+              - /url: /products?category=waistbeads
+      - generic [ref=e288]:
+        - heading "Care" [level=4] [ref=e289]
+        - list [ref=e290]:
+          - listitem [ref=e291]:
+            - link "Aftercare Shop" [ref=e292] [cursor=pointer]:
+              - /url: /products?category=aftercare
+          - listitem [ref=e293]:
+            - link "Healing Guide" [ref=e294] [cursor=pointer]:
+              - /url: /aftercare-guide
+          - listitem [ref=e295]:
+            - link "Materials Glossary" [ref=e296] [cursor=pointer]:
+              - /url: /learn/materials
+          - listitem [ref=e297]:
+            - link "Sizing Guide" [ref=e298] [cursor=pointer]:
+              - /url: /learn/sizing
+      - generic [ref=e299]:
+        - heading "Help" [level=4] [ref=e300]
+        - list [ref=e301]:
+          - listitem [ref=e302]:
+            - link "Contact" [ref=e303] [cursor=pointer]:
+              - /url: /contact
+          - listitem [ref=e304]:
+            - link "Shipping" [ref=e305] [cursor=pointer]:
+              - /url: /help/shipping
+          - listitem [ref=e306]:
+            - link "Returns" [ref=e307] [cursor=pointer]:
+              - /url: /help/returns
+          - listitem [ref=e308]:
+            - link "Order Status" [ref=e309] [cursor=pointer]:
+              - /url: /account/orders
+          - listitem [ref=e310]:
+            - link "FAQ" [ref=e311] [cursor=pointer]:
+              - /url: /#faq
+      - generic [ref=e312]:
+        - heading "Follow" [level=4] [ref=e313]
+        - list [ref=e314]:
+          - listitem [ref=e315]:
+            - link "Instagram" [ref=e316] [cursor=pointer]:
+              - /url: https://instagram.com
+          - listitem [ref=e317]:
+            - link "TikTok" [ref=e318] [cursor=pointer]:
+              - /url: https://tiktok.com
+          - listitem [ref=e319]:
+            - link "Pinterest" [ref=e320] [cursor=pointer]:
+              - /url: https://pinterest.com
+          - listitem [ref=e321]:
+            - link "YouTube" [ref=e322] [cursor=pointer]:
+              - /url: https://youtube.com
+          - listitem [ref=e323]:
+            - link "Berry List" [ref=e324] [cursor=pointer]:
+              - /url: /#newsletter
+    - generic [ref=e325]:
+      - generic [ref=e326]: © 2026 SherryBerries Atelier · Made with ♡in Brooklyn & Bridgetown
+      - navigation "Legal" [ref=e327]:
+        - link "Privacy" [ref=e328] [cursor=pointer]:
+          - /url: /privacy
+        - link "Terms" [ref=e329] [cursor=pointer]:
+          - /url: /terms
+        - link "Accessibility" [ref=e330] [cursor=pointer]:
+          - /url: /accessibility
+  - alert [ref=e331]
