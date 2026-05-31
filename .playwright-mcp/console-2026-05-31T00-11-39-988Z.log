@@ -1,0 +1,84 @@
+[     120ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[     313ms] [LOG] [Fast Refresh] done in 298ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[    1799ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[    1851ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[    1879ms] [WARNING] %c%s%c ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[    2174ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[    2394ms] [LOG] [Fast Refresh] done in 323ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[    5555ms] [WARNING] The resource http://localhost:3000/_next/image?url=%2F_next%2Fstatic%2Fmedia%2FHero.0stqcrvuweg-3.png&w=640&q=75 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3000/:0
+[  183262ms] [WARNING] The resource http://localhost:3000/_next/image?url=%2F_next%2Fstatic%2Fmedia%2FHero.0stqcrvuweg-3.png&w=640&q=75 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3000/:0
+[21893383ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[21893594ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[21902215ms] [LOG] [Fast Refresh] done in 8728ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[21902335ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[21902343ms] [LOG] [Fast Refresh] done in 115ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22040723ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22042940ms] [WARNING] [Fast Refresh] performing full reload because your application had an unrecoverable error @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22042943ms] [LOG] [Fast Refresh] done in 2323ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22043093ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22043303ms] [WARNING] %c%s%c ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22043305ms] [LOG] [Fast Refresh] done in 324ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22043422ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22043720ms] [LOG] [Fast Refresh] done in 404ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22043831ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/:0
+[22044021ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22044066ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22044106ms] [WARNING] %c%s%c ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22044276ms] ReferenceError: usePathname is not defined
+    at Navbar (http://localhost:3000/_next/static/chunks/src_components_08.vhgl._.js:618:22)
+    at Object.react_stack_bottom_frame (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:15037:24)
+    at renderWithHooks (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:4620:24)
+    at updateFunctionComponent (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6081:21)
+    at beginWork (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6665:639)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at performUnitOfWork (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9555:97)
+    at workLoopSync (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9449:40)
+    at renderRootSync (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9433:13)
+    at performWorkOnRoot (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64)
+[22044507ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22044533ms] [LOG] [Fast Refresh] done in 131ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22047695ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22048377ms] [WARNING] [Fast Refresh] performing full reload because your application had an unrecoverable error @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22048378ms] [LOG] [Fast Refresh] done in 789ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22048489ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/:0
+[22048815ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22048844ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22048861ms] [WARNING] %c%s%c ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22048913ms] ReferenceError: pathname is not defined
+    at Navbar (http://localhost:3000/_next/static/chunks/src_components_08.vhgl._.js:645:9)
+    at Object.react_stack_bottom_frame (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:15037:24)
+    at renderWithHooks (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:4620:24)
+    at updateFunctionComponent (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6081:21)
+    at beginWork (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6665:639)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at performUnitOfWork (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9555:97)
+    at workLoopSync (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9449:40)
+    at renderRootSync (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9433:13)
+    at performWorkOnRoot (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64)
+[22054285ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22054388ms] [WARNING] [Fast Refresh] performing full reload because your application had an unrecoverable error @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22054822ms] [LOG] [Fast Refresh] done in 215ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22054957ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22054975ms] [LOG] [Fast Refresh] done in 122ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22055136ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22055175ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22055200ms] [WARNING] %c%s%c ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22056276ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22057111ms] [LOG] [Fast Refresh] done in 938ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22060529ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22060965ms] [WARNING] %c%s%c ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22060966ms] [LOG] [Fast Refresh] done in 253ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22070017ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22070380ms] [WARNING] %c%s%c ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[22070381ms] [LOG] [Fast Refresh] done in 214ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477

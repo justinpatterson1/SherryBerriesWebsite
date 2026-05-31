@@ -95,7 +95,7 @@ export default async function ProductPage({ params }: PageProps) {
       <section
         aria-labelledby="product-title"
         className={
-          "grid grid-cols-[1.15fr_1fr] gap-12 px-[8%] " +
+          "grid grid-cols-[1.15fr_1fr] items-start gap-12 px-[8%] " +
           "max-[1100px]:gap-8 max-[900px]:grid-cols-1 max-[900px]:px-[6%]"
         }
       >

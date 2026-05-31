@@ -1,0 +1,57 @@
+[     142ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[     526ms] [LOG] [Fast Refresh] done in 486ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[     781ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[     830ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[    1093ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[    1146ms] [LOG] [Fast Refresh] done in 157ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[    2097ms] [WARNING] %c%s%c ⚠ Unsupported metadata viewport is configured in metadata export in /products/[slug]. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[    2647ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[    2726ms] [LOG] [Fast Refresh] done in 179ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[  378407ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=zhH-DF9-LH8P0Np6CUooc' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13322
+[  381762ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=zhH-DF9-LH8P0Np6CUooc' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13322
+[  385114ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=zhH-DF9-LH8P0Np6CUooc' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13322
+[  388464ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=zhH-DF9-LH8P0Np6CUooc' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13322
+[  391811ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=zhH-DF9-LH8P0Np6CUooc' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13322
+[  400800ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=zhH-DF9-LH8P0Np6CUooc' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13322
+[  408167ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=zhH-DF9-LH8P0Np6CUooc' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13322
+[  415515ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=zhH-DF9-LH8P0Np6CUooc' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13322
+[  422866ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=zhH-DF9-LH8P0Np6CUooc' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13322
+[  430211ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=zhH-DF9-LH8P0Np6CUooc' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13322
+[  437623ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=zhH-DF9-LH8P0Np6CUooc' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13322
+[  445028ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=zhH-DF9-LH8P0Np6CUooc' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13322
+[  491455ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[  491649ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[  492265ms] [WARNING] %c%s%c [33m[1m⚠[22m[39m Unsupported metadata viewport is configured in metadata export in /products/[slug]. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[ 1638001ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=f4QtjzcrehQsB13eaUT2B' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13322
+[ 1641355ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=f4QtjzcrehQsB13eaUT2B' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13322
+[ 1644688ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=f4QtjzcrehQsB13eaUT2B' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13322
+[ 1648024ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=f4QtjzcrehQsB13eaUT2B' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13322
+[ 1651401ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=f4QtjzcrehQsB13eaUT2B' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13322
+[ 1658759ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=f4QtjzcrehQsB13eaUT2B' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13322
+[ 1666102ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=f4QtjzcrehQsB13eaUT2B' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13322
+[ 1671868ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[ 1674506ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[ 1674541ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[ 1674557ms] [ERROR] %c%s%c (node:28372) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created) background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:3318
+[ 1674687ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[ 1674813ms] [LOG] [Fast Refresh] done in 231ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[ 1676179ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[ 1676917ms] [LOG] [Fast Refresh] done in 852ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[ 1678406ms] [WARNING] %c%s%c ⚠ Unsupported metadata viewport is configured in metadata export in /products/[slug]. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[ 1706238ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[ 1706294ms] [LOG] [Fast Refresh] done in 160ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[ 1706382ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[ 1706431ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[ 1706453ms] [WARNING] %c%s%c ⚠ Unsupported metadata viewport is configured in metadata export in /login. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477

@@ -1,0 +1,177 @@
+- generic [active] [ref=e1]:
+  - banner:
+    - generic [ref=e2]:
+      - link "SherryBerries home" [ref=e3] [cursor=pointer]:
+        - /url: /
+        - text: SherryBerries
+      - generic [ref=e4]:
+        - button "Switch to light mode" [ref=e5] [cursor=pointer]:
+          - img [ref=e6]
+        - button "Search" [ref=e9] [cursor=pointer]:
+          - img [ref=e10]
+        - link "Account" [ref=e13] [cursor=pointer]:
+          - /url: /account
+          - img [ref=e14]
+        - link "Wishlist (0)" [ref=e17] [cursor=pointer]:
+          - /url: /wishlist
+          - img [ref=e18]
+        - link "Bag (0)" [ref=e21] [cursor=pointer]:
+          - /url: /cart
+          - img [ref=e22]
+  - generic [ref=e25]:
+    - complementary [ref=e26]:
+      - link "SherryBerries" [ref=e27] [cursor=pointer]:
+        - /url: /
+      - generic [ref=e28]:
+        - generic [ref=e29]: The Berry List
+        - heading "Luxury body jewelry, made for your glow." [level=1] [ref=e30]:
+          - text: Luxury body jewelry,
+          - emphasis [ref=e31]: made for your glow
+          - text: .
+      - generic [ref=e32]:
+        - generic [ref=e33]: Implant-grade ✦
+        - generic [ref=e34]: Hypoallergenic ✦
+        - generic [ref=e35]: Studio-tested ✦
+    - generic [ref=e37]:
+      - link "Back to shop" [ref=e38] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e39]: ←
+        - text: Back to shop
+      - tablist [ref=e40]:
+        - tab "Sign in" [selected] [ref=e41] [cursor=pointer]
+        - tab "Create account" [ref=e42] [cursor=pointer]
+      - heading "Welcome back, sweet berry." [level=2] [ref=e43]:
+        - text: Welcome back,
+        - emphasis [ref=e44]: sweet berry
+        - text: .
+      - paragraph [ref=e45]:
+        - text: Sign in to track orders, sync your wishlist, and unlock
+        - strong [ref=e46]: Berry List
+        - text: exclusives.
+      - generic [ref=e47]:
+        - generic [ref=e48]:
+          - textbox "Email" [ref=e49]:
+            - /placeholder: " "
+          - generic: Email
+        - generic [ref=e50]:
+          - textbox "Password" [ref=e51]:
+            - /placeholder: " "
+          - generic: Password
+          - button "Show password" [ref=e52] [cursor=pointer]:
+            - img [ref=e53]
+        - generic [ref=e56]:
+          - generic [ref=e57] [cursor=pointer]:
+            - checkbox "Remember me" [checked] [ref=e58]
+            - text: Remember me
+          - link "Forgot password?" [ref=e59] [cursor=pointer]:
+            - /url: /forgot-password
+        - button "Sign in" [ref=e60] [cursor=pointer]
+      - paragraph [ref=e61]:
+        - text: New to SherryBerries?
+        - link "Create an account" [ref=e62] [cursor=pointer]:
+          - /url: "#"
+    - status
+  - contentinfo [ref=e63]:
+    - generic [ref=e64]:
+      - generic [ref=e65]:
+        - link "SherryBerries" [ref=e66] [cursor=pointer]:
+          - /url: /
+        - paragraph [ref=e67]: Luxury body jewelry & piercing aftercare — made with love in Brooklyn & Bridgetown.
+        - generic [ref=e68]:
+          - link "Instagram" [ref=e69] [cursor=pointer]:
+            - /url: https://instagram.com
+            - img [ref=e70]
+          - link "TikTok" [ref=e74] [cursor=pointer]:
+            - /url: https://tiktok.com
+            - img [ref=e75]
+          - link "Pinterest" [ref=e77] [cursor=pointer]:
+            - /url: https://pinterest.com
+            - img [ref=e78]
+          - link "YouTube" [ref=e82] [cursor=pointer]:
+            - /url: https://youtube.com
+            - img [ref=e83]
+        - generic "Accepted payment methods" [ref=e85]:
+          - generic [ref=e86]: VISA
+          - generic [ref=e87]: MC
+          - generic [ref=e88]: AMEX
+          - generic [ref=e89]: AFTERPAY
+      - generic [ref=e90]:
+        - heading "Shop" [level=4] [ref=e91]
+        - list [ref=e92]:
+          - listitem [ref=e93]:
+            - link "Belly Rings" [ref=e94] [cursor=pointer]:
+              - /url: /products?category=belly-rings
+          - listitem [ref=e95]:
+            - link "Nose Rings" [ref=e96] [cursor=pointer]:
+              - /url: /products?category=nose-rings
+          - listitem [ref=e97]:
+            - link "Cartilage" [ref=e98] [cursor=pointer]:
+              - /url: /products?category=tragus
+          - listitem [ref=e99]:
+            - link "Septum" [ref=e100] [cursor=pointer]:
+              - /url: /products?category=septum
+          - listitem [ref=e101]:
+            - link "Waistbeads" [ref=e102] [cursor=pointer]:
+              - /url: /products?category=waistbeads
+      - generic [ref=e103]:
+        - heading "Care" [level=4] [ref=e104]
+        - list [ref=e105]:
+          - listitem [ref=e106]:
+            - link "Aftercare Shop" [ref=e107] [cursor=pointer]:
+              - /url: /products?category=aftercare
+          - listitem [ref=e108]:
+            - link "Healing Guide" [ref=e109] [cursor=pointer]:
+              - /url: /aftercare-guide
+          - listitem [ref=e110]:
+            - link "Materials Glossary" [ref=e111] [cursor=pointer]:
+              - /url: /learn/materials
+          - listitem [ref=e112]:
+            - link "Sizing Guide" [ref=e113] [cursor=pointer]:
+              - /url: /learn/sizing
+      - generic [ref=e114]:
+        - heading "Help" [level=4] [ref=e115]
+        - list [ref=e116]:
+          - listitem [ref=e117]:
+            - link "Contact" [ref=e118] [cursor=pointer]:
+              - /url: /contact
+          - listitem [ref=e119]:
+            - link "Shipping" [ref=e120] [cursor=pointer]:
+              - /url: /help/shipping
+          - listitem [ref=e121]:
+            - link "Returns" [ref=e122] [cursor=pointer]:
+              - /url: /help/returns
+          - listitem [ref=e123]:
+            - link "Order Status" [ref=e124] [cursor=pointer]:
+              - /url: /account/orders
+          - listitem [ref=e125]:
+            - link "FAQ" [ref=e126] [cursor=pointer]:
+              - /url: /#faq
+      - generic [ref=e127]:
+        - heading "Follow" [level=4] [ref=e128]
+        - list [ref=e129]:
+          - listitem [ref=e130]:
+            - link "Instagram" [ref=e131] [cursor=pointer]:
+              - /url: https://instagram.com
+          - listitem [ref=e132]:
+            - link "TikTok" [ref=e133] [cursor=pointer]:
+              - /url: https://tiktok.com
+          - listitem [ref=e134]:
+            - link "Pinterest" [ref=e135] [cursor=pointer]:
+              - /url: https://pinterest.com
+          - listitem [ref=e136]:
+            - link "YouTube" [ref=e137] [cursor=pointer]:
+              - /url: https://youtube.com
+          - listitem [ref=e138]:
+            - link "Berry List" [ref=e139] [cursor=pointer]:
+              - /url: /#newsletter
+    - generic [ref=e140]:
+      - generic [ref=e141]: © 2026 SherryBerries Atelier · Made with ♡in Brooklyn & Bridgetown
+      - navigation "Legal" [ref=e142]:
+        - link "Privacy" [ref=e143] [cursor=pointer]:
+          - /url: /privacy
+        - link "Terms" [ref=e144] [cursor=pointer]:
+          - /url: /terms
+        - link "Accessibility" [ref=e145] [cursor=pointer]:
+          - /url: /accessibility
+  - button "Open Next.js Dev Tools" [ref=e151] [cursor=pointer]:
+    - img [ref=e152]

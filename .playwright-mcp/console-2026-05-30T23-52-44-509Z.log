@@ -1,0 +1,16 @@
+[     119ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[     131ms] [LOG] [Fast Refresh] done in 115ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[     235ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[     269ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[     281ms] [WARNING] %c%s%c ⚠ Unsupported metadata viewport is configured in metadata export in /login. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[     497ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[     499ms] [LOG] [Fast Refresh] done in 112ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[  127034ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[  128288ms] [LOG] [Fast Refresh] done in 1333ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[  129106ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[  129189ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[  129200ms] [WARNING] %c%s%c ⚠ Unsupported metadata viewport is configured in metadata export in /login. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[  129548ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477
+[  129598ms] [LOG] [Fast Refresh] done in 164ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_115brz8._.js:2477

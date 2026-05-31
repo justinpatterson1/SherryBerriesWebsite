@@ -18,7 +18,9 @@ type Theme = "dark" | "light";
 
 const navRowBase =
   "pointer-events-auto w-fit max-w-[calc(100vw-2rem)] flex items-center gap-7 " +
+  "max-[1400px]:gap-5 max-[1280px]:w-full max-[1280px]:justify-between max-[1280px]:gap-3 " +
   "py-[calc(10px+0.5rem)] pl-7 pr-[18px] rounded-full " +
+  "max-[1280px]:py-3 max-[1280px]:pl-5 max-[1280px]:pr-3 " +
   "border border-white/[0.06] backdrop-blur-[20px] backdrop-saturate-150 " +
   "shadow-[0_12px_40px_rgba(0,0,0,0.45),0_1px_0_rgba(255,255,255,0.04)_inset,0_0_0_1px_rgba(255,79,163,0.08)_inset,0_0_60px_rgba(255,79,163,0.08)_inset] " +
   "transition-[background-color,box-shadow] duration-[240ms] " +
@@ -30,6 +32,7 @@ export function Navbar() {
   const { count: wishlistCount } = useWishlist();
   const [scrolled, setScrolled] = useState(false);
   const [theme, setTheme] = useState<Theme>("dark");
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -42,6 +45,20 @@ export function Navbar() {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
 
+  // While the mobile menu is open: lock body scroll and close on Escape.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [menuOpen]);
+
   const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
 
   const rowBgClass = scrolled
@@ -49,12 +66,13 @@ export function Navbar() {
     : "bg-[rgba(15,12,13,0.72)] light:bg-[rgba(253,247,244,0.78)]";
 
   return (
-    <header className="fixed top-[18px] inset-x-0 z-50 flex justify-center pointer-events-none px-4">
+    <header className="fixed top-[18px] inset-x-0 z-50 flex flex-col items-center pointer-events-none px-4">
       <div className={`${navRowBase} ${rowBgClass}`}>
         <Link
           href="/"
           aria-label="SherryBerries home"
-          className="font-display text-[28px] tracking-[0.02em] text-ink no-underline leading-none whitespace-nowrap"
+          onClick={() => setMenuOpen(false)}
+          className="font-display text-[28px] max-[380px]:text-[22px] tracking-[0.02em] text-ink no-underline leading-none whitespace-nowrap"
         >
           Sherry
           <span className="font-serif italic text-pink ml-px">Berries</span>
@@ -62,7 +80,7 @@ export function Navbar() {
 
         <nav
           aria-label="Primary"
-          className="flex items-center gap-7 ml-2 flex-1 min-w-0 justify-center max-[980px]:hidden"
+          className="flex items-center gap-7 max-[1400px]:gap-5 ml-2 flex-1 min-w-0 justify-center max-[1280px]:hidden"
         >
           {NAV_LINKS.map((link) => (
             <Link
@@ -81,7 +99,8 @@ export function Navbar() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
+        {/* Desktop actions */}
+        <div className="flex items-center gap-2 max-[1280px]:hidden">
           <IconButton
             label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
             onClick={toggleTheme}
@@ -99,14 +118,7 @@ export function Navbar() {
 
           <IconLink href="/wishlist" label={`Wishlist (${wishlistCount})`}>
             <HeartIcon />
-            {wishlistCount > 0 && (
-              <span
-                aria-hidden="true"
-                className="absolute top-0.5 right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-pink text-white text-[10px] font-semibold inline-flex items-center justify-center leading-none border-2 border-[rgba(15,12,13,0.72)]"
-              >
-                {wishlistCount}
-              </span>
-            )}
+            {wishlistCount > 0 && <CountBadge>{wishlistCount}</CountBadge>}
           </IconLink>
 
           <AuthButton />
@@ -120,16 +132,99 @@ export function Navbar() {
               "border-none cursor-pointer " +
               "shadow-[0_6px_18px_rgba(255,79,163,0.35),0_0_0_1px_rgba(255,255,255,0.08)_inset] " +
               "transition-[transform,box-shadow] duration-200 [&_svg]:w-[18px] [&_svg]:h-[18px] " +
-              "hover:-translate-y-px " +
-              "max-[980px]:px-3"
+              "hover:-translate-y-px"
             }
           >
             <BagIcon />
-            <span className="max-[980px]:hidden">Bag</span>
-            <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-[5px] rounded-full bg-white/20 text-[11px] font-bold leading-none max-[980px]:hidden">
+            <span>Bag</span>
+            <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-[5px] rounded-full bg-white/20 text-[11px] font-bold leading-none">
               {cartCount}
             </span>
           </Link>
+        </div>
+
+        {/* Mobile actions: bag + burger */}
+        <div className="hidden max-[1280px]:flex items-center gap-1.5">
+          <IconLink href="/cart" label={`Bag (${cartCount})`} onClick={() => setMenuOpen(false)}>
+            <BagIcon />
+            {cartCount > 0 && <CountBadge>{cartCount}</CountBadge>}
+          </IconLink>
+
+          <IconButton
+            label={menuOpen ? "Close menu" : "Open menu"}
+            onClick={() => setMenuOpen((o) => !o)}
+            aria-expanded={menuOpen}
+            aria-controls="mobile-menu"
+          >
+            {menuOpen ? <CloseIcon /> : <MenuIcon />}
+          </IconButton>
+        </div>
+      </div>
+
+      {/* Click-away backdrop (mobile only) */}
+      {menuOpen && (
+        <button
+          type="button"
+          aria-hidden="true"
+          tabIndex={-1}
+          onClick={() => setMenuOpen(false)}
+          className="min-[1281px]:hidden pointer-events-auto fixed inset-0 -z-10 cursor-default bg-black/30 backdrop-blur-[2px]"
+        />
+      )}
+
+      {/* Mobile menu panel */}
+      <div
+        id="mobile-menu"
+        className={
+          "min-[1281px]:hidden pointer-events-auto w-full max-w-[calc(100vw-2rem)] mt-2 overflow-hidden " +
+          "rounded-[28px] border border-white/[0.06] backdrop-blur-[20px] backdrop-saturate-150 " +
+          "shadow-[0_24px_60px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,79,163,0.08)_inset] " +
+          "light:border-[rgba(26,13,18,0.08)] light:shadow-[0_24px_60px_rgba(180,120,140,0.2)] " +
+          rowBgClass +
+          (menuOpen ? " block" : " hidden")
+        }
+      >
+        <nav aria-label="Mobile" className="flex flex-col p-3">
+          {NAV_LINKS.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={() => setMenuOpen(false)}
+              className={
+                "font-sans text-sm font-medium tracking-[0.14em] uppercase text-ink-dim no-underline py-3.5 px-3 rounded-xl " +
+                "transition-colors duration-200 hover:text-ink hover:bg-white/5 focus-visible:text-ink focus-visible:bg-white/5 " +
+                "light:hover:bg-[rgba(26,13,18,0.05)] light:focus-visible:bg-[rgba(26,13,18,0.05)]"
+              }
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="flex items-center justify-between gap-2 border-t border-white/[0.06] light:border-[rgba(26,13,18,0.08)] p-3">
+          <IconLink href="/account" label="Account" onClick={() => setMenuOpen(false)}>
+            <UserIcon />
+          </IconLink>
+
+          <IconLink href="/wishlist" label={`Wishlist (${wishlistCount})`} onClick={() => setMenuOpen(false)}>
+            <HeartIcon />
+            {wishlistCount > 0 && <CountBadge>{wishlistCount}</CountBadge>}
+          </IconLink>
+
+          <IconButton label="Search">
+            <SearchIcon />
+          </IconButton>
+
+          <IconButton
+            label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            onClick={toggleTheme}
+          >
+            {theme === "dark" ? <SunIcon /> : <MoonIcon />}
+          </IconButton>
+
+          <div className="ml-auto">
+            <AuthButton />
+          </div>
         </div>
       </div>
     </header>
@@ -148,13 +243,14 @@ function IconButton({
   label,
   onClick,
   children,
+  ...rest
 }: {
   label: string;
   onClick?: () => void;
   children: React.ReactNode;
-}) {
+} & React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
-    <button type="button" aria-label={label} onClick={onClick} className={iconBtnClasses}>
+    <button type="button" aria-label={label} onClick={onClick} className={iconBtnClasses} {...rest}>
       {children}
     </button>
   );
@@ -163,16 +259,29 @@ function IconButton({
 function IconLink({
   href,
   label,
+  onClick,
   children,
 }: {
   href: string;
   label: string;
+  onClick?: () => void;
   children: React.ReactNode;
 }) {
   return (
-    <Link href={href} aria-label={label} className={iconBtnClasses}>
+    <Link href={href} aria-label={label} onClick={onClick} className={iconBtnClasses}>
       {children}
     </Link>
+  );
+}
+
+function CountBadge({ children }: { children: React.ReactNode }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="absolute top-0.5 right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-pink text-white text-[10px] font-semibold inline-flex items-center justify-center leading-none border-2 border-[rgba(15,12,13,0.72)]"
+    >
+      {children}
+    </span>
   );
 }
 
@@ -224,6 +333,22 @@ function BagIcon() {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M6 7h12l-1 13H7L6 7z" />
       <path d="M9 7a3 3 0 0 1 6 0" />
+    </svg>
+  );
+}
+
+function MenuIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 7h16M4 12h16M4 17h16" />
+    </svg>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M6 6l12 12M18 6L6 18" />
     </svg>
   );
 }
