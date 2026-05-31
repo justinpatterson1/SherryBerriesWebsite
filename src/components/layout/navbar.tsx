@@ -1,18 +1,41 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/components/providers/cart-provider";
 import { useWishlist } from "@/components/providers/wishlist-provider";
 import { AuthButton } from "@/components/auth/auth-button";
 
-const NAV_LINKS = [
-  { label: "Products", href: "/products" },
+type NavChild = { label: string; href: string };
+type NavItem = { label: string; href: string; children?: NavChild[] };
+
+const NAV_LINKS: NavItem[] = [
+  {
+    label: "Products",
+    href: "/products",
+    children: [
+      { label: "Jewelry", href: "/products" },
+      { label: "Aftercare", href: "/products?category=aftercare" },
+      { label: "Merchandise", href: "/products?category=merch" },
+    ],
+  },
   { label: "Bestsellers", href: "/bestsellers" },
   { label: "Our Story", href: "/our-story" },
   { label: "Learn", href: "/learn" },
   { label: "Community", href: "/community" },
 ];
+
+const desktopLinkClass =
+  "relative font-sans text-sm font-medium tracking-[0.12em] uppercase text-ink-dim no-underline py-2 " +
+  "transition-colors duration-200 hover:text-ink focus-visible:text-ink " +
+  "after:content-[''] after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-pink " +
+  "after:scale-x-0 after:origin-left after:transition-transform after:duration-[260ms] after:ease-[cubic-bezier(0.2,0.8,0.2,1)] " +
+  "hover:after:scale-x-100 focus-visible:after:scale-x-100";
+
+const mobileLinkClass =
+  "font-sans text-sm font-medium tracking-[0.14em] uppercase text-ink-dim no-underline py-3.5 px-3 rounded-xl " +
+  "transition-colors duration-200 hover:text-ink hover:bg-white/5 focus-visible:text-ink focus-visible:bg-white/5 " +
+  "light:hover:bg-[rgba(26,13,18,0.05)] light:focus-visible:bg-[rgba(26,13,18,0.05)]";
 
 type Theme = "dark" | "light";
 
@@ -82,21 +105,15 @@ export function Navbar() {
           aria-label="Primary"
           className="flex items-center gap-7 max-[1400px]:gap-5 ml-2 flex-1 min-w-0 justify-center max-[1280px]:hidden"
         >
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={
-                "relative font-sans text-sm font-medium tracking-[0.12em] uppercase text-ink-dim no-underline py-2 " +
-                "transition-colors duration-200 hover:text-ink focus-visible:text-ink " +
-                "after:content-[''] after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-pink " +
-                "after:scale-x-0 after:origin-left after:transition-transform after:duration-[260ms] after:ease-[cubic-bezier(0.2,0.8,0.2,1)] " +
-                "hover:after:scale-x-100 focus-visible:after:scale-x-100"
-              }
-            >
-              {link.label}
-            </Link>
-          ))}
+          {NAV_LINKS.map((link) =>
+            link.children ? (
+              <NavDropdown key={link.label} item={link} />
+            ) : (
+              <Link key={link.href} href={link.href} className={desktopLinkClass}>
+                {link.label}
+              </Link>
+            )
+          )}
         </nav>
 
         {/* Desktop actions */}
@@ -185,20 +202,43 @@ export function Navbar() {
         }
       >
         <nav aria-label="Mobile" className="flex flex-col p-3">
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={() => setMenuOpen(false)}
-              className={
-                "font-sans text-sm font-medium tracking-[0.14em] uppercase text-ink-dim no-underline py-3.5 px-3 rounded-xl " +
-                "transition-colors duration-200 hover:text-ink hover:bg-white/5 focus-visible:text-ink focus-visible:bg-white/5 " +
-                "light:hover:bg-[rgba(26,13,18,0.05)] light:focus-visible:bg-[rgba(26,13,18,0.05)]"
-              }
-            >
-              {link.label}
-            </Link>
-          ))}
+          {NAV_LINKS.map((link) =>
+            link.children ? (
+              <div key={link.label} className="flex flex-col">
+                <Link
+                  href={link.href}
+                  onClick={() => setMenuOpen(false)}
+                  className={mobileLinkClass}
+                >
+                  {link.label}
+                </Link>
+                <div className="flex flex-col ml-3 pl-3 border-l border-white/[0.08] light:border-[rgba(26,13,18,0.1)]">
+                  {link.children.map((child) => (
+                    <Link
+                      key={child.href}
+                      href={child.href}
+                      onClick={() => setMenuOpen(false)}
+                      className={
+                        mobileLinkClass +
+                        " text-xs tracking-[0.12em] text-ink-faint py-2.5"
+                      }
+                    >
+                      {child.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMenuOpen(false)}
+                className={mobileLinkClass}
+              >
+                {link.label}
+              </Link>
+            )
+          )}
         </nav>
 
         <div className="flex items-center justify-between gap-2 border-t border-white/[0.06] light:border-[rgba(26,13,18,0.08)] p-3">
@@ -282,6 +322,112 @@ function CountBadge({ children }: { children: React.ReactNode }) {
     >
       {children}
     </span>
+  );
+}
+
+function NavDropdown({ item }: { item: NavItem }) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const menuId = `${item.label.toLowerCase()}-menu`;
+
+  const openNow = () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    setOpen(true);
+  };
+  const closeSoon = () => {
+    closeTimer.current = setTimeout(() => setOpen(false), 120);
+  };
+
+  useEffect(() => () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+  }, []);
+
+  // While open: close on Escape or a click outside the dropdown.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    const onPointer = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onPointer);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.removeEventListener("mousedown", onPointer);
+    };
+  }, [open]);
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative"
+      onMouseEnter={openNow}
+      onMouseLeave={closeSoon}
+    >
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-controls={menuId}
+        onClick={() => setOpen((o) => !o)}
+        className={`${desktopLinkClass} inline-flex items-center gap-1.5 bg-transparent border-none cursor-pointer ${open ? "text-ink" : ""}`}
+      >
+        {item.label}
+        <ChevronDownIcon open={open} />
+      </button>
+
+      {open && (
+        <div
+          id={menuId}
+          role="menu"
+          aria-label={item.label}
+          className={
+            "absolute left-0 top-[calc(100%+10px)] min-w-[200px] flex flex-col p-2 " +
+            "rounded-2xl border border-white/[0.08] backdrop-blur-[20px] backdrop-saturate-150 " +
+            "bg-[rgba(15,12,13,0.97)] light:bg-[rgba(253,247,244,0.98)] light:border-[rgba(26,13,18,0.08)] " +
+            "shadow-[0_24px_60px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,79,163,0.08)_inset] light:shadow-[0_24px_60px_rgba(180,120,140,0.2)]"
+          }
+        >
+          {item.children!.map((child) => (
+            <Link
+              key={child.href}
+              href={child.href}
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className={
+                "font-sans text-[13px] font-medium tracking-[0.08em] uppercase text-ink-dim no-underline rounded-xl py-2.5 px-3.5 " +
+                "transition-colors duration-200 hover:text-ink hover:bg-white/5 focus-visible:text-ink focus-visible:bg-white/5 " +
+                "light:hover:bg-[rgba(26,13,18,0.05)] light:focus-visible:bg-[rgba(26,13,18,0.05)]"
+              }
+            >
+              {child.label}
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ChevronDownIcon({ open }: { open: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className={`w-3.5 h-3.5 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+    >
+      <path d="m6 9 6 6 6-6" />
+    </svg>
   );
 }
 
