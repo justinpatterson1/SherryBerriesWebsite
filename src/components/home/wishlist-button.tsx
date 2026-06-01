@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
+import { useWishlist } from "@/components/providers/wishlist-provider";
 
 function HeartIcon({ filled = false }: { filled?: boolean }) {
   return (
@@ -18,8 +20,28 @@ function HeartIcon({ filled = false }: { filled?: boolean }) {
   );
 }
 
-export function WishlistButton({ productName }: { productName: string }) {
-  const [active, setActive] = useState(false);
+export function WishlistButton({
+  productId,
+  productName,
+}: {
+  productId: string;
+  productName: string;
+}) {
+  const { status } = useSession();
+  const { isWishlisted, toggle } = useWishlist();
+  const [busy, setBusy] = useState(false);
+
+  // Wishlist is for signed-in customers only.
+  if (status !== "authenticated") return null;
+
+  const active = isWishlisted(productId);
+  const handleClick = async () => {
+    if (busy) return;
+    setBusy(true);
+    await toggle(productId);
+    setBusy(false);
+  };
+
   return (
     <button
       type="button"
@@ -29,14 +51,15 @@ export function WishlistButton({ productName }: { productName: string }) {
           : `Add ${productName} to wishlist`
       }
       aria-pressed={active}
-      onClick={() => setActive((a) => !a)}
+      disabled={busy}
+      onClick={handleClick}
       className={
         "absolute top-3 right-3 z-[2] w-[34px] h-[34px] rounded-full " +
         "bg-[rgba(13,13,13,0.55)] backdrop-blur-[10px] border border-white/[0.08] " +
         "inline-flex items-center justify-center cursor-pointer " +
         "transition-[color,background-color,transform] duration-200 " +
         "hover:bg-[rgba(13,13,13,0.75)] hover:scale-[1.08] hover:text-pink " +
-        "[&_svg]:w-4 [&_svg]:h-4 " +
+        "[&_svg]:w-4 [&_svg]:h-4 disabled:opacity-60 disabled:cursor-not-allowed " +
         (active
           ? "text-pink [&_svg]:fill-pink [&_svg]:stroke-pink"
           : "text-ink-dim")

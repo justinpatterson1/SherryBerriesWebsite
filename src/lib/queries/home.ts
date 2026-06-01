@@ -25,6 +25,7 @@ export async function getHomeCategories(): Promise<HomeCategory[]> {
 export type BestsellerPin = "Bestseller" | "New" | "Studio pick";
 
 export type BestsellerProduct = {
+  id: string;
   slug: string;
   name: string;
   imageUrl: string | null;
@@ -72,6 +73,7 @@ export async function getBestsellers(limit = 8): Promise<BestsellerProduct[]> {
     const pinMatch = PIN_PRIORITY.find((p) => tagNames.includes(p.tag));
     const chips = tagNames.filter((t) => CHIP_TAGS.has(t)).slice(0, 2);
     return {
+      id: p.id,
       slug: p.slug,
       name: p.name,
       imageUrl: p.images[0]?.imageUrl ?? null,
