@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { useSession } from "next-auth/react";
 import { useCart } from "@/components/providers/cart-provider";
 import { useWishlist } from "@/components/providers/wishlist-provider";
 import { AuthButton } from "@/components/auth/auth-button";
@@ -21,7 +22,7 @@ const NAV_LINKS: NavItem[] = [
   },
   { label: "Bestsellers", href: "/bestsellers" },
   { label: "Our Story", href: "/our-story" },
-  { label: "Learn", href: "/learn" },
+  { label: "FAQ", href: "/faq" },
   { label: "Community", href: "/community" },
 ];
 
@@ -51,6 +52,8 @@ const navRowBase =
   "light:shadow-[0_12px_40px_rgba(180,120,140,0.18),0_1px_0_rgba(255,255,255,0.6)_inset,0_0_0_1px_rgba(255,79,163,0.1)_inset]";
 
 export function Navbar() {
+  const { status } = useSession();
+  const showWishlist = status === "authenticated";
   const { count: cartCount } = useCart();
   const { count: wishlistCount } = useWishlist();
   const [scrolled, setScrolled] = useState(false);
@@ -133,10 +136,12 @@ export function Navbar() {
             <UserIcon />
           </IconLink>
 
-          <IconLink href="/wishlist" label={`Wishlist (${wishlistCount})`}>
-            <HeartIcon />
-            {wishlistCount > 0 && <CountBadge>{wishlistCount}</CountBadge>}
-          </IconLink>
+          {showWishlist && (
+            <IconLink href="/wishlist" label={`Wishlist (${wishlistCount})`}>
+              <HeartIcon />
+              {wishlistCount > 0 && <CountBadge>{wishlistCount}</CountBadge>}
+            </IconLink>
+          )}
 
           <AuthButton />
 
@@ -246,10 +251,12 @@ export function Navbar() {
             <UserIcon />
           </IconLink>
 
-          <IconLink href="/wishlist" label={`Wishlist (${wishlistCount})`} onClick={() => setMenuOpen(false)}>
-            <HeartIcon />
-            {wishlistCount > 0 && <CountBadge>{wishlistCount}</CountBadge>}
-          </IconLink>
+          {showWishlist && (
+            <IconLink href="/wishlist" label={`Wishlist (${wishlistCount})`} onClick={() => setMenuOpen(false)}>
+              <HeartIcon />
+              {wishlistCount > 0 && <CountBadge>{wishlistCount}</CountBadge>}
+            </IconLink>
+          )}
 
           <IconButton label="Search">
             <SearchIcon />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { useWishlist } from "@/components/providers/wishlist-provider";
 
 export function ProductWishlistButton({
@@ -10,6 +11,7 @@ export function ProductWishlistButton({
   productId: string;
   productName: string;
 }) {
+  const { status } = useSession();
   const { isWishlisted, toggle } = useWishlist();
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -20,6 +22,9 @@ export function ProductWishlistButton({
     const t = setTimeout(() => setToast(null), 2200);
     return () => clearTimeout(t);
   }, [toast]);
+
+  // Wishlist is for signed-in customers only.
+  if (status !== "authenticated") return null;
 
   const handleClick = async () => {
     if (busy) return;

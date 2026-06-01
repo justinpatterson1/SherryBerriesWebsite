@@ -1,13 +1,35 @@
-# Current Feature
+# Current Feature: Full-page Wishlist at `/wishlist`
 
 ## Status
-Not Started
+In Progress
+
+## Feature
+A full-page wishlist at `/wishlist` — a grid of saved pieces with quick move-to-bag actions, bulk summary, category filters, recommendations, and an empty state. The navbar heart already points at `/wishlist` (currently a dead link); this builds the page. Must feel like "the same garment opened to a different page" — identical chrome, toast, and theme behavior as `/cart` and the PDP.
 
 ## Goals
-<!-- Run /feature load to populate -->
+- New route `/wishlist`: server shell (`page.tsx`) → client `<WishlistClient>`, mirroring the `/cart` server-shell → client pattern.
+- **Bulk summary bar** — "N pieces saved" (Playfair) + subcopy on the left, running **total** of saved items' prices (22px Playfair, "total" caption) on the right; pink-gold gradient tint, pink border, 16px radius.
+- **Toolbar** — filter chips ("All" + one per distinct category present, auto-generated, active chip inverts to solid `--ink`) on the left; muted "Showing X of Y" counter on the right.
+- **Wishlist grid** (4→3→2→1 responsive) of `.wish-card`s: 1:1 image (1.06× on hover) with full-cover link to the PDP, optional tag pill (Bestseller/New/plain), 34px glass **remove heart** top-right, "Added X ago" glass badge bottom-left, body (blush uppercase category, gold rating + "4.9 · 264", Playfair name, material chips), footer row with struck-through original + current price (left) and a small pink-gradient **Add** button (right) that flips to a green "✓ In bag" state when already in the cart.
+- **Remove animation** — `.removing` scales card to 0.92 + fades over 300ms before it leaves state and re-renders.
+- **Recommendations** — below a 1px top border, a centered section head + 4-up grid of bestsellers NOT already wishlisted, each with a heart that adds to the wishlist and re-renders.
+- **Empty state** — when zero items: centered card (max 480px, soft pink radial glow), 64px pink ♡, Italiana "Your wishlist is waiting." headline, muted paragraph, two CTAs ("Explore bestsellers →" pink gradient + "Browse collections" ghost).
+- **Header** — "Continue shopping" back-link (← to home `#shop`), 64px Italiana "Your wishlist." headline ("wishlist" italic Playfair blush) + subcopy, and right-side actions (`#wishHeadActions`, only when items exist): ghost "Share" + pink-gradient "Add all to bag →".
+- **Interactions**: remove → toast "Removed from wishlist"; Add → cart add + green "In bag" + toast "<name> added to bag ✦" (or navigate to `/cart` if already in bag); filter chips; rec heart → "Saved to wishlist ♡"; Add-all → "N pieces added to bag ✦" / "Everything's already in your bag"; Share → copy URL → "Wishlist link copied ✦" (graceful fallback).
+- Light-theme parity (warmer tints on glass badges/remove-heart, deeper gold stars) and full responsive behavior.
+
+## Plan / files (proposed — to confirm at `start`)
+- `src/app/wishlist/page.tsx` — server shell.
+- `src/components/wishlist/` — `wishlist-client.tsx` (orchestrates render + toast), `wish-card.tsx`, `wish-bulk.tsx`, `wish-toolbar.tsx`, `wish-empty.tsx`, `wish-recs.tsx` (mirrors `src/components/cart/` layout).
+- Likely `POST /api/wishlist/snapshot` — enrich wishlist IDs → product details (image, price, compareAtPrice, category, rating, materials), mirroring `POST /api/cart/snapshot` (auth reads DB, guest enriches body IDs). Bestseller recs via a Prisma query.
 
 ## Notes
-<!-- Run /feature load to populate -->
+- **Spec is written for a different stack.** It describes vanilla `wishlist.html` / `wishlist.js` / appended `styles.css`, `data.js` / `SB.bestsellers`, `sessionStorage["sb-wish"]`, hand-injected navbar/footer/FAB/toast, and `ph()`/`SBToast()` helpers. This repo is **Next.js 16 + React + Tailwind v4 + Prisma** — so, per the established pattern (Login Page, Cart both translated vanilla specs to React), this will be a **React/Next translation**: a `/wishlist` route + client components, Tailwind utility classes inline (no `styles.css` append — globals.css is 106 lines of tokens only), real Prisma products (no `data.js`).
+- **Reuse, don't rebuild, the chrome.** Navbar, footer, theme toggle, and scroll behavior are already global via `layout.tsx` — the page must NOT re-implement them. The spec's "render the wishlist heart pre-highlighted with count badge" is already how the navbar behaves via `useWishlist()`. WhatsApp FAB was deferred sitewide ([features/whatsapp-toast.md](features/whatsapp-toast.md)) — out of scope here unless we add it globally. Toast: follow `/cart`, which owns its own local toast.
+- **Wishlist state = the real `WishlistProvider`** ([src/components/providers/wishlist-provider.tsx](../src/components/providers/wishlist-provider.tsx)): `useWishlist()` exposes `ids: Set<string>`, `count`, `toggle(productId)`; auth → `/api/wishlist` (DB), guest → `localStorage["sb-wishlist"]`. **Do NOT** introduce the spec's `sessionStorage["sb-wish"]` or seed 5 demo IDs into a real user's wishlist — show the empty state instead (more honest; demo seeding would mutate persisted user data).
+- **Cart state = the real `CartProvider`** (`useCart()`), guest → sessionStorage / auth → `/api/cart`. "Add"/"In bag"/"Add all" drive it so the nav bag count stays in sync.
+- IDs are Prisma `cuid`s, not the spec's short ids (`"elixir"`, etc.) — recommendations are bestseller products from the DB, not a hardcoded array; "Added X ago" has no real timestamp source (wishlist rows aren't dated client-side) → either drop the badge or derive from DB `createdAt` for auth users (confirm at `start`).
+- Tag pills (Bestseller/New) map to existing product `tags`/`featured`; material chips map to product attributes if present (confirm what the schema exposes during `start`).
 
 ---
 

@@ -84,7 +84,7 @@ export async function Bestsellers() {
 
             {product.pin && <span className={tagClasses(product.pin)}>{product.pin}</span>}
 
-            <WishlistButton productName={product.name} />
+            <WishlistButton productId={product.id} productName={product.name} />
 
             <button
               type="button"
