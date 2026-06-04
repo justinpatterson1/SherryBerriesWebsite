@@ -1,13 +1,29 @@
-# Current Feature
+# Current Feature: My Account Area
 
 ## Status
-Not Started
+In Progress
 
 ## Goals
-<!-- Run /feature load to populate -->
+- Build a customer **My Account** area: a persistent left **sidebar** that switches between **6 sidebar views + 1 hidden order-detail view**, in the SherryBerries dark-pink/black aesthetic, reusing the shared navbar / footer / toast / WhatsApp FAB / theme behavior.
+- **Page header:** "My Account" eyebrow + 60px Italiana "Hello, *Maya*." (first name italic Playfair blush, driven by profile state).
+- **Sidebar:** mini profile block (gradient-initials avatar, name, "★ Sweet Berry" tier) + nav buttons w/ thin-stroke icons — Dashboard, Orders (live count badge), Returns (count badge), Addresses, divider, Profile, Security, divider, Sign out (→ login, red-hover). Active = pink-tinted gradient + blush text + pink border. Sticky `top:100px` desktop; horizontal-scroll row on mobile.
+- **Dashboard:** 3 stat cards (Total orders / In progress / Completed) + "Recent orders" card (latest 4 compact rows) + "View all →".
+- **Orders:** one row per order — number + status badge, date + payment, up to 4 item thumbnails ("+N" overflow chip); right side = total (Playfair) + Track + View details (hide Track when Cancelled).
+- **Order detail** (hidden 7th view, keeps Orders highlighted): back link, header w/ status; Order-info + Shipping cards (label/value rows, dashed separators); Items card (image/name/variant/"Qty·$each"/line total) + totals block (subtotal, shipping, optional blush discount, grand total); Tracking timeline (5 stages Pending→Delivered, done/current/pending dots, current has glow ring, bars filled to current, per-step caption — skip if Cancelled); "Request a return" (if eligible) → Returns pre-selected.
+- **Returns:** create-return form (Order select [eligible only] → Product select [enabled on order pick] → Reason select → Notes) with full validation → generate `RT-####`, prepend, persist, toast "Return request submitted ✦"; plus "Your return requests" list w/ status badges + empty state.
+- **Addresses:** 2-col grid of cards (default card pink-tinted + "✦ Default" badge) w/ Set-default / Edit / Delete + dashed "Add new address" tile; Add/Edit modal (2-col form, validate name+line1+city); Set-default flips so only one is default; Delete confirm modal (promote first remaining if default deleted).
+- **Profile:** 2-col form (first/last, full-width email + phone), validate email format + required phone → persist, update sidebar avatar/name + header greeting, toast "Profile saved ✦"; show "Member since {date}".
+- **Security:** change-password card (current non-empty, new ≥8, new===confirm → clear + toast) + red danger-zone w/ Delete-account confirm modal (red banner + password field → toast → redirect home ~1.8s).
+- **Modal system:** full-screen `#modalScrim` + centered `#modalBox`, scale/translate open, closes on scrim-click or Escape.
+- **Deep-linking:** support `?view=` to open any view (default Dashboard); cross-view actions via delegated click handler (goto / order / track / return-order / setdefault / editaddr / deladdr / add-address).
 
 ## Notes
-<!-- Run /feature load to populate -->
+- **STACK TRANSLATION (critical):** the spec is written for **vanilla `account.html` + `account.js` + `data.js` + `styles.css`**, but this repo is **Next.js 16 / React / TS / Tailwind v4 / Prisma**. Per established convention (Login, Cart, Wishlist all did this — see History), the vanilla constructs are **translated to the real stack**: a route under **`src/app/account/`** (server shell + client view components), Tailwind utilities instead of `styles.css` additions, and the shared `Navbar`/`Footer`/providers instead of JS-injected chrome. The literal `account.html`/`account.js`/`data.js` files will **not** be created.
+- **`/account` is already proxy-gated** — the Auth Phase 1 proxy matcher includes `/account/:path*`, so the area is auth-protected today (placeholder). A page-level `auth()` → `redirect("/login?callbackUrl=/account")` should mirror the `/wishlist` pattern.
+- **Mock data vs real Prisma — DECISION FOR `start`:** the spec's `window.SB_ACCOUNT` mock (profile/orders/returns/addresses) overlaps real seeded models (`User`, `Address`, `Order`+`OrderItem`, etc.). Wishlist/Cart moved to **real Prisma + providers** and dropped the mock/sessionStorage constructs. Need to confirm: build against real DB (orders/addresses/profile for the signed-in user) **or** ship the mock `SB_ACCOUNT` dashboard first. Returns has **no schema model** yet — likely the one piece that stays client-state/mock (or needs a migration). Tracking timeline + "tier/Sweet Berry" + memberSince are presentational and have no backing fields.
+- **Reuse:** theme persistence (`localStorage["sb-theme"]`, pre-paint inline script) + nav scroll + toast + WhatsApp FAB + shared footer already exist site-wide — reuse, don't reinvent. Cart/wishlist count badges read from the real `CartProvider`/`WishlistProvider` (the spec's `sb-cart`/`sb-wish` localStorage keys are the vanilla equivalents).
+- **Status enum:** spec uses display statuses (Shipped/Delivered/Processing/Cancelled/Packed/Pending); real `Order` has its own status enums (verify against `prisma/schema.prisma` at `start` and map).
+- **Scope:** this is a large multi-view feature — at `start` I'll outline the route/component breakdown and the data-source decision before implementing, per the "confirm before large changes" guideline.
 
 ---
 
