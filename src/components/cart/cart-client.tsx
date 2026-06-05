@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useCart } from "@/components/providers/cart-provider";
 import {
@@ -22,6 +23,7 @@ const FREE_SHIP_THRESHOLD = 80;
 const GIFT_WRAP_PRICE = 6;
 
 export function CartClient() {
+  const router = useRouter();
   const { items: cartLines, ready, updateQuantity, removeLine, addItem } = useCart();
 
   const [snapshot, setSnapshot] = useState<CartSnapshotLine[]>([]);
@@ -318,9 +320,17 @@ export function CartClient() {
               setPromo(null);
               showToast("Promo removed");
             }}
-            onCheckout={() =>
-              showToast("This is a mockup — checkout coming soon ✦")
-            }
+            onCheckout={() => {
+              // Carry any applied promo into checkout, then hand off.
+              try {
+                if (promo) {
+                  sessionStorage.setItem("sb-promo", JSON.stringify({ code: promo.code }));
+                } else {
+                  sessionStorage.removeItem("sb-promo");
+                }
+              } catch {}
+              router.push("/checkout");
+            }}
             onError={showToast}
           />
         </div>
