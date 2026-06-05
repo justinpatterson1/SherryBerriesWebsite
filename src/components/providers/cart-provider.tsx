@@ -30,6 +30,7 @@ type CartContextValue = {
     quantity: number,
   ) => Promise<{ ok: boolean; error?: string }>;
   removeLine: (key: LineKey) => Promise<{ ok: boolean; error?: string }>;
+  clearCart: () => void;
 };
 
 const STORAGE_KEY = "sb-cart";
@@ -200,14 +201,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [status],
   );
 
+  // Reset local cart state after checkout. For auth users the DB cart is already
+  // emptied server-side by /api/checkout; this just syncs the in-memory state
+  // (and the navbar badge). Guests get their sessionStorage cleared too.
+  const clearCart = useCallback<CartContextValue["clearCart"]>(() => {
+    setItems([]);
+    if (status !== "authenticated") writeGuestCart([]);
+  }, [status]);
+
   const count = useMemo(
     () => items.reduce((sum, it) => sum + it.quantity, 0),
     [items],
   );
 
   const value = useMemo(
-    () => ({ items, count, ready, addItem, updateQuantity, removeLine }),
-    [items, count, ready, addItem, updateQuantity, removeLine],
+    () => ({ items, count, ready, addItem, updateQuantity, removeLine, clearCart }),
+    [items, count, ready, addItem, updateQuantity, removeLine, clearCart],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
@@ -224,6 +233,7 @@ export function useCart() {
       addItem: async () => ({ ok: false, error: "Cart unavailable." }),
       updateQuantity: async () => ({ ok: false, error: "Cart unavailable." }),
       removeLine: async () => ({ ok: false, error: "Cart unavailable." }),
+      clearCart: () => {},
     } satisfies CartContextValue;
   }
   return ctx;
