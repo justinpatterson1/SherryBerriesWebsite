@@ -3,6 +3,12 @@ import { prisma } from "@/lib/db";
 import { createPasswordResetToken } from "@/lib/auth/password-reset";
 import { createVerificationToken } from "@/lib/auth/verification";
 import { sendPasswordResetEmail, sendVerificationEmail } from "@/lib/email/resend";
+import {
+  authLimiters,
+  checkRateLimit,
+  getClientIp,
+  tooManyRequests,
+} from "@/lib/rate-limit";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -15,6 +21,9 @@ const GENERIC = {
 };
 
 export async function POST(request: Request) {
+  const rl = await checkRateLimit(authLimiters.forgotPassword, getClientIp(request));
+  if (!rl.success) return tooManyRequests(rl.reset);
+
   let body: unknown;
   try {
     body = await request.json();

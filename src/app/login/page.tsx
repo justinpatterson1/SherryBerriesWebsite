@@ -158,7 +158,11 @@ export default function LoginPage() {
       });
       if (!result || result.error) {
         setSubmitState((s) => ({ ...s, [formMode]: "idle" }));
-        showToast("Wrong email or password — or email not yet verified ♡");
+        showToast(
+          result?.code === "rate_limited"
+            ? "Too many sign-in attempts. Please try again in a few minutes ♡"
+            : "Wrong email or password — or email not yet verified ♡",
+        );
         return;
       }
       setSubmitState((s) => ({ ...s, login: "success" }));
