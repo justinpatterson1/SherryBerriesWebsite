@@ -1,13 +1,46 @@
-# Current Feature
+# Current Feature: Admin Dashboard (single-page control room)
 
 ## Status
-Not Started
+In Progress
+
+## Decisions (locked at start)
+- **Build target:** stack-translate to a Next.js App-Router page at **`/admin`** (React/TS/Tailwind) — NOT literal `admin.html`/`admin.css`/`admin-data.js`. There is **no `styles.css`** to reuse; the brief's `.nav`/`.btn`/`.status`/`.modal`/`.toast` are **inline-Tailwind conventions** (mirror `src/components/account/shared.tsx`: `btnSolid`/`btnOutline`/`btnGhost`, `cardClass`, `StatusBadge`, `ModalScrim`, toast pattern), reusing the existing `globals.css` design tokens.
+- **Data:** **real Prisma** (DB confirmed seeded: 101 orders, 60 products, 307 line items, 8 categories, 118 variants; admin user `admin@sherryberries.test` has role ADMIN). The brief's `window.SB_ADMIN` mock is dropped — aggregated in `src/lib/queries/admin.ts`.
+- **Auth gate:** page-level `requireAdmin()` (`auth()` + role lookup → guests `redirect("/login?callbackUrl=/admin")`, non-admins `redirect("/")`); same guard reused by the admin API routes. JWT/session shape left untouched (role read server-side, like the account page fetches). Proxy matcher already includes `/admin/:path*` (login-level defense-in-depth).
+- **Chrome:** the global store navbar + footer are **hidden on `/admin`** via a `usePathname` gate in the root layout; admin renders its own floating-pill nav. Admin owns a **light/dark toggle persisted to `localStorage["sb-theme"]`** (net-new — the site's existing toggle is session-only React state), applied to `document.documentElement.dataset.theme`.
+- **Trend chart + KPI windows:** seed orders span a year and are sparse recently (1 order in the last 14 days), so the brief's 14-day daily chart is replaced with a **trailing-12-month MONTHLY revenue+orders trend** (same SVG area-chart styling); KPIs use **all-time totals + month-over-month deltas**. All real.
+- **Order status:** Pending←`UNFULFILLED`, Processing←`PROCESSING`, Shipped←`SHIPPED`, Delivered←`DELIVERED`, Cancelled←`CANCELLED`, **Refunded←`paymentStatus = REFUNDED`**. **"Packed" tab dropped** — no `FulfillmentStatus` enum member (no schema migration; consistent with the account-area note). Status `<select>` persists to the DB via `PATCH /api/admin/orders`.
+- **Inventory persistence:** real DB mutations (`PATCH /api/admin/inventory`) — not `sessionStorage`. Dirty-row tracking + sticky Save/Discard stay client-side until Save commits. "reorder" ← `Product.lowStockThreshold`; `sold30` ← Σ `OrderItem.quantity` over the trailing 30 days (real, may be small).
+- **Unavoidable estimates (no schema source — labeled "est." in UI, documented here):** (1) **Conversion %** and (2) **acquisition channels** — no traffic/analytics data exists; rendered as representative estimates to satisfy the brief's layout. (3) **"Inventory value at cost"** — `Product` has no `cost` column, so cost is estimated as `price × 0.45`. (4) **Order "channel"** column — no source; derived from `Order.paymentMethod`.
+
+### Increment — Product add/edit (CRUD)
+- **Ask:** "admin dashboard should allow admin to add and update jewelry and items." Chosen: **full product-details form** (no variants) in a **modal over the Inventory view**.
+- New `POST`/`PATCH` [/api/admin/products](../src/app/api/admin/products/route.ts) (admin-gated via `requireAdmin`): create + update real `Product` rows. Form covers name, SKU, short + long description, price, compare-at, stock, reorder (`lowStockThreshold`), category, jewelry type, material, featured/active, and one image URL. **Persists to the DB** (not the brief's `sessionStorage`).
+- **Slug** auto-generated from name on create (uniqueness loop appends `-2`,`-3`,…); **left unchanged on update** so existing PDP URLs stay stable. **SKU** uniqueness enforced (409 on clash). **Image** managed as the single position-0 `ProductImage` — set/updated when a URL is given, **non-destructive on empty** (clearing the field leaves the existing image).
+- [product-form.tsx](../src/components/admin/product-form.tsx) modal (client-side validation + error banner + featured/active toggles + live image preview); "Add product" button in the Inventory header + per-row Edit action. New product is prepended + re-sorted by name; edits merge into state and recompute the stock pill live.
+- Data layer extended: `AdminProduct` gained the editable fields + `categoryId`; `AdminData` gained `categories`; added [getAdminProduct()](../src/lib/queries/admin.ts) (returns a fully-shaped row for the routes); jewelry-type options + the `ProductFormData` shape live in client-safe [options.ts](../src/lib/admin/options.ts).
+- **Admin thumbnails switched from `next/image` to a plain-`<img>` [ProductThumb]**: admins can enter arbitrary image hosts not in `next.config` `remotePatterns`, which would make `next/image` throw at render. Decouples all four admin views from that config.
+- **Verified (dev, real DB, reverted/cleaned up):** create → 200 (image preserved), update → 200 (status recomputed to "Low stock", compare-at cleared), missing name → 400, duplicate SKU → 409, guest → 403; `/admin` still renders 200 for an admin. Lint + prod build clean; `/api/admin/products` registered.
+
 
 ## Goals
-<!-- Bullet points of what success looks like -->
+- A single admin dashboard page that **reuses the site's existing design tokens** and feels native to the store — dark feminine luxury theme (`--bg #0d0d0d`, `--pink #ff4fa3`, `--gold #d4af37`, Italiana/Playfair display + Inter body).
+- **Chrome:** floating pill `.nav` at top with SherryBerries logo, a **light-mode toggle persisted to `localStorage` under `sb-theme`** (dark default), an "SA" admin avatar, and a "View Store" link.
+- **Layout:** two-column shell — sticky left sidebar (≈250px) + content area — that **stacks vertically below 940px**. Sidebar has an "Admin / Control Room" brand block, nav links (Overview, Orders, Inventory, Analytics, View Store), plus **live badges** (orders-needing-action count + low-stock warning count).
+- **Client-side view router** (show/hide `.adm-view` panels, no reloads) mirroring the account-page pattern — 4 views + a hidden order-detail view.
+- **Overview view:** 4 KPI cards (Revenue, Orders, Avg Order Value, Conversion) with up/down deltas; an **interactive 14-day revenue area chart** hand-drawn in SVG (gradient fill, line, hover dots + floating tooltip); a "Sales by Category" horizontal bar list with animated fills; a clickable "Needs Attention" order feed (→ order detail); and an **acquisition donut** (pure SVG `stroke-dasharray`) with legend.
+- **Orders view:** status filter tabs (All / Pending / Processing / Packed / Shipped / Delivered / Cancelled / Refunded) with **live counts**, a search box (order # / customer / email), and a table (customer avatar+email, stacked product thumbnails, channel, status badge, total). Row click → **order detail** (back link, line items, customer card, status `<select>` + "Update status" button that **persists and re-renders**).
+- **Inventory view:** out-of-stock / low-stock / healthy alert tiles; All vs "Needs reorder" tabs + search; a table with product image+SKU, category, **inline price input** and a **stock stepper** (− / number / +). Track **unsaved edits per-row** (highlight dirty rows), show a **sticky Save changes / Discard bar**, and recompute the stock-status pill (In stock / Low stock / Out of stock) live.
+- **Analytics view:** KPI cards (Units Sold, Product Revenue, Inventory Value at cost, Active SKUs); reuse the revenue trend chart + acquisition donut; a "Top Products by Revenue" table with inline share bars.
+- **Data & persistence:** all sample content lives in a separate data module (`window.SB_ADMIN`) — products (`sku`/`price`/`cost`/`stock`/`reorder`/`sold30`), ~14 multi-customer orders referencing product IDs, a 14-day revenue+orders series, KPI figures, category sales, acquisition channels. On load, **clone into state and persist edits (stock, price, order status) to `sessionStorage`** so changes survive navigation between views.
+- **Charts are dependency-free** — inline SVG + CSS only, no chart libraries.
+- Reuse `.nav`, `.btn`/`.btn-primary`/`.btn-ghost`, `.status` + `.status-*` badges, `.modal`, `.toast`; build admin-specific styles (KPI cards, tables, steppers, charts, donut, sidebar) separately.
 
 ## Notes
-<!-- Additional context, constraints, or details from spec -->
+- **Spec is written as static front-end** (`admin.html` + `admin.css` + `admin-data.js` reusing a `styles.css`). **This project is Next.js 16 / React / TS / Tailwind v4** and has **no literal `styles.css`** — every prior feature (Account area, Cart, Wishlist, Checkout) was **"stack-translated"** into App-Router pages/components with tokens living in `globals.css`, not the literal HTML/CSS/JS files. **Decision to resolve at `start`:** translate to the existing stack (consistent with all prior features — recommended) **vs.** build the literal standalone `admin.html`/`admin.css`/`admin-data.js` as the brief reads. Confirm with the user before implementing.
+- If stack-translated, the route is presumably `/admin` (the proxy matcher already reserves `/admin/:path*` from Auth Phase 1). **Open question:** real Prisma data + admin auth gating, or sample/mock data per the brief's `window.SB_ADMIN`? The brief is explicitly mock/`sessionStorage`-driven; prior features leaned to real DB where a schema existed. Likely mock-first (no admin role/queries exist yet) — confirm at `start`.
+- The site's design tokens (`--bg`, `--pink`, `--gold`, fonts) and the `.status-*` badge system already exist; reuse them rather than redefining.
+- Charts must be hand-built SVG (area chart w/ gradient + hover tooltip; donut via `stroke-dasharray`); no libraries.
 
 ---
 

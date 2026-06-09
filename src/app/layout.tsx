@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Italiana, Playfair_Display, Inter, Caveat } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "@/components/layout/navbar";
-import { Footer } from "@/components/layout/footer";
+import { SiteNavbar, SiteFooter } from "@/components/layout/site-chrome";
 import { AuthSessionProvider } from "@/components/providers/session-provider";
 import { CartProvider } from "@/components/providers/cart-provider";
 import { WishlistProvider } from "@/components/providers/wishlist-provider";
@@ -55,9 +54,9 @@ export default function RootLayout({
           <CartProvider>
             <WishlistProvider>
               <IdleSignOut />
-              <Navbar />
+              <SiteNavbar />
               {children}
-              <Footer />
+              <SiteFooter />
             </WishlistProvider>
           </CartProvider>
         </AuthSessionProvider>
