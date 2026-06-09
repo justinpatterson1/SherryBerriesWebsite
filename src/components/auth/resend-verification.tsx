@@ -5,17 +5,26 @@ import { useState, type FormEvent } from "react";
 export function ResendVerification() {
   const [email, setEmail] = useState("");
   const [state, setState] = useState<"idle" | "sending" | "sent">("idle");
+  const [error, setError] = useState<string | null>(null);
 
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (state === "sending" || !email.trim()) return;
     setState("sending");
+    setError(null);
     try {
-      await fetch("/api/auth/resend-verification", {
+      const res = await fetch("/api/auth/resend-verification", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim() }),
       });
+      // Otherwise ignored to stay enumeration-safe, but a 429 is worth surfacing.
+      if (res.status === 429) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        setError(body.error || "Too many attempts. Please try again later.");
+        setState("idle");
+        return;
+      }
     } catch {
       // network errors fall through to the generic confirmation below
     }
@@ -48,6 +57,11 @@ export function ResendVerification() {
           "light:bg-white light:border-[rgba(26,13,18,0.12)]"
         }
       />
+      {error && (
+        <p aria-live="polite" className="font-sans text-[13px] text-[#ff8d8d] m-0">
+          {error}
+        </p>
+      )}
       <button
         type="submit"
         disabled={state === "sending" || !email.trim()}

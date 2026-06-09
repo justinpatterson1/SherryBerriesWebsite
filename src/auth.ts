@@ -1,9 +1,17 @@
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcrypt";
 import { prisma } from "@/lib/db";
 import { authConfig } from "@/auth.config";
+import { authLimiters, checkRateLimit, getClientIp } from "@/lib/rate-limit";
+
+// Thrown when login is rate-limited. The `code` surfaces to the client via
+// signIn's response (result.code), letting the form show a distinct message
+// instead of the generic "wrong email or password".
+class RateLimitSignin extends CredentialsSignin {
+  code = "rate_limited";
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -19,10 +27,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      authorize: async (credentials) => {
+      authorize: async (credentials, request) => {
         const email = credentials?.email;
         const password = credentials?.password;
         if (typeof email !== "string" || typeof password !== "string") return null;
+
+        // Brute-force / credential-stuffing guard, keyed by IP + email. This is
+        // the real credential-verification chokepoint, so it can't be bypassed.
+        const ip = getClientIp(request);
+        const rl = await checkRateLimit(
+          authLimiters.login,
+          `${ip}:${email.toLowerCase()}`,
+        );
+        if (!rl.success) throw new RateLimitSignin();
 
         const user = await prisma.user.findUnique({
           where: { email: email.toLowerCase() },

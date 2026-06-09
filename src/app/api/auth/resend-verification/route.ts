@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { createVerificationToken } from "@/lib/auth/verification";
 import { sendVerificationEmail } from "@/lib/email/resend";
+import {
+  authLimiters,
+  checkRateLimit,
+  getClientIp,
+  tooManyRequests,
+} from "@/lib/rate-limit";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -25,6 +31,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "A valid email is required." }, { status: 400 });
   }
   const email = raw.toLowerCase();
+
+  const rl = await checkRateLimit(
+    authLimiters.resendVerification,
+    `${getClientIp(request)}:${email}`,
+  );
+  if (!rl.success) return tooManyRequests(rl.reset);
 
   const user = await prisma.user.findUnique({
     where: { email },
