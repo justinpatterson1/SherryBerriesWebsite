@@ -22,12 +22,6 @@ export type FormState = {
   landmark: string;
 };
 export type FormErrors = Partial<Record<keyof FormState, string>>;
-export type CardState = {
-  name: string;
-  number: string;
-  expiry: string;
-  cvv: string;
-};
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -53,7 +47,6 @@ export function CheckoutClient({
   const [errors, setErrors] = useState<FormErrors>({});
   const [shipping, setShipping] = useState<ShippingKey>("pickup");
   const [payment, setPayment] = useState<PaymentKey>("cod");
-  const [card, setCard] = useState<CardState>({ name: "", number: "", expiry: "", cvv: "" });
 
   const [promo, setPromo] = useState<AppliedPromo | null>(null);
   const [placing, setPlacing] = useState(false);
@@ -130,6 +123,21 @@ export function CheckoutClient({
     if (order) window.scrollTo({ top: 0, behavior: "smooth" });
   }, [order]);
 
+  // Surface a message when WiPay redirects back here (a card payment that
+  // didn't complete cleanly), then strip the query param so it shows once.
+  useEffect(() => {
+    const wipay = new URLSearchParams(window.location.search).get("wipay");
+    if (!wipay) return;
+    queueMicrotask(() => {
+      if (wipay === "error") {
+        showToast("We couldn't confirm your payment. If you were charged, please contact support.");
+      } else if (wipay === "pending") {
+        showToast("Your payment is still processing — we'll email you once it's confirmed.");
+      }
+    });
+    window.history.replaceState(null, "", window.location.pathname);
+  }, [showToast]);
+
   const totals = useMemo(() => {
     const subtotal = snapshot.reduce((s, l) => s + l.unitPrice * l.quantity, 0);
     let discount = 0;
@@ -204,8 +212,12 @@ export function CheckoutClient({
           promoCode: promo?.code ?? null,
         }),
       });
-      const data = (await res.json().catch(() => ({}))) as { order?: PlacedOrder; error?: string };
-      if (!res.ok || !data.order) {
+      const data = (await res.json().catch(() => ({}))) as {
+        order?: PlacedOrder;
+        redirect?: string;
+        error?: string;
+      };
+      if (!res.ok || (!data.order && !data.redirect)) {
         showToast(data.error ?? "Something went wrong placing your order");
         setPlacing(false);
         return;
@@ -213,8 +225,14 @@ export function CheckoutClient({
       try {
         sessionStorage.removeItem(PROMO_KEY);
       } catch {}
+      // Card → hand off to WiPay's hosted page. Keep `placing` true so the
+      // button stays disabled while the browser navigates away.
+      if (data.redirect) {
+        window.location.href = data.redirect;
+        return;
+      }
       clearCart();
-      setOrder(data.order);
+      setOrder(data.order!);
     } catch {
       showToast("Network error — please try again");
       setPlacing(false);
@@ -263,8 +281,6 @@ export function CheckoutClient({
                 onSelectShipping={setShipping}
                 payment={payment}
                 onSelectPayment={setPayment}
-                card={card}
-                onCard={(k, v) => setCard((c) => ({ ...c, [k]: v }))}
               />
               <CheckoutSummary
                 items={snapshot}

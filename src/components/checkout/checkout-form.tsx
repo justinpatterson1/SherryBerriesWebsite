@@ -8,7 +8,7 @@ import {
   type PaymentKey,
   type ShippingKey,
 } from "@/lib/checkout/shipping";
-import type { CardState, FormErrors, FormState } from "./checkout-client";
+import type { FormErrors, FormState } from "./checkout-client";
 import { Field, SectionCard, fieldClass, money } from "./shared";
 
 export function CheckoutForm({
@@ -19,8 +19,6 @@ export function CheckoutForm({
   onSelectShipping,
   payment,
   onSelectPayment,
-  card,
-  onCard,
 }: {
   form: FormState;
   errors: FormErrors;
@@ -29,8 +27,6 @@ export function CheckoutForm({
   onSelectShipping: (key: ShippingKey) => void;
   payment: PaymentKey;
   onSelectPayment: (key: PaymentKey) => void;
-  card: CardState;
-  onCard: (key: keyof CardState, value: string) => void;
 }) {
   const input = (key: keyof FormState, props?: Record<string, string>) => {
     const invalid = !!errors[key];
@@ -140,7 +136,8 @@ export function CheckoutForm({
             }
           />
 
-          {/* Card fields — revealed on max-height transition */}
+          {/* Card details are entered on WiPay's secure hosted page — never on
+              our site (PCI). Reveal a redirect notice instead of card inputs. */}
           <div
             className={
               "grid transition-[grid-template-rows,opacity] duration-300 ease-out " +
@@ -148,54 +145,15 @@ export function CheckoutForm({
             }
           >
             <div className="overflow-hidden">
-              <div className="pt-1 grid grid-cols-2 gap-3.5 max-[560px]:grid-cols-1">
-                <Field label="Cardholder name" htmlFor="co-card-name" span2>
-                  <input
-                    id="co-card-name"
-                    value={card.name}
-                    onChange={(e) => onCard("name", e.target.value)}
-                    className={fieldClass}
-                    autoComplete="cc-name"
-                    tabIndex={payment === "card" ? 0 : -1}
-                  />
-                </Field>
-                <Field label="Card number" htmlFor="co-card-number" span2>
-                  <input
-                    id="co-card-number"
-                    value={card.number}
-                    onChange={(e) => onCard("number", e.target.value)}
-                    className={fieldClass}
-                    inputMode="numeric"
-                    placeholder="•••• •••• •••• ••••"
-                    autoComplete="cc-number"
-                    tabIndex={payment === "card" ? 0 : -1}
-                  />
-                </Field>
-                <Field label="Expiry (MM/YY)" htmlFor="co-card-exp">
-                  <input
-                    id="co-card-exp"
-                    value={card.expiry}
-                    onChange={(e) => onCard("expiry", e.target.value)}
-                    className={fieldClass}
-                    placeholder="MM/YY"
-                    autoComplete="cc-exp"
-                    tabIndex={payment === "card" ? 0 : -1}
-                  />
-                </Field>
-                <Field label="CVV" htmlFor="co-card-cvv">
-                  <input
-                    id="co-card-cvv"
-                    value={card.cvv}
-                    onChange={(e) => onCard("cvv", e.target.value)}
-                    className={fieldClass}
-                    inputMode="numeric"
-                    placeholder="•••"
-                    autoComplete="cc-csc"
-                    tabIndex={payment === "card" ? 0 : -1}
-                  />
-                </Field>
-                <p className="col-span-2 max-[560px]:col-span-1 flex items-center gap-2 font-sans text-[12px] text-[#5fd29a] m-0">
-                  <LockIcon /> Encrypted &amp; processed securely by WiPay
+              <div className="pt-1 flex items-start gap-3 p-4 rounded-[12px] border border-pink/20 bg-pink/[0.06]">
+                <span className="flex-none text-blush mt-0.5" aria-hidden="true">
+                  <LockIcon />
+                </span>
+                <p className="font-sans text-[12.5px] leading-[1.6] text-ink-dim m-0">
+                  When you place your order you&apos;ll be taken to{" "}
+                  <span className="text-ink font-semibold">WiPay&apos;s secure page</span>{" "}
+                  to enter your card. We never see or store your card details. You&apos;ll
+                  return here once payment is confirmed.
                 </p>
               </div>
             </div>
