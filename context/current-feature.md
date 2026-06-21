@@ -1,13 +1,26 @@
-# Current Feature
+# Current Feature: WiPay Payment Gateway
 
 ## Status
-Not Started
+In Progress
 
 ## Goals
-<!-- Bullet points of what success looks like -->
+- Integrate the **WiPay Plugins Payment Request API (v1.0.8)** into the existing `/checkout` flow, replacing the current mock card payment (today: card → `paymentStatus PAID` UI-only, no real gateway).
+- **Sandbox-first:** run against the WiPay TEST account by default (`account_number=1234567890`, API Key `123`, `environment=sandbox`) so the flow is fully testable without live credentials.
+- **Environment-driven config:** add env vars so production vs sandbox is a config switch — at minimum `WIPAY_ENVIRONMENT` (`live`/`sandbox`), `WIPAY_ACCOUNT_NUMBER`, `WIPAY_API_KEY`, and the derived endpoint/country/currency (TT/TTD). Document them in `.env.example`; keep the API Key server-only (never shipped to the client).
+- **Request leg:** server-side action/route that builds the WiPay request (required params: `account_number`, `country_code=TT`, `currency=TTD`, `environment`, `fee_structure`, `method=credit_card`, `order_id`, `origin`, `response_url`, `total`), POSTs with `Accept: application/json`, and redirects the payor to the returned hosted-page `url`.
+- **Order tie-in:** a WiPay card order is created `paymentStatus PENDING` before redirect; `order_id` maps deterministically to our `Order` so the callback can resolve it.
+- **Response leg:** a `response_url` endpoint on our domain that parses the GET querystring, **verifies the hash** (`md5(transaction_id + total + apiKey)` on `status=success`), and updates the order (`success` → `PAID`, `failed`/`error` → leave/clear), then routes the customer to the in-page Thank-You / a failure state.
+- Lint + production build clean; flow verified end-to-end against the WiPay sandbox using the documented test cards.
 
 ## Notes
-<!-- Additional context, constraints, or details from spec -->
+- **Spec:** `docs/Payments API Documentation v1.0.8.pdf` (already distilled into CLAUDE.md → "Payments — WiPay Plugins Payment Request API" section: endpoint, params, response params, hash formula, sandbox creds, TT fee rates).
+- **Endpoint:** `POST https://tt.wipayfinancial.com/plugins/payments/request` (TT platform, matches a TT-verified account).
+- **Flow type:** hosted-page **web-redirect** — request a hosted-page URL → redirect payor → WiPay redirects back to `response_url` with response params as a querystring (GET). The result must be parsed there.
+- **Hash verification is the security linchpin:** on success, recompute `md5(transaction_id + original_total + apiKey)` (concatenated, no separators) and compare to the returned `hash`; only mark `PAID` on a match. API Key must stay server-side.
+- **Sandbox specifics:** `transaction_id` is `SB-`-prefixed; reporting/emails disabled; any expiry + any 3-digit CVV works on test cards (e.g. FAC `5111111111111111` → approval, `5111111111113333` → decline).
+- **Existing checkout context (History, 2026-06-04):** `/checkout` is auth-gated, recomputes totals server-side from the DB cart in one `$transaction`, creates `Order`+`OrderItems`, decrements stock, and currently sends a Resend confirmation email. COD → `PENDING`, mock card → `PAID`. `orderNumber` = `SB-`+8 digits. Shipping fees/labels single-sourced in `src/lib/checkout/shipping.ts`. WiPay replaces only the **card** payment path; COD stays as-is.
+- **`fee_structure` decision pending** (`customer_pay` / `merchant_absorb` / `split`) — affects the final `total` the payor is debited; confirm at `start`. Note the existing checkout charges NO tax and a flat T&T shipping fee, so reconcile what `total` is sent to WiPay.
+- Use the project's stack conventions (server actions / route handlers, no literal PHP/HTML/JS example code from the PDF — those are reference only).
 
 ---
 

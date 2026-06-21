@@ -7,6 +7,7 @@ import {
   isPaymentKey,
   isShippingKey,
 } from "@/lib/checkout/shipping";
+import { getWipayConfig, requestHostedPage } from "@/lib/checkout/wipay";
 import { sendOrderConfirmationEmail } from "@/lib/email/resend";
 import type { Order } from "@/generated/prisma/client";
 
@@ -178,6 +179,35 @@ export async function POST(request: Request) {
     promo: appliedPromo?.code ?? null,
   });
 
+  // Card payments go through WiPay's hosted page. Request the hosted-page URL
+  // BEFORE committing the order, so a gateway failure leaves nothing behind
+  // (no order, no stock decrement) — the payor simply isn't redirected.
+  let wipayRedirect: string | null = null;
+  if (paymentKey === "card") {
+    let config;
+    try {
+      config = getWipayConfig();
+    } catch {
+      return NextResponse.json(
+        { error: "Card payments are temporarily unavailable. Please use Cash on Delivery." },
+        { status: 503 },
+      );
+    }
+    const baseUrl =
+      process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
+      new URL(request.url).origin;
+    const wipay = await requestHostedPage({
+      config,
+      orderId: orderNumber,
+      total: total.toFixed(2),
+      responseUrl: `${baseUrl}/api/checkout/wipay/return`,
+    });
+    if (!wipay.ok) {
+      return NextResponse.json({ error: wipay.error }, { status: wipay.status });
+    }
+    wipayRedirect = wipay.url;
+  }
+
   let created: Order;
   try {
     created = await prisma.$transaction(async (tx) => {
@@ -188,8 +218,9 @@ export async function POST(request: Request) {
         subtotal,
         shippingCost: shipFee,
         total,
-        // COD is collected on arrival (pending); the mock card "charge" succeeds.
-        paymentStatus: paymentKey === "card" ? "PAID" : "PENDING",
+        // Both COD and card start PENDING: COD is collected on arrival, and a
+        // card order is only marked PAID once WiPay's verified callback returns.
+        paymentStatus: "PENDING",
         fulfillmentStatus: "UNFULFILLED",
         paymentMethod: paymentLabel,
         notes,
@@ -241,6 +272,13 @@ export async function POST(request: Request) {
       );
     }
     throw e;
+  }
+
+  // Card path: hand the browser off to WiPay's secure hosted page. The order
+  // stays PENDING; the confirmation email + Thank-You happen once the verified
+  // callback marks it PAID (see /api/checkout/wipay/return).
+  if (paymentKey === "card") {
+    return NextResponse.json({ ok: true, redirect: wipayRedirect });
   }
 
   const responseOrder = {

@@ -81,6 +81,16 @@ export function CartClient() {
     setToast({ msg, id: Date.now() });
   }, []);
 
+  // A WiPay card payment that failed/was abandoned redirects back here with the
+  // bag rebuilt. Let the shopper know, then strip the param so it shows once.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("wipay") !== "failed") return;
+    queueMicrotask(() => {
+      showToast("Payment didn't go through — your bag is saved. Feel free to try again.");
+    });
+    window.history.replaceState(null, "", window.location.pathname);
+  }, [showToast]);
+
   const totals = useMemo(() => {
     const visible = snapshot.filter(
       (line) => !removingKeys.has(lineKey(line.productId, line.variantId)),
