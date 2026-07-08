@@ -11,19 +11,23 @@ type NavChild = { label: string; href: string };
 type NavItem = { label: string; href: string; children?: NavChild[] };
 
 const NAV_LINKS: NavItem[] = [
-  {
-    label: "Products",
-    href: "/products",
-    children: [
+  // {
+  //   label: "Products",
+  //   href: "/products",
+  //   children: [
+  //     { label: "Jewelry", href: "/products" },
+  //     { label: "Aftercare", href: "/products?category=aftercare" },
+  //     { label: "Merchandise", href: "/products?category=merch" },
+  //   ],
+  // },
+  
       { label: "Jewelry", href: "/products" },
       { label: "Aftercare", href: "/products?category=aftercare" },
       { label: "Merchandise", href: "/products?category=merch" },
-    ],
-  },
-  { label: "Bestsellers", href: "/bestsellers" },
-  { label: "Our Story", href: "/our-story" },
-  { label: "FAQ", href: "/faq" },
-  { label: "Community", href: "/community" },
+      { label: "Bestsellers", href: "/bestsellers" },
+  // { label: "Our Story", href: "/our-story" },
+  // { label: "FAQ", href: "/faq" },
+  // { label: "Community", href: "/community" },
 ];
 
 const desktopLinkClass =
