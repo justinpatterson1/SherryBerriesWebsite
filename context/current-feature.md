@@ -1,13 +1,26 @@
-# Current Feature
+# Current Feature: Homepage Testimonials Slider
 
 ## Status
-Not Started
+In Progress
 
 ## Goals
-<!-- What does success look like? Bullet points. -->
+- Add a **"Reviews" section to the homepage** — a compact, on-brand horizontal **slider of testimonial cards** that surfaces customer social proof without adding much page length.
+- **Card contents:** star rating (gold), serif quote, reviewer avatar (initials fallback on image error), name, **verified-buyer badge** (pink checkmark), location, and recency.
+- **Section header:** eyebrow "Reviews · Verified buyers", a heading, and a supporting line referencing the total review count.
+- **Responsive paging:** 3 cards/page desktop, 2 at ≤1024px, 1 at ≤640px; widths + page count recompute on resize.
+- **Navigation:** prev/next arrows (disabled at the ends), clickable pagination dots that track the current page, **swipe** on touch, and **autoplay** every 6s (loops to first page, pauses on hover); ~0.55s eased slide transition.
+- **Accessibility:** arrows + dots have `aria-label`s; section is keyboard- and screen-reader-labelled.
+- **Resilience:** broken avatar URLs show initials (not empty circles); the resting state shows content even without JS (no blank section).
+- Reuse existing theme tokens (card bg, lines, pink/gold accents, serif quote type). Card hover = border + shadow lift only (no vertical move — cards live in a transformed track).
 
 ## Notes
-<!-- Additional context, constraints, or spec details. -->
+- **Spec:** [features/PRD-Testimonials-Slider.md](features/PRD-Testimonials-Slider.md) (Homepage Testimonials Slider, v1).
+- **Out of scope (v1):** submitting/collecting reviews from the site, an aggregate-rating breakdown panel, per-card product attribution, and any filtering/sorting/full-listing page.
+- **✅ Decisions locked at `start`:** (1) **Data source = static module** of ~6 real-customer reviews (typed `testimonials.ts`: `name`, `loc`, `rating`, `date`, `img`, `quote`) — not DB-backed, so it's never empty at launch and includes `loc`/`avatar` the `Review` schema lacks; (2) **Placement = after FAQ, before Newsletter**; (3) **stack-translated** to a Next/React/TS + Tailwind client component (cache-busting note N/A).
+- **Original decision context (for reference):**
+  - **Data source.** The PRD specifies a static `SB.testimonials` array (`name`, `loc`, `rating`, `date`, `img`, `quote`). But the project has a **real `Review` model** (and the recurring convention is real Prisma over mocks — see Cart/Account/Admin/WiPay history). Decide: pull approved reviews from the DB (with a `getTestimonials()` query) vs. a static/editable source. **Caveat:** there's currently **no way for customers to write reviews** (no `POST /api/reviews`, no form) and production will have **0 reviews** until seeded/collected — so a DB-backed slider could be empty at launch. The `Review` schema also has no `location`/`avatar` fields, so `loc`/`img` would need a source or omission.
+  - **Placement.** The PRD says "between the Berry Elixir and Community sections," but the current homepage has **no such sections** (it's hero → categories → bestsellers → brand-story → faq → newsletter, per [layout/history]). Confirm where the Reviews section actually goes (likely after Brand Story / before Newsletter).
+  - **Stack translation.** The PRD is written for a vanilla `app.js`/`styles.css`/`data.js` site (`SECTION 6.5`, pixel-translated flex track, cache-busted query strings). Per project convention this will be **stack-translated** to a Next/React/TS + Tailwind client component; the cache-busting note is N/A (Next handles asset hashing).
 
 ---
 

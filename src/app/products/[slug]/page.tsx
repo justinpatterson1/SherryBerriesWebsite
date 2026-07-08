@@ -213,7 +213,7 @@ export default async function ProductPage({ params }: PageProps) {
         </div>
       </section>
 
-      <ProductReviews reviews={product.reviews} />
+      {/* <ProductReviews reviews={product.reviews} /> */}
       <RelatedProducts products={related} />
     </main>
   );
