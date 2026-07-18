@@ -88,14 +88,22 @@ export type ProductListItem = {
   reviewCount: number;
 };
 
+// Aftercare and elixirs — plus accessories and merch, which reuse the AFTERCARE
+// jewelry type as a catch-all — are not jewelry. The Jewelry listing excludes
+// them so they only surface on their own category pages.
+const NON_JEWELRY_TYPES: JewelryType[] = ["AFTERCARE", "ELIXIR"];
+
 export async function listProducts(opts: {
   categorySlug?: string;
+  jewelryOnly?: boolean;
 } = {}): Promise<ProductListItem[]> {
   const where: {
     active: boolean;
     category?: { slug: string };
+    jewelryType?: { notIn: JewelryType[] };
   } = { active: true };
   if (opts.categorySlug) where.category = { slug: opts.categorySlug };
+  else if (opts.jewelryOnly) where.jewelryType = { notIn: NON_JEWELRY_TYPES };
 
   const rows = await prisma.product.findMany({
     where,

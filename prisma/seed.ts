@@ -29,8 +29,15 @@ faker.seed(20260521);
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) throw new Error("DATABASE_URL is required to run the seed.");
 
+// Make the SSL mode explicit; `require` is a deprecated alias for `verify-full`
+// in pg and warns at startup. Neon serves publicly-trusted certs.
+const adapterConnectionString = connectionString.replace(
+  /([?&]sslmode=)(prefer|require|verify-ca)\b/i,
+  "$1verify-full",
+);
+
 const prisma = new PrismaClient({
-  adapter: new PrismaPg({ connectionString }),
+  adapter: new PrismaPg({ connectionString: adapterConnectionString }),
 });
 
 // ---- tunables ----------------------------------------------------------------

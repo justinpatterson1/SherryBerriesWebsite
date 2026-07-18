@@ -12,9 +12,9 @@ export async function generateMetadata({
   const { category } = await searchParams;
   if (!category) {
     return {
-      title: "Shop all products | SherryBerries",
+      title: "Jewelry | SherryBerries",
       description:
-        "Luxury body jewelry, aftercare, and elixirs from Trinidad & Tobago.",
+        "Luxury body jewelry from Trinidad & Tobago — belly rings, nose rings, septum, and cartilage pieces.",
     };
   }
   const categories = await getHomeCategories();
@@ -32,17 +32,28 @@ export default async function ProductsListingPage({ searchParams }: PageProps) {
   const { category: categorySlug } = await searchParams;
 
   const [products, categories] = await Promise.all([
-    listProducts({ categorySlug }),
+    // No category selected → this is the Jewelry page; keep aftercare/merch out.
+    listProducts(categorySlug ? { categorySlug } : { jewelryOnly: true }),
     getHomeCategories(),
   ]);
 
   const active = categories.find((c) => c.slug === categorySlug) ?? null;
 
+  // Merch and aftercare are standalone navbar destinations, not part of the
+  // jewelry browse experience: on those pages we drop the category filter bar
+  // entirely and the redundant per-card category label. Elsewhere we still show
+  // the bar, minus the merch/aftercare chips (they have their own pages).
+  const isStandalonePage =
+    categorySlug === "aftercare" || categorySlug === "merch";
+  const chipCategories = categories.filter(
+    (c) => c.slug !== "aftercare" && c.slug !== "merch",
+  );
+
   return (
     <main className="pt-[110px] pb-[100px] max-[900px]:pt-[100px] max-[900px]:pb-20">
       <header className="px-[8%] mb-10 max-[900px]:px-[6%] max-[900px]:mb-8">
         <span className="font-sans text-[11px] font-medium tracking-[0.22em] uppercase text-pink">
-          {active ? "Category" : "All products"}
+          {active ? "Category" : "Jewelry"}
         </span>
         <h1 className="font-display text-[clamp(40px,5vw,68px)] leading-[1.04] tracking-[-0.01em] text-ink m-0 mt-3">
           {active ? active.name : "Sweet pieces, picked from the studio."}
@@ -54,28 +65,30 @@ export default async function ProductsListingPage({ searchParams }: PageProps) {
         )}
       </header>
 
-      <nav
-        aria-label="Filter by category"
-        className="px-[8%] mb-10 max-[900px]:px-[6%] max-[900px]:mb-8"
-      >
-        <ul className="flex flex-wrap gap-2">
-          <li>
-            <CategoryChip href="/products" active={!categorySlug}>
-              All
-            </CategoryChip>
-          </li>
-          {categories.map((cat) => (
-            <li key={cat.id}>
-              <CategoryChip
-                href={`/products?category=${cat.slug}`}
-                active={cat.slug === categorySlug}
-              >
-                {cat.name}
+      {!isStandalonePage && (
+        <nav
+          aria-label="Filter by category"
+          className="px-[8%] mb-10 max-[900px]:px-[6%] max-[900px]:mb-8"
+        >
+          <ul className="flex flex-wrap gap-2">
+            <li>
+              <CategoryChip href="/products" active={!categorySlug}>
+                Jewelry
               </CategoryChip>
             </li>
-          ))}
-        </ul>
-      </nav>
+            {chipCategories.map((cat) => (
+              <li key={cat.id}>
+                <CategoryChip
+                  href={`/products?category=${cat.slug}`}
+                  active={cat.slug === categorySlug}
+                >
+                  {cat.name}
+                </CategoryChip>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
 
       <div className="px-[8%] mb-6 font-sans text-[11px] tracking-[0.16em] uppercase text-ink-faint max-[900px]:px-[6%]">
         {products.length} {products.length === 1 ? "piece" : "pieces"}
@@ -97,7 +110,7 @@ export default async function ProductsListingPage({ searchParams }: PageProps) {
           }
         >
           {products.map((p) => (
-            <ProductCard key={p.id} product={p} />
+            <ProductCard key={p.id} product={p} showCategory={!isStandalonePage} />
           ))}
         </div>
       )}
@@ -133,8 +146,10 @@ function CategoryChip({
 
 function ProductCard({
   product,
+  showCategory,
 }: {
   product: Awaited<ReturnType<typeof listProducts>>[number];
+  showCategory: boolean;
 }) {
   const full = Math.round(product.rating);
   const out = product.inventory <= 0;
@@ -197,9 +212,11 @@ function ProductCard({
           {product.name}
         </span>
 
-        <span className="font-sans text-[10px] tracking-[0.18em] uppercase text-ink-faint">
-          {product.categoryName}
-        </span>
+        {showCategory && (
+          <span className="font-sans text-[10px] tracking-[0.18em] uppercase text-ink-faint">
+            {product.categoryName}
+          </span>
+        )}
 
         <div className="flex items-baseline gap-2.5 mt-1">
           {product.compareAtPrice && product.compareAtPrice > product.price && (
