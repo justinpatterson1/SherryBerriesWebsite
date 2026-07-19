@@ -1,13 +1,25 @@
-# Current Feature
+# Current Feature: Site Search
 
 ## Status
-Not Started
+In Progress
 
 ## Goals
-<!-- What does success look like? Bullet points. -->
+- Header search icon (and `/` or `Cmd/Ctrl-K`) opens a command-palette overlay with the input auto-focused; `Esc` / scrim click closes it; background scroll locked while open.
+- Instant, debounced (~120ms) **client-side** search over the real catalog: products by name / category / material tags, categories by name / description. Case-insensitive substring, ranked **name > category > tag**, with highlighted matching text and a live result count.
+- Results grouped **Products → Categories → Suggestions**; product row = thumbnail, name, category label, price (+ struck "was" when on sale); category row = name + short description. Products capped (~6) with a reserved "See all N results" affordance (links to the future results page).
+- Full keyboard nav: ↑/↓ move the active row, Enter opens it; `role="listbox"` + `aria-activedescendant`, focus trapped in the overlay.
+- **Idle** state: recent searches (localStorage, clearable) + curated popular-search chips (optionally a few bestsellers).
+- **Zero-result** state: friendly message + suggested categories to browse — never a blank panel.
+- Selecting a product → its PDP (`/products/<slug>`); selecting a category → that category view (`/products?category=<slug>`). Committing a query (Enter) records it to recent searches.
+- Works in dark **and** light theme, down to mobile widths (overlay near-fullscreen, input pinned top, results scroll beneath). No new dependencies.
 
 ## Notes
-<!-- Additional context, constraints, or spec details. -->
+- **Stack translation:** the PRD's vanilla `app.js` / `styles.css` / `data.js` and `SB.categories` / `SB.bestsellers` map to Next/React/TS + Tailwind and the **real catalog** (build the client index from existing queries — e.g. `getHomeCategories` + a product list via `listProducts`). No new data model; client-side v1. "Cache-bust versioned query strings" is Next's asset hashing — N/A.
+- **Where it lives:** the shared navbar ([src/components/layout/navbar.tsx](../src/components/layout/navbar.tsx)) already has a non-functional Search `IconButton` (desktop + mobile) — wire those to open the overlay so it's available on every page that renders the nav. Navbar is a client component; the overlay should be a sibling client component fed the catalog once (passed from a server boundary or fetched on first open).
+- **Links** use existing conventions: products `/products/<slug>`, categories `/products?category=<slug>`.
+- **Curated data:** add a popular-searches list (the PRD's `SB.popularSearches`) as a small typed static source, mirroring [src/lib/home/testimonials.ts](../src/lib/home/testimonials.ts).
+- **A11y:** labelled input, `role="listbox"`/`option`, `aria-activedescendant`, focus trap, `Esc`/scrim close. Follow the project's React 19 no-sync-`setState`-in-effect convention (`queueMicrotask`) where an effect must seed state.
+- **Out of scope (v1):** dedicated `/search` page with filters/sort, fuzzy/synonyms/typo tolerance, ML ranking, voice/image search — "See all results" is only a reserved affordance for now.
 
 ---
 

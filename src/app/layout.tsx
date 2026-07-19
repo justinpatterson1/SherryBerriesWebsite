@@ -5,6 +5,7 @@ import { SiteNavbar, SiteFooter } from "@/components/layout/site-chrome";
 import { AuthSessionProvider } from "@/components/providers/session-provider";
 import { CartProvider } from "@/components/providers/cart-provider";
 import { WishlistProvider } from "@/components/providers/wishlist-provider";
+import { SearchProvider } from "@/components/search/search-provider";
 import { IdleSignOut } from "@/components/auth/idle-sign-out";
 
 const italiana = Italiana({
@@ -54,9 +55,11 @@ export default function RootLayout({
           <CartProvider>
             <WishlistProvider>
               <IdleSignOut />
-              <SiteNavbar />
-              {children}
-              <SiteFooter />
+              <SearchProvider>
+                <SiteNavbar />
+                {children}
+                <SiteFooter />
+              </SearchProvider>
             </WishlistProvider>
           </CartProvider>
         </AuthSessionProvider>

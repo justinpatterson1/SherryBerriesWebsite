@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useCart } from "@/components/providers/cart-provider";
 import { useWishlist } from "@/components/providers/wishlist-provider";
+import { useSearch } from "@/components/search/search-provider";
 import { AuthButton } from "@/components/auth/auth-button";
 
 type NavChild = { label: string; href: string };
@@ -60,6 +61,7 @@ export function Navbar() {
   const showWishlist = status === "authenticated";
   const { count: cartCount } = useCart();
   const { count: wishlistCount } = useWishlist();
+  const { open: openSearch } = useSearch();
   const [scrolled, setScrolled] = useState(false);
   const [theme, setTheme] = useState<Theme>("dark");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -132,7 +134,7 @@ export function Navbar() {
             {theme === "dark" ? <SunIcon /> : <MoonIcon />}
           </IconButton>
 
-          <IconButton label="Search">
+          <IconButton label="Search" onClick={openSearch}>
             <SearchIcon />
           </IconButton>
 
@@ -262,7 +264,7 @@ export function Navbar() {
             </IconLink>
           )}
 
-          <IconButton label="Search">
+          <IconButton label="Search" onClick={openSearch}>
             <SearchIcon />
           </IconButton>
 
