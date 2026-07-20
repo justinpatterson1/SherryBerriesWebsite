@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { AdminProduct, AdminCategory } from "@/lib/queries/admin";
 import { JEWELRY_TYPES, type ProductFormData } from "@/lib/admin/options";
 import { ProductThumb, btnSolid, btnOutline, ICONS } from "@/components/admin/shared";
@@ -65,8 +65,31 @@ export function ProductForm({
 }) {
   const [f, setF] = useState<FormState>(() => initialState(product));
   const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setF((prev) => ({ ...prev, [key]: value }));
+
+  const handleFile = async (file: File | undefined) => {
+    if (!file) return;
+    setUploadError(null);
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+      const json = await res.json();
+      if (!res.ok || !json.url) throw new Error(json.error || "Upload failed.");
+      set("imageUrl", json.url as string);
+    } catch (e) {
+      setUploadError(e instanceof Error ? e.message : "Upload failed. Please try again.");
+    } finally {
+      setUploading(false);
+      // Reset so selecting the same file again re-triggers onChange.
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
 
   const handleSubmit = () => {
     const price = parseFloat(f.price);
@@ -220,13 +243,43 @@ export function ProductForm({
           </div>
 
           <div>
-            <label className={labelClass}>Image URL</label>
+            <label className={labelClass}>Product image</label>
             <div className="flex items-center gap-3">
               <span className="relative w-14 h-14 rounded-xl overflow-hidden bg-canvas-2 border border-white/10 shrink-0 light:border-[rgba(26,13,18,0.1)]">
                 <ProductThumb src={f.imageUrl.trim() || null} alt="" />
               </span>
-              <input className={fieldClass} value={f.imageUrl} onChange={(e) => set("imageUrl", e.target.value)} placeholder="https://…" />
+              <div className="flex-1 flex flex-col gap-2">
+                <div className="flex items-center gap-2.5">
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="hidden"
+                    onChange={(e) => handleFile(e.target.files?.[0])}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileRef.current?.click()}
+                    disabled={uploading}
+                    className={btnOutline + " disabled:opacity-60 disabled:cursor-not-allowed"}
+                  >
+                    {uploading ? "Uploading…" : "Upload image"}
+                  </button>
+                  <span className="font-sans text-[11px] text-ink-faint">
+                    JPEG, PNG, WebP or GIF · max 5&nbsp;MB
+                  </span>
+                </div>
+                <input
+                  className={fieldClass}
+                  value={f.imageUrl}
+                  onChange={(e) => set("imageUrl", e.target.value)}
+                  placeholder="…or paste an image URL (https://…)"
+                />
+              </div>
             </div>
+            {uploadError && (
+              <p className="mt-1.5 font-sans text-[12px] text-[#ff8d8d]">{uploadError}</p>
+            )}
           </div>
 
           <div className="flex flex-wrap gap-5 pt-1">
@@ -240,7 +293,7 @@ export function ProductForm({
           <button type="button" onClick={onCancel} disabled={busy} className={btnOutline}>
             Cancel
           </button>
-          <button type="button" onClick={handleSubmit} disabled={busy} className={btnSolid}>
+          <button type="button" onClick={handleSubmit} disabled={busy || uploading} className={btnSolid}>
             {busy ? "Saving…" : product ? "Save product" : "Create product"}
           </button>
         </div>
