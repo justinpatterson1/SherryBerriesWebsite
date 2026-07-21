@@ -24,11 +24,8 @@ const HELP = [
 ];
 
 const FOLLOW = [
-  { label: "Instagram", href: "https://instagram.com" },
-  { label: "TikTok", href: "https://tiktok.com" },
-  { label: "Pinterest", href: "https://pinterest.com" },
-  { label: "YouTube", href: "https://youtube.com" },
-  { label: "Berry List", href: "/#newsletter" },
+  { label: "Instagram", href: "https://www.instagram.com/sherryberries_/" },
+  { label: "TikTok", href: "https://www.tiktok.com/@sherrybvanessa?lang=en" },
 ];
 
 export function Footer() {
@@ -48,10 +45,10 @@ export function Footer() {
           </p>
 
           <div className="flex gap-2.5">
-            <SocialLink href="https://instagram.com" label="Instagram">
+            <SocialLink href="https://www.instagram.com/sherryberries_/" label="Instagram">
               <InstagramIcon />
             </SocialLink>
-            <SocialLink href="https://tiktok.com" label="TikTok">
+            <SocialLink href="https://www.tiktok.com/@sherrybvanessa?lang=en" label="TikTok">
               <TikTokIcon />
             </SocialLink>
             <SocialLink href="https://pinterest.com" label="Pinterest">
@@ -111,6 +108,8 @@ function SocialLink({
     <Link
       href={href}
       aria-label={label}
+      target="_blank"
+      rel="noopener noreferrer"
       className="w-[38px] h-[38px] rounded-full inline-flex items-center justify-center bg-white/[0.04] border border-white/[0.08] text-[#cfc6c9] transition-[color,background-color,border-color,box-shadow,transform] duration-200 hover:text-white hover:bg-pink/15 hover:border-pink hover:shadow-[0_0_24px_rgba(255,79,163,0.5)] hover:-translate-y-px [&_svg]:w-[17px] [&_svg]:h-[17px]"
     >
       {children}
@@ -139,16 +138,20 @@ function FooterCol({
         {title}
       </h4>
       <ul className="list-none m-0 p-0 flex flex-col gap-3.5">
-        {links.map((l) => (
-          <li key={l.href + l.label}>
-            <Link
-              href={l.href}
-              className="text-base text-[#8a8084] no-underline transition-colors duration-200 hover:text-blush"
-            >
-              {l.label}
-            </Link>
-          </li>
-        ))}
+        {links.map((l) => {
+          const external = l.href.startsWith("http");
+          return (
+            <li key={l.href + l.label}>
+              <Link
+                href={l.href}
+                {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                className="text-base text-[#8a8084] no-underline transition-colors duration-200 hover:text-blush"
+              >
+                {l.label}
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
