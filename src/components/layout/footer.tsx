@@ -10,8 +10,8 @@ const SHOP = [
 
 const CARE = [
   { label: "Aftercare Shop", href: "/products?category=aftercare" },
-  { label: "Healing Guide", href: "/aftercare-guide" },
-  { label: "Materials Glossary", href: "/learn/materials" },
+  // { label: "Healing Guide", href: "/aftercare-guide" },
+  // { label: "Materials Glossary", href: "/learn/materials" },
   { label: "Sizing Guide", href: "/learn/sizing" },
 ];
 

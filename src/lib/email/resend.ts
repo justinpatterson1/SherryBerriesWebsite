@@ -79,6 +79,47 @@ export async function sendPasswordResetEmail({
   }
 }
 
+export async function sendContactEmail({
+  to,
+  name,
+  email,
+  subject,
+  message,
+}: {
+  /** Where the message is delivered — the site/domain holder's inbox. */
+  to: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}): Promise<{ ok: boolean; error?: string }> {
+  const resend = getClient();
+  if (!resend) {
+    return { ok: false, error: "RESEND_API_KEY is not configured." };
+  }
+
+  const subjectLine = subject.trim() || "New contact form message";
+
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM,
+      to,
+      // Owner replies land straight in the visitor's inbox.
+      replyTo: email,
+      subject: `[Contact] ${subjectLine}`,
+      html: contactHtml({ name, email, subject: subjectLine, message }),
+      text: `New message via the SherryBerries contact form\n\nFrom: ${name} <${email}>\nSubject: ${subjectLine}\n\n${message}`,
+    });
+    if (error) return { ok: false, error: error.message };
+    return { ok: true };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Failed to send email.",
+    };
+  }
+}
+
 export type OrderEmailItem = {
   name: string;
   variant: string | null;
@@ -276,6 +317,61 @@ function passwordResetHtml({
             <p style="font-size:12px;line-height:1.6;color:#8a7780;margin:0;">This link expires in 1 hour. If the button doesn't work, paste this link into your browser:</p>
             <p style="font-size:12px;line-height:1.6;color:#ff4fa3;word-break:break-all;margin:8px 0 0;">${resetUrl}</p>
             <p style="font-size:12px;line-height:1.6;color:#8a7780;margin:16px 0 0;">If you didn't request a password reset, you can safely ignore this email — your password won't change.</p>
+          </td></tr>
+        </table>
+      </td></tr>
+    </table>
+  </body>
+</html>`;
+}
+
+// Escape user-supplied content before interpolating into the email HTML.
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function contactHtml({
+  name,
+  email,
+  subject,
+  message,
+}: {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}): string {
+  const safeName = escapeHtml(name);
+  const safeEmail = escapeHtml(email);
+  const safeSubject = escapeHtml(subject);
+  const safeMessage = escapeHtml(message).replace(/\n/g, "<br>");
+  return `<!doctype html>
+<html>
+  <body style="margin:0;background:#0d0608;font-family:Helvetica,Arial,sans-serif;color:#f5e9ee;padding:32px 0;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      <tr><td align="center">
+        <table role="presentation" width="520" cellpadding="0" cellspacing="0" style="max-width:520px;background:#160a10;border:1px solid rgba(255,79,163,0.18);border-radius:20px;overflow:hidden;">
+          <tr><td style="padding:36px 36px 8px;">
+            <div style="font-size:26px;letter-spacing:0.02em;color:#ffffff;">Sherry<span style="font-style:italic;color:#ff4fa3;">Berries</span></div>
+          </td></tr>
+          <tr><td style="padding:8px 36px 0;">
+            <h1 style="font-size:22px;line-height:1.25;color:#ffffff;margin:16px 0 16px;">New contact message ✦</h1>
+          </td></tr>
+          <tr><td style="padding:0 36px 8px;">
+            <p style="font-size:13px;line-height:1.6;color:#8a7780;margin:0 0 2px;text-transform:uppercase;letter-spacing:0.1em;">From</p>
+            <p style="font-size:15px;line-height:1.6;color:#f5e9ee;margin:0 0 16px;">${safeName} &lt;<a href="mailto:${safeEmail}" style="color:#ff4fa3;text-decoration:none;">${safeEmail}</a>&gt;</p>
+            <p style="font-size:13px;line-height:1.6;color:#8a7780;margin:0 0 2px;text-transform:uppercase;letter-spacing:0.1em;">Subject</p>
+            <p style="font-size:15px;line-height:1.6;color:#f5e9ee;margin:0 0 16px;">${safeSubject}</p>
+            <p style="font-size:13px;line-height:1.6;color:#8a7780;margin:0 0 2px;text-transform:uppercase;letter-spacing:0.1em;">Message</p>
+            <p style="font-size:15px;line-height:1.7;color:#cbb8c0;margin:0 0 28px;">${safeMessage}</p>
+          </td></tr>
+          <tr><td style="padding:0 36px 36px;">
+            <p style="font-size:12px;line-height:1.6;color:#8a7780;margin:0;">Reply to this email to respond to ${safeName} directly.</p>
           </td></tr>
         </table>
       </td></tr>
