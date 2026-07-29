@@ -30,6 +30,9 @@ export const authLimiters = {
   resendVerification: makeLimiter(3, "15 m", "resend"),
 };
 
+// Contact form — deter spam without blocking genuine follow-ups (per IP).
+export const contactLimiter = makeLimiter(5, "1 h", "contact");
+
 export type RateLimitResult = {
   success: boolean;
   remaining: number;
