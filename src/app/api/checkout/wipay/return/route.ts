@@ -204,6 +204,8 @@ export async function GET(request: Request) {
   if (process.env.NODE_ENV !== "production") {
     console.log(
       `[wipay] order ${orderNumber} FAILED (status="${status}", txn ${transactionId}) — restocked + cart rebuilt.`,
+      `\n[wipay]   gateway message: ${params.get("message") ?? "(none)"}`,
+      `\n[wipay]   full response: ${url.search}`,
     );
   }
 
