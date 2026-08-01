@@ -1,6 +1,9 @@
 export function ProductTrustBadges() {
   return (
-    <ul className="grid grid-cols-3 gap-2 max-[520px]:grid-cols-1">
+    // auto-fit rather than a fixed 3 columns: the buy-box column is only ~340px
+    // between 900–1250px, and "HYPOALLERGENIC" (one unbreakable word at 0.14em
+    // tracking) needs ~120px of text width, so rigid thirds overflow the card.
+    <ul className="grid grid-cols-[repeat(auto-fit,minmax(170px,1fr))] gap-2">
       {BADGES.map((b) => (
         <li
           key={b.title}
@@ -10,8 +13,8 @@ export function ProductTrustBadges() {
           }
         >
           <span className="text-pink mt-0.5 [&_svg]:w-4 [&_svg]:h-4">{b.icon}</span>
-          <div className="flex flex-col gap-0.5">
-            <span className="font-sans text-[11px] tracking-[0.14em] uppercase font-semibold text-ink">
+          <div className="flex flex-col gap-0.5 min-w-0">
+            <span className="font-sans text-[11px] tracking-[0.14em] uppercase font-semibold text-ink wrap-break-word">
               {b.title}
             </span>
             <span className="font-sans text-[11px] text-ink-faint leading-[1.45]">
