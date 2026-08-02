@@ -1,13 +1,29 @@
-# Current Feature
+# Current Feature: Privacy Policy Page
 
 ## Status
-Not Started
+In Progress
 
 ## Goals
-<!-- What does success look like? Bullet points. -->
+- New **`/privacy`** page rendering the owner-supplied Privacy Policy in full, matching the site's design language (hero eyebrow + display headline + "Last updated" line, then long-form legal sections) — filling the currently-dead footer "Privacy" link.
+- **Theme + layout parity with the existing site** — `globals.css` tokens (`bg-canvas-elev`/`bg-card`/`border-line`/`text-ink`/`ink-dim`/`ink-faint`/`pink`/`blush`), Italiana/Playfair/Inter type scale, `px-[8%]` → `max-[600px]:px-[6%]` rhythm, alternating section backgrounds, and the global navbar/footer/search chrome — mirroring [learn/sizing](../src/app/learn/sizing/page.tsx), the closest long-form precedent.
+- **Content in a typed data module** (`src/lib/legal/privacy.ts` or similar) rather than inline JSX, following the [sizing/data.ts](../src/lib/sizing/data.ts) convention, so the copy is editable in one place without touching layout.
+- **Readable long-form legal typography** — constrained measure (~720–760px), clear heading hierarchy, comfortable list/paragraph spacing; not a wall of text.
+- **Navigable** — jump-link chips or a sticky section index for the 15 top-level sections, with `scroll-mt` offsets for the fixed navbar (as `/learn/sizing` does).
+- Responsive, accessible (single `h1`, correct heading order, ≥44px targets, real `<a>` for the mailto/website links), dark **and** light theme via `light:` variants.
+- Static route (`○`) with proper `metadata` (title + description); lint, typecheck, `npm test`, and production build all clean.
 
 ## Notes
-<!-- Additional context, constraints, or spec details. -->
+- **Spec:** the supplied copy is saved verbatim at [features/privacy-policy-spec.md](features/privacy-policy-spec.md). Treat the **wording as authoritative legal copy** — adapt structure/headings/styling to the design system, but don't reword sentences without the owner's sign-off.
+- **Route = `/privacy`**, because [footer.tsx:83](../src/components/layout/footer.tsx#L83) already links there and the link is currently a dead 404 — the same situation the Contact page just fixed. No footer change needed. (`/terms` at [footer.tsx:86](../src/components/layout/footer.tsx#L86) is **also** dead but is **out of scope** for this feature.)
+- **No markdown renderer in the project** (no `remark`/`mdx`/`react-markdown` dependency) and no reason to add one for a single static document — render as JSX from a typed data module, per the `sizing/data.ts` precedent.
+- **Heading levels in the supplied copy are inconsistent** — it opens with `#` then `##`, but every subsequent major section is also `#` (15 of them). Rendering that literally would produce 16 `<h1>`s, which is bad for a11y and SEO. **Recommended deviation:** one `<h1>` ("Privacy Policy"), major sections as `<h2>`, the sub-blocks under "Information We Collect" as `<h3>`. Content unchanged; hierarchy corrected.
+- **Accuracy items to confirm with the owner before publishing** — a privacy policy that describes practices the site doesn't have is a real liability, and three claims don't currently match the codebase:
+  1. **Google Analytics is named twice** (Third Party Services) but is **not integrated anywhere** — no `gtag`, no `googletagmanager`, no `@next/third-parties`, no measurement-ID env var. Either add GA or cut the claim.
+  2. **Cookies are described** and **EEA/GDPR rights are asserted**, but there is **no cookie consent banner** on the site. Consent-on-use is the weaker position under GDPR; worth deciding whether a banner is in scope (it is **not** in this feature's goals).
+  3. **"If you submit a product review…"** — the `Review` model exists and reviews render, but there is **no review submission flow** (no `POST /api/reviews`, no form; the PDP reviews block is currently commented out). The clause is aspirational rather than describing current behaviour.
+- **Also confirm:** the policy states the site is **www.sherryberries.com**, but `NEXT_PUBLIC_SITE_URL` is unset in `.env` (checkout falls back to the request origin) — worth setting as part of launch. And the policy's contact address is **sherryvanessanichols@gmail.com**, which differs from the still-unset `CONTACT_EMAIL` and from the Resend account owner (`justin.patterson17@yahoo.com`) that currently receives all mail; these three should be reconciled so a privacy request actually reaches someone.
+- **Decisions (locked at `start`):** (1) route **`/privacy`** — matches the existing footer link; (2) **jump-link chips**, matching `/learn/sizing`; (3) "Last Updated" rendered from a **`LAST_UPDATED` constant** in the data module so it can't drift; (4) **ship the copy verbatim** — the three accuracy items below are *not* corrected in this feature and remain **open for the owner** (see `explain` for the flag); (5) **`/terms` is a follow-up**, out of scope here.
+- **Housekeeping:** resolved — the `HYPOALLERGENIC` badge fix landed on `master` as `7640f29` before this branch was cut, so `feature/privacy-policy` starts from a clean tree.
 
 ---
 
