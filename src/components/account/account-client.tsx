@@ -14,9 +14,9 @@ import type {
   AccountData,
   AccountProfile,
 } from "@/lib/queries/account";
+import { RETURN_REASONS } from "@/lib/account/returns";
 import {
   ICONS,
-  RETURN_REASONS,
   initials,
   type ReturnRequest,
   type View,

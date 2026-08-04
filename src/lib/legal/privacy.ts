@@ -5,45 +5,15 @@
 //
 // Plain static data — safe to import from server or client components.
 
+import type { Block, LegalDocument, Section } from "@/lib/legal/types";
+
 /** Rendered in the hero and referenced by "Changes to This Privacy Policy". */
 export const LAST_UPDATED = "July 31, 2026";
-
-/**
- * An inline run of copy. A plain string is the common case; the array form is
- * only used where the source copy emphasises a word or links out, so the page
- * needs no markdown parser.
- */
-export type Run =
-  | string
-  /** Emphasised — rendered as <strong>. */
-  | { b: string }
-  /** A real anchor. Absolute http(s) URLs open in a new tab; mailto: does not. */
-  | { href: string; text: string };
-
-export type Rich = string | Run[];
-
-export type Block =
-  | { kind: "p"; text: Rich }
-  | { kind: "list"; items: Rich[] }
-  /** A labelled sub-block, e.g. "Personal Information" under "Information We Collect". */
-  | { kind: "sub"; title: string };
-
-export type Section = {
-  /** Anchor target + jump-chip key. */
-  id: string;
-  /** Section heading — rendered as the section's <h2>. */
-  title: string;
-  /** Short label for the jump chip (the full title is often too long). */
-  chip: string;
-  /** Short kicker shown in the pink eyebrow above the heading. */
-  kicker: string;
-  blocks: Block[];
-};
 
 export const SITE_URL = "https://www.sherryberries.com";
 export const PRIVACY_EMAIL = "sherryvanessanichols@gmail.com";
 
-export const INTRO: Block[] = [
+const INTRO: Block[] = [
   {
     kind: "p",
     text: [
@@ -63,7 +33,7 @@ export const INTRO: Block[] = [
   },
 ];
 
-export const SECTIONS: Section[] = [
+const SECTIONS: Section[] = [
   {
     id: "information-we-collect",
     title: "Information We Collect",
@@ -380,21 +350,22 @@ export const SECTIONS: Section[] = [
   },
 ];
 
-/**
- * The closing "Contact Us" section. Kept out of SECTIONS because the page gives
- * it the pink card treatment rather than a plain long-form section.
- */
-export const CONTACT: {
-  id: string;
-  title: string;
-  chip: string;
-  kicker: string;
-  intro: string;
-} = {
-  id: "contact-us",
-  title: "Contact Us",
-  chip: "Contact",
-  kicker: "Get in touch",
-  intro:
-    "If you have any questions about this Privacy Policy or wish to exercise your privacy rights, please contact us:",
+export const PRIVACY_DOC: LegalDocument = {
+  breadcrumb: "Privacy Policy",
+  eyebrow: "Legal · Sherry Berries Body Jewelry and Accessories",
+  title: "Privacy",
+  titleAccent: "policy",
+  lastUpdated: LAST_UPDATED,
+  intro: INTRO,
+  sections: SECTIONS,
+  contact: {
+    id: "contact-us",
+    title: "Contact Us",
+    chip: "Contact",
+    kicker: "Get in touch",
+    intro:
+      "If you have any questions about this Privacy Policy or wish to exercise your privacy rights, please contact us:",
+    email: PRIVACY_EMAIL,
+    website: SITE_URL,
+  },
 };

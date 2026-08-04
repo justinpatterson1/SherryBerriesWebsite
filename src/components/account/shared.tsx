@@ -29,14 +29,6 @@ export type ReturnRequest = {
   date: string; // "Mar 12, 2024"
 };
 
-export const RETURN_REASONS = [
-  "Wrong Item Received",
-  "Damaged Item",
-  "Defective Item",
-  "Changed Mind",
-  "Other",
-] as const;
-
 export const money = (n: number) => `$${n.toFixed(2)}`;
 
 export function initials(firstName: string, lastName: string): string {
