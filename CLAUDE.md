@@ -16,6 +16,7 @@ Read these for full project context:
 - @context/coding-standards.md: Code conventions and patterns
 - @context/ai-interaction.md : Workflow and communication guidelines
 - @context/current-feature.md: What we are currently working on
+- @context/open-issues.md: Known unfixed problems — check before claiming something is broken, and update when you fix one
 - @context/backend-architecture.md: Structure of our backend
 - @context/styles.md : Follow this style sheet
 
