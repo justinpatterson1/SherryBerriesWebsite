@@ -202,9 +202,8 @@ export default async function ProductPage({ params }: PageProps) {
                 title: "Shipping & returns",
                 body: (
                   <p className="m-0">
-                    Free shipping on TTD orders over $80. Trinidad & Tobago delivery
-                    in 2–4 business days. Unworn pieces returnable within 14 days for
-                    store credit.
+                    Trinidad & Tobago delivery in 2–4 business days. Unworn pieces
+                    returnable within 14 days for store credit.
                   </p>
                 ),
               },

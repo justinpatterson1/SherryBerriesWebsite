@@ -2,9 +2,9 @@ export function TrustStrip() {
   return (
     <ul
       className={
-        "grid grid-cols-4 gap-4 p-6 rounded-[20px] border border-white/[0.06] " +
+        "grid grid-cols-2 gap-4 p-6 rounded-[20px] border border-white/[0.06] " +
         "bg-[linear-gradient(135deg,rgba(255,79,163,0.05),rgba(212,175,55,0.05))] " +
-        "max-[900px]:grid-cols-2 list-none m-0"
+        "max-[560px]:grid-cols-1 list-none m-0"
       }
     >
       {ITEMS.map((it) => (
@@ -28,17 +28,6 @@ export function TrustStrip() {
 
 const ITEMS = [
   {
-    label: "Free shipping",
-    body: "On orders over $80 · ships from Port of Spain",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M3 7h13v10H3zM16 10h4l1 3v4h-5z" />
-        <circle cx="7" cy="18" r="1.6" />
-        <circle cx="18" cy="18" r="1.6" />
-      </svg>
-    ),
-  },
-  {
     label: "14-day returns",
     body: "Free returns on unworn pieces",
     icon: (
@@ -55,16 +44,6 @@ const ITEMS = [
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M12 3l8 4v5c0 4.5-3.4 8.5-8 9-4.6-.5-8-4.5-8-9V7z" />
         <path d="m8.5 12 2.5 2.5L16 9.5" />
-      </svg>
-    ),
-  },
-  {
-    label: "Pay in 4",
-    body: "Interest-free with Afterpay",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <rect x="3" y="6" width="18" height="13" rx="2" />
-        <path d="M3 10h18M7 15h3" />
       </svg>
     ),
   },
