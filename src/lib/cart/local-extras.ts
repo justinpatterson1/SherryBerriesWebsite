@@ -1,12 +1,11 @@
-// Gift-wrap and saved-for-later state lives in localStorage for v1
-// (no DB schema change). Both keyed by `productId::variantId|""`.
+// Saved-for-later state lives in localStorage for v1 (no DB schema change),
+// keyed by `productId::variantId|""`.
 
 export type SavedItem = {
   productId: string;
   variantId: string | null;
 };
 
-const GIFT_WRAP_KEY = "sb-cart-gift";
 const SAVED_KEY = "sb-saved";
 
 export function lineKey(productId: string, variantId: string | null): string {
@@ -31,14 +30,6 @@ function safeWrite(key: string, value: unknown) {
   } catch {
     // ignore quota / private-mode errors
   }
-}
-
-export function readGiftWraps(): Record<string, true> {
-  return safeRead<Record<string, true>>(GIFT_WRAP_KEY, {});
-}
-
-export function writeGiftWraps(map: Record<string, true>) {
-  safeWrite(GIFT_WRAP_KEY, map);
 }
 
 export function readSaved(): SavedItem[] {

@@ -29,17 +29,6 @@ export function ProductTrustBadges() {
 
 const BADGES = [
   {
-    title: "Free shipping",
-    body: "On orders over $80 TTD",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M3 7h13v10H3zM16 10h4l1 3v4h-5z" />
-        <circle cx="7" cy="18" r="1.6" />
-        <circle cx="18" cy="18" r="1.6" />
-      </svg>
-    ),
-  },
-  {
     title: "Hypoallergenic",
     body: "Implant-grade titanium & 14k gold",
     icon: (

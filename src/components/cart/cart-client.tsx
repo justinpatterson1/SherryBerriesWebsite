@@ -6,9 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useCart } from "@/components/providers/cart-provider";
 import {
   lineKey,
-  readGiftWraps,
   readSaved,
-  writeGiftWraps,
   writeSaved,
   type SavedItem,
 } from "@/lib/cart/local-extras";
@@ -19,8 +17,9 @@ import { SavedForLater } from "./saved-for-later";
 import { CartEmpty } from "./cart-empty";
 import { TrustStrip } from "./trust-strip";
 
-const FREE_SHIP_THRESHOLD = 80;
-const GIFT_WRAP_PRICE = 6;
+// The bag is a subtotal-only summary: shipping depends on the delivery method
+// picked at checkout, so it is quoted there rather than estimated here. There is
+// no free-shipping threshold and no tax — see the commented-out tax block below.
 
 export function CartClient() {
   const router = useRouter();
@@ -28,7 +27,6 @@ export function CartClient() {
 
   const [snapshot, setSnapshot] = useState<CartSnapshotLine[]>([]);
   const [snapshotReady, setSnapshotReady] = useState(false);
-  const [gifts, setGifts] = useState<Record<string, true>>({});
   const [saved, setSaved] = useState<SavedItem[]>([]);
   const [promo, setPromo] = useState<AppliedPromo | null>(null);
   const [toast, setToast] = useState<{ msg: string; id: number } | null>(null);
@@ -36,7 +34,6 @@ export function CartClient() {
 
   useEffect(() => {
     queueMicrotask(() => {
-      setGifts(readGiftWraps());
       setSaved(readSaved());
     });
   }, []);
@@ -96,10 +93,6 @@ export function CartClient() {
       (line) => !removingKeys.has(lineKey(line.productId, line.variantId)),
     );
     const subtotal = visible.reduce((sum, l) => sum + l.unitPrice * l.quantity, 0);
-    const giftCount = visible.filter(
-      (l) => gifts[lineKey(l.productId, l.variantId)],
-    ).length;
-    const giftWrap = giftCount * GIFT_WRAP_PRICE;
 
     let discount = 0;
     if (promo) {
@@ -110,42 +103,16 @@ export function CartClient() {
       }
     }
 
-    const taxable = Math.max(0, subtotal - discount);
-    const shipping = taxable >= FREE_SHIP_THRESHOLD ? 0 : 6;
-    const tax = taxable * 0.0875;
-    const total = taxable + giftWrap + shipping + tax;
+    const total = Math.max(0, subtotal - discount);
+
+    // No tax is charged. Kept here, commented, in case that changes:
+    // const tax = total * TAX_RATE;
+    // const total = Math.max(0, subtotal - discount) + tax;
+
     const itemCount = visible.reduce((n, l) => n + l.quantity, 0);
 
-    return {
-      subtotal,
-      discount,
-      giftWrap,
-      shipping,
-      tax,
-      total,
-      itemCount,
-      taxable,
-    };
-  }, [snapshot, removingKeys, gifts, promo]);
-
-  const toggleGift = useCallback(
-    (productId: string, variantId: string | null) => {
-      const key = lineKey(productId, variantId);
-      setGifts((prev) => {
-        const next = { ...prev };
-        if (next[key]) {
-          delete next[key];
-          showToast("Gift wrap removed");
-        } else {
-          next[key] = true;
-          showToast("Gift wrap added — $6 ✦");
-        }
-        writeGiftWraps(next);
-        return next;
-      });
-    },
-    [showToast],
-  );
+    return { subtotal, discount, total, itemCount };
+  }, [snapshot, removingKeys, promo]);
 
   const removeWithAnimation = useCallback(
     async (productId: string, variantId: string | null, message: string) => {
@@ -170,13 +137,6 @@ export function CartClient() {
           (l) => !(l.productId === productId && l.variantId === variantId),
         ),
       );
-      setGifts((prev) => {
-        if (!prev[key]) return prev;
-        const next = { ...prev };
-        delete next[key];
-        writeGiftWraps(next);
-        return next;
-      });
       setRemovingKeys((prev) => {
         const next = new Set(prev);
         next.delete(key);
@@ -241,10 +201,6 @@ export function CartClient() {
   };
 
   const isEmpty = snapshotReady && snapshot.length === 0;
-  const remainingForFreeShip = Math.max(
-    0,
-    FREE_SHIP_THRESHOLD - totals.taxable,
-  );
 
   return (
     <main className="pt-[110px] pb-[100px] max-[900px]:pt-[100px] max-[900px]:pb-20">
@@ -260,7 +216,7 @@ export function CartClient() {
           <span aria-hidden="true">←</span> Continue shopping
         </Link>
 
-        <header className="mt-6 mb-10 pb-6 border-b border-white/[0.06] light:border-[rgba(26,13,18,0.08)] grid grid-cols-[1fr_auto] items-baseline gap-6 max-[640px]:grid-cols-1 max-[640px]:gap-3">
+        <header className="mt-6 mb-10 pb-6 border-b border-white/[0.06] light:border-[rgba(26,13,18,0.08)]">
           <h1 className="font-display text-[clamp(40px,5vw,64px)] leading-[1.04] tracking-[-0.01em] text-ink m-0">
             Your{" "}
             <em className="font-serif italic text-blush font-medium not-italic-fallback">
@@ -268,22 +224,6 @@ export function CartClient() {
             </em>
             .
           </h1>
-          <span
-            className={
-              "font-sans text-[11px] tracking-[0.18em] uppercase " +
-              (isEmpty
-                ? "text-ink-faint"
-                : remainingForFreeShip > 0
-                ? "text-ink-faint"
-                : "text-[#3aa86b]")
-            }
-          >
-            {isEmpty
-              ? "✦ Free shipping over $80"
-              : remainingForFreeShip > 0
-              ? `✦ $${remainingForFreeShip.toFixed(2)} from free shipping`
-              : "✓ You unlocked free shipping ✦"}
-          </span>
         </header>
       </div>
 
@@ -308,12 +248,10 @@ export function CartClient() {
                 <CartRow
                   key={key}
                   line={line}
-                  giftWrap={!!gifts[key]}
                   removing={removingKeys.has(key)}
                   onQtyChange={onQtyChange}
                   onRemove={onRemove}
                   onSaveForLater={onSaveForLater}
-                  onToggleGiftWrap={toggleGift}
                 />
               );
             })}

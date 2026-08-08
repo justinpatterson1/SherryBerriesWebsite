@@ -12,20 +12,16 @@ const cardClass =
 
 export function CartRow({
   line,
-  giftWrap,
   removing,
   onQtyChange,
   onRemove,
   onSaveForLater,
-  onToggleGiftWrap,
 }: {
   line: CartSnapshotLine;
-  giftWrap: boolean;
   removing: boolean;
   onQtyChange: (productId: string, variantId: string | null, qty: number) => void;
   onRemove: (productId: string, variantId: string | null) => void;
   onSaveForLater: (productId: string, variantId: string | null) => void;
-  onToggleGiftWrap: (productId: string, variantId: string | null) => void;
 }) {
   const inv =
     line.variantInventory != null ? line.variantInventory : line.productInventory;
@@ -91,11 +87,6 @@ export function CartRow({
             className="absolute inset-0 bg-gradient-to-br from-pink to-pink-deep"
           />
         )}
-        {giftWrap && (
-          <span className="absolute top-1.5 left-1.5 z-[2] py-1 px-2 rounded-full bg-gradient-to-br from-gold-soft to-gold text-[#2a1a05] font-sans text-[9px] font-bold tracking-[0.14em] uppercase leading-none">
-            ★ Gift
-          </span>
-        )}
       </Link>
 
       <div className="flex flex-col gap-2.5 min-w-0">
@@ -154,11 +145,6 @@ export function CartRow({
             onClick={() => onSaveForLater(line.productId, line.variantId)}
           >
             ♡ Save for later
-          </RowAction>
-          <RowAction
-            onClick={() => onToggleGiftWrap(line.productId, line.variantId)}
-          >
-            {giftWrap ? "✕ Remove gift wrap" : "🎁 Add gift wrap (+$6)"}
           </RowAction>
         </div>
       </div>

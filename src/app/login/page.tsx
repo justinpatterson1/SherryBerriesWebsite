@@ -239,7 +239,7 @@ export default function LoginPage() {
           </h1>
           <p className="font-serif italic text-lg leading-[1.55] text-ink-dim max-w-[440px] border-l-2 border-pink pl-[18px] max-[900px]:hidden">
             “The aftercare alone changed how I think about piercings — and the gold-fill
-            pieces are now half my jewelry box.” — Maya, Brooklyn
+            pieces are now half my jewelry box.” — Maya, Port of Spain
           </p>
         </div>
 

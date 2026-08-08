@@ -3,11 +3,9 @@ import Link from "next/link";
 import heroBanner from "../../../assets/images/Hero.png";
 
 const MARQUEE_ITEMS = [
-  "Free shipping over $80",
   "Implant-grade titanium",
   "Hypoallergenic certified",
   "Free piercing aftercare guide",
-  "Pay in 4 with Afterpay",
 ];
 
 const chipBase =

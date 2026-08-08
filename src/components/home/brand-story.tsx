@@ -85,7 +85,7 @@ export function BrandStory() {
             <span className="font-sans text-[13px] font-medium tracking-[0.18em] uppercase text-ink-faint leading-[1.6]">
               Founder · Studio piercer
               <br />
-              Brooklyn · Bridgetown
+              Trinidad &amp; Tobago
             </span>
           </div>
         </div>

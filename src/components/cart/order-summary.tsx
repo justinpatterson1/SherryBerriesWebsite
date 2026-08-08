@@ -13,12 +13,8 @@ export type AppliedPromo = {
 type Totals = {
   subtotal: number;
   discount: number;
-  giftWrap: number;
-  shipping: number;
-  tax: number;
   total: number;
   itemCount: number;
-  taxable: number;
 };
 
 export function OrderSummary({
@@ -159,27 +155,13 @@ export function OrderSummary({
             valueClass="text-blush"
           />
         )}
-        {totals.giftWrap > 0 && (
-          <SummaryRow
-            label="Gift wrap"
-            value={`$${totals.giftWrap.toFixed(2)}`}
-          />
-        )}
         <SummaryRow
           label="Shipping"
           value={
-            totals.shipping === 0 ? (
-              <span className="text-[#3aa86b] uppercase tracking-[0.12em] text-[12px] font-semibold">
-                Free ✦
-              </span>
-            ) : (
-              `$${totals.shipping.toFixed(2)}`
-            )
+            <span className="text-ink-faint text-[12px]">
+              Calculated at checkout
+            </span>
           }
-        />
-        <SummaryRow
-          label="Estimated tax"
-          value={`$${totals.tax.toFixed(2)}`}
         />
       </div>
 
@@ -193,11 +175,6 @@ export function OrderSummary({
           ${totals.total.toFixed(2)}
         </span>
       </div>
-      <p className="font-sans text-[11px] text-ink-faint -mt-2.5">
-        or 4 interest-free payments of ${(totals.total / 4).toFixed(2)} with
-        Afterpay
-      </p>
-
       <button
         type="button"
         onClick={handleCheckout}
@@ -214,30 +191,6 @@ export function OrderSummary({
       >
         {redirecting ? "Redirecting…" : "Secure checkout →"}
       </button>
-
-      <div
-        aria-hidden="true"
-        className="flex items-center gap-3 my-1 font-sans text-[10px] font-medium tracking-[0.2em] uppercase text-ink-faint before:content-[''] before:flex-1 before:h-px before:bg-white/[0.08] after:content-[''] after:flex-1 after:h-px after:bg-white/[0.08]"
-      >
-        express checkout
-      </div>
-
-      <div className="grid grid-cols-2 gap-2">
-        <button
-          type="button"
-          onClick={() => onError("Shop Pay is a visual stub for v1")}
-          className="h-11 rounded-xl border-0 bg-[#5a31f4] text-white font-sans text-[12px] font-bold tracking-[0.12em] uppercase cursor-pointer transition-transform duration-200 hover:-translate-y-px"
-        >
-          Shop Pay
-        </button>
-        <button
-          type="button"
-          onClick={() => onError("PayPal is a visual stub for v1")}
-          className="h-11 rounded-xl border border-white/14 bg-white/[0.03] text-ink font-sans text-[12px] font-bold tracking-[0.12em] uppercase cursor-pointer transition-[color,border-color,transform] duration-200 hover:border-blush hover:-translate-y-px light:bg-white light:text-[#00457c] light:border-[rgba(0,69,124,0.2)]"
-        >
-          PayPal
-        </button>
-      </div>
 
       <ul className="flex flex-col gap-2 mt-1">
         <Perk>256-bit SSL secure checkout</Perk>

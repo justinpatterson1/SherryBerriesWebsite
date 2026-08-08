@@ -3,9 +3,9 @@ import Link from "next/link";
 const SHOP = [
   { label: "Belly Rings", href: "/products?category=belly-rings" },
   { label: "Nose Rings", href: "/products?category=nose-rings" },
-  { label: "Cartilage", href: "/products?category=tragus" },
-  { label: "Septum", href: "/products?category=septum" },
-  { label: "Waistbeads", href: "/products?category=waistbeads" },
+  { label: "Cartilage", href: "/products?category=cartilage-jewelry" },
+  { label: "Septum", href: "/products?category=septum-jewelry" },
+  { label: "Merchandise", href: "/products?category=merch" },
 ];
 
 const CARE = [
@@ -40,8 +40,8 @@ export function Footer() {
             Sherry<span className="font-serif italic text-pink ml-px">Berries</span>
           </Link>
           <p className="text-base leading-[1.65] text-[#8a8084] m-0 max-w-[340px]">
-            Luxury body jewelry &amp; piercing aftercare — made with love in Brooklyn
-            &amp; Bridgetown.
+            Luxury body jewelry &amp; piercing aftercare — made with love in Trinidad
+            &amp; Tobago.
           </p>
 
           <div className="flex gap-2.5">
@@ -58,13 +58,6 @@ export function Footer() {
               <YouTubeIcon />
             </SocialLink>
           </div>
-
-          <div className="flex flex-wrap gap-1.5" aria-label="Accepted payment methods">
-            <PayChip>VISA</PayChip>
-            <PayChip>MC</PayChip>
-            <PayChip>AMEX</PayChip>
-            <PayChip>AFTERPAY</PayChip>
-          </div>
         </div>
 
         <FooterCol title="Shop" links={SHOP} />
@@ -75,9 +68,9 @@ export function Footer() {
 
       <div className="mt-16 pt-7 border-t border-white/[0.06] flex items-center justify-between gap-4 flex-wrap text-sm text-[#6a6266] max-[560px]:flex-col max-[560px]:items-start">
         <span>
-          © 2026 SherryBerries Atelier · Made with{" "}
-          <span className="text-pink" aria-hidden="true">♡</span> in Brooklyn &amp;
-          Bridgetown
+          © 2026 SherryBerries · Made with{" "}
+          <span className="text-pink" aria-hidden="true">♡</span> in Trinidad &amp;
+          Tobago
         </span>
         <nav className="flex gap-7 text-sm" aria-label="Legal">
           <Link href="/privacy" className="text-[#8a8084] no-underline transition-colors duration-200 hover:text-blush">
@@ -114,14 +107,6 @@ function SocialLink({
     >
       {children}
     </Link>
-  );
-}
-
-function PayChip({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="text-[11px] font-bold tracking-[0.16em] px-3 py-[7px] rounded-md bg-white/[0.06] text-[#cfc6c9] border border-white/[0.08] leading-none">
-      {children}
-    </span>
   );
 }
 
