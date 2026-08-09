@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { btnSolid, cardClass } from "./shared";
 
@@ -13,14 +14,12 @@ const labelClass =
 
 export function SecurityView({
   onChangePassword,
-  onDeleteAccount,
 }: {
   onChangePassword: (data: {
     currentPassword: string;
     newPassword: string;
     confirmPassword: string;
   }) => Promise<boolean>;
-  onDeleteAccount: () => void;
 }) {
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
@@ -82,20 +81,23 @@ export function SecurityView({
         </button>
       </form>
 
-      {/* Danger zone */}
+      {/* Account deletion. There is no deletion endpoint yet, and the button that
+          used to sit here only fired a toast — so it told customers their account
+          was being deleted when nothing happened. Until the endpoint exists,
+          requests go to a human, which is what the Privacy Policy promises. */}
       <div className="rounded-[18px] border border-[rgba(192,57,43,0.4)] bg-[rgba(192,57,43,0.08)] p-6">
-        <h3 className="font-display text-[22px] text-[#ff8d8d] m-0 mb-2">Danger zone</h3>
+        <h3 className="font-display text-[22px] text-[#ff8d8d] m-0 mb-2">Delete your account</h3>
         <p className="font-sans text-[14px] leading-[1.6] text-ink-dim m-0 mb-5 max-w-[520px]">
           Deleting your account is permanent and cannot be undone. Your profile and
           saved addresses are removed; past orders are retained in anonymized form.
+          To request deletion, contact us and we&apos;ll action it for you.
         </p>
-        <button
-          type="button"
-          onClick={onDeleteAccount}
-          className="py-3 px-6 rounded-full border border-[rgba(192,57,43,0.5)] bg-transparent text-[#ff8d8d] font-sans text-[12px] font-bold tracking-[0.12em] uppercase cursor-pointer transition-colors hover:bg-[#c0392b] hover:text-white hover:border-[#c0392b]"
+        <Link
+          href="/contact"
+          className="inline-flex items-center min-h-[44px] py-3 px-6 rounded-full border border-[rgba(192,57,43,0.5)] bg-transparent text-[#ff8d8d] font-sans text-[12px] font-bold tracking-[0.12em] uppercase no-underline transition-colors hover:bg-[#c0392b] hover:text-white hover:border-[#c0392b]"
         >
-          Delete account
-        </button>
+          Request account deletion
+        </Link>
       </div>
     </div>
   );

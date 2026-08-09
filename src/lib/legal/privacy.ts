@@ -7,8 +7,12 @@
 
 import type { Block, LegalDocument, Section } from "@/lib/legal/types";
 
-/** Rendered in the hero and referenced by "Changes to This Privacy Policy". */
-export const LAST_UPDATED = "July 31, 2026";
+/**
+ * Rendered in the hero and referenced by "Changes to This Privacy Policy".
+ * Bumped on 2026-08-08: removed the Google Analytics references and the
+ * traffic-measurement cookie purpose, none of which the site actually does.
+ */
+export const LAST_UPDATED = "August 8, 2026";
 
 export const SITE_URL = "https://www.sherryberries.com";
 export const PRIVACY_EMAIL = "sherryvanessanichols@gmail.com";
@@ -106,7 +110,6 @@ const SECTIONS: Section[] = [
           "Remember your shopping cart",
           "Save your preferences",
           "Improve website performance",
-          "Measure website traffic",
           "Enhance your shopping experience",
         ],
       },
@@ -165,7 +168,6 @@ const SECTIONS: Section[] = [
         kind: "list",
         items: [
           [{ b: "WiPay" }, " for secure payment processing"],
-          [{ b: "Google Analytics" }, " for website analytics"],
           "Email service providers for transactional and marketing emails",
           "Website hosting and infrastructure providers",
         ],
@@ -173,10 +175,6 @@ const SECTIONS: Section[] = [
       {
         kind: "p",
         text: "These providers only receive the information necessary to perform services on our behalf.",
-      },
-      {
-        kind: "p",
-        text: "For more information about Google Analytics, please visit Google's Privacy Policy.",
       },
     ],
   },
@@ -202,7 +200,6 @@ const SECTIONS: Section[] = [
           "Shipping providers",
           "Email service providers",
           "Website hosting providers",
-          "Analytics providers",
         ],
       },
       {

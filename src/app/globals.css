@@ -68,6 +68,18 @@
   .animate-fade-up { animation: none; }
 }
 
+/* Keyboard focus indicator (WCAG 2.4.7). Applied globally because most controls
+   style :hover only, and many inputs set `outline-none` with just a border-colour
+   swap as their focus cue — invisible on a dark background.
+   :focus-visible means mouse clicks don't get a ring, only keyboard/AT focus.
+   The white offset ring keeps it visible on pink and gold backgrounds too. */
+:focus-visible {
+  outline: 2px solid var(--color-pink);
+  outline-offset: 2px;
+  border-radius: 2px;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.28);
+}
+
 [data-theme="light"] {
   --color-canvas: #fdf7f4;
   --color-canvas-elev: #ffffff;
@@ -77,7 +89,11 @@
   --color-line-strong: #d9c5cb;
   --color-ink: #1a0d12;
   --color-ink-dim: #5a3f48;
-  --color-ink-faint: #998084;
+  --color-ink-faint: #6f5b60;
+  /* Pink must be darkened for light backgrounds like blush/gold already are:
+     the dark-theme #ff4fa3 is only 2.87:1 on --color-canvas, failing WCAG AA
+     for the section eyebrows and small accent text that use it. */
+  --color-pink: #c01f68;
   --color-blush: #c4286d;
   --color-pink-deep: #b81e62;
   --color-gold: #9a7b1e;
