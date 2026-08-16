@@ -8,9 +8,6 @@
 // below are generated from lib/checkout/shipping.ts — the same module the
 // checkout API uses for authoritative totals — so a rate change in one place
 // updates this page automatically and the two can never disagree.
-//
-// ⚠ OWNER SIGN-OFF NEEDED on the values in OWNER_DECISIONS below. They are
-// reasonable defaults, not facts read out of the codebase.
 
 import { SHIPPING, SHIPPING_ORDER } from "@/lib/checkout/shipping";
 import type { Block, LegalDocument, Section } from "@/lib/legal/types";
@@ -21,8 +18,8 @@ export const SITE_URL = "https://www.sherryberries.com";
 export const SUPPORT_EMAIL = "sherryvanessanichols@gmail.com";
 
 /**
- * ⚠ Assumptions awaiting the owner's confirmation — nothing in the codebase
- * pins these down. Each is used exactly once below, so editing here is enough.
+ * Owner-confirmed on 2026-08-15. Nothing in the codebase pins these down, so
+ * they live here; each is used exactly once below, so editing here is enough.
  */
 const OWNER_DECISIONS = {
   /** Time between a paid order and hand-off to the carrier. */
