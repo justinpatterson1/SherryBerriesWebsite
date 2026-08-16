@@ -10,6 +10,12 @@ import { cardClass } from "./shared";
 // The published Returns Policy tells customers to start a return here, so until
 // the request flow is backed by the database this points them at a human. Any
 // change here should stay consistent with /help/returns.
+//
+// The per-item hygiene note matters: the Terms and the Returns Policy both say
+// pierced jewelry and aftercare cannot come back once unsealed, and this view
+// used to list every delivered order under "Orders you can return" with no hint
+// of that. It is a heads-up, not a gate — a human still decides at /contact,
+// and a damaged or incorrect item is always covered.
 
 export function ReturnsView({ eligibleOrders }: { eligibleOrders: AccountOrder[] }) {
   return (
@@ -58,35 +64,58 @@ export function ReturnsView({ eligibleOrders }: { eligibleOrders: AccountOrder[]
       </div>
 
       <div className={cardClass}>
-        <h3 className="font-display text-[22px] text-ink m-0 mb-4">
-          Orders you can return
+        <h3 className="font-display text-[22px] text-ink m-0 mb-3">
+          Your delivered orders
         </h3>
         {eligibleOrders.length === 0 ? (
           <p className="font-sans text-[14px] text-ink-dim m-0">
             None yet — orders become returnable once they&apos;ve been delivered.
           </p>
         ) : (
-          <div className="flex flex-col">
-            {eligibleOrders.map((o, i) => (
-              <div
-                key={o.id}
-                className={
-                  "py-4 " +
-                  (i > 0 ? "border-t border-white/[0.06] light:border-[rgba(26,13,18,0.08)]" : "")
-                }
-              >
-                <span className="font-sans text-[14px] font-semibold text-ink">
-                  {o.orderNumber}
-                </span>
-                <p className="font-sans text-[12px] text-ink-faint m-0 mt-1">
-                  {o.items.map((it) => it.name).join(" · ")}
-                </p>
-                <p className="font-sans text-[12px] text-ink-faint m-0 mt-1">
-                  Delivered {o.dateLabel}
-                </p>
-              </div>
-            ))}
-          </div>
+          <>
+            <p className="font-sans text-[13px] leading-[1.6] text-ink-dim m-0 mb-4 max-w-[560px]">
+              For hygiene reasons, jewelry and aftercare can only come back
+              sealed in their original packaging.{" "}
+              <span className="text-ink">
+                Anything that arrived damaged, defective, or incorrect is always
+                covered
+              </span>{" "}
+              — the note beside each item assumes nothing has gone wrong with it.
+            </p>
+            <div className="flex flex-col">
+              {eligibleOrders.map((o, i) => (
+                <div
+                  key={o.id}
+                  className={
+                    "py-4 " +
+                    (i > 0 ? "border-t border-white/[0.06] light:border-[rgba(26,13,18,0.08)]" : "")
+                  }
+                >
+                  <span className="font-sans text-[14px] font-semibold text-ink">
+                    {o.orderNumber}
+                  </span>
+                  <p className="font-sans text-[12px] text-ink-faint m-0 mt-1">
+                    Delivered {o.dateLabel}
+                  </p>
+                  <ul className="m-0 mt-2 p-0 list-none flex flex-col gap-1.5">
+                    {o.items.map((it) => (
+                      <li
+                        key={it.id}
+                        className="flex flex-wrap items-baseline gap-x-2 gap-y-1 font-sans text-[12px] text-ink-faint"
+                      >
+                        <span>{it.name}</span>
+                        <span className="rounded-full border border-white/14 py-0.5 px-2 text-[11px] leading-[1.4] text-ink-dim light:border-[rgba(26,13,18,0.14)]">
+                          {it.hygieneExcluded
+                            ? "Sealed & unopened only"
+                            : "Returnable if unused"}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>
