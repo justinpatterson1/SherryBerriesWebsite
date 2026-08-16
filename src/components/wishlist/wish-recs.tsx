@@ -2,19 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import type { RecProduct } from "./wishlist-client";
 
-function Stars({ rating }: { rating: number }) {
-  const full = Math.round(rating);
-  return (
-    <span
-      aria-label={`${rating.toFixed(1)} out of 5 stars`}
-      className="text-gold tracking-[1px] text-[13px] leading-none light:text-[#b8860b]"
-    >
-      {"★".repeat(full)}
-      {"☆".repeat(Math.max(0, 5 - full))}
-    </span>
-  );
-}
-
 function HeartIcon() {
   return (
     <svg
@@ -113,13 +100,6 @@ export function WishRecs({
             </div>
 
             <div className="p-4 pb-[18px] flex flex-col gap-2">
-              <div className="flex items-center gap-2 font-sans text-[11px] text-ink-faint tracking-[0.04em]">
-                <Stars rating={product.rating || 4.9} />
-                <span>
-                  {(product.rating || 4.9).toFixed(1)} · {product.reviewCount || 264}
-                </span>
-              </div>
-
               <Link
                 href={`/products/${product.slug}`}
                 className="font-serif text-lg leading-[1.25] text-ink no-underline hover:text-pink"

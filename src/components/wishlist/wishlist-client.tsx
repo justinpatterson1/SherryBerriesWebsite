@@ -18,8 +18,6 @@ export type RecProduct = {
   price: number;
   compareAtPrice: number | null;
   categoryName: string;
-  rating: number;
-  reviewCount: number;
 };
 
 export function WishlistClient({ recPool }: { recPool: RecProduct[] }) {

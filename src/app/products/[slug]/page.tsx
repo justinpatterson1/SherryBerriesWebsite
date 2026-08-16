@@ -6,8 +6,6 @@ import { ProductGallery } from "@/components/product/product-gallery";
 import { ProductBuyBox } from "@/components/product/product-buy-box";
 import { ProductWishlistButton } from "@/components/product/product-wishlist-button";
 import { ProductAccordion } from "@/components/product/product-accordion";
-// Re-enable alongside the reviews block below once review submission exists.
-// import { ProductReviews } from "@/components/product/product-reviews";
 import { ProductTrustBadges } from "@/components/product/product-trust-badges";
 import { RelatedProducts } from "@/components/product/related-products";
 
@@ -213,7 +211,6 @@ export default async function ProductPage({ params }: PageProps) {
         </div>
       </section>
 
-      {/* <ProductReviews reviews={product.reviews} /> */}
       <RelatedProducts products={related} />
     </main>
   );

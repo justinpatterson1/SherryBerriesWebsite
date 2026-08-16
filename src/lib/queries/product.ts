@@ -12,13 +12,6 @@ export async function getProductBySlug(slug: string) {
       variants: { orderBy: { value: "asc" } },
       category: true,
       tags: { select: { name: true } },
-      reviews: {
-        where: { approved: true },
-        orderBy: { createdAt: "desc" },
-        include: {
-          user: { select: { name: true, firstName: true, lastName: true } },
-        },
-      },
     },
   });
   if (!row) return null;
@@ -58,17 +51,6 @@ export async function getProductBySlug(slug: string) {
       inventory: v.inventory,
       additionalPrice: v.additionalPrice ? Number(v.additionalPrice) : 0,
     })),
-    reviews: row.reviews.map((r) => ({
-      id: r.id,
-      rating: r.rating,
-      title: r.title,
-      comment: r.comment,
-      createdAt: r.createdAt,
-      authorName:
-        r.user.name ??
-        [r.user.firstName, r.user.lastName].filter(Boolean).join(" ") ??
-        "Anonymous",
-    })),
   };
 }
 
@@ -84,8 +66,6 @@ export type ProductListItem = {
   jewelryType: JewelryType;
   categoryName: string;
   categorySlug: string;
-  rating: number;
-  reviewCount: number;
 };
 
 // Aftercare and elixirs — plus accessories and merch, which reuse the AFTERCARE
@@ -111,16 +91,10 @@ export async function listProducts(opts: {
     include: {
       images: { orderBy: { position: "asc" }, take: 1 },
       category: { select: { name: true, slug: true } },
-      reviews: { where: { approved: true }, select: { rating: true } },
     },
   });
 
   return rows.map((p) => {
-    const reviewCount = p.reviews.length;
-    const rating =
-      reviewCount > 0
-        ? p.reviews.reduce((acc, r) => acc + r.rating, 0) / reviewCount
-        : 0;
     return {
       id: p.id,
       slug: p.slug,
@@ -133,8 +107,6 @@ export async function listProducts(opts: {
       jewelryType: p.jewelryType,
       categoryName: p.category.name,
       categorySlug: p.category.slug,
-      rating,
-      reviewCount,
     };
   });
 }

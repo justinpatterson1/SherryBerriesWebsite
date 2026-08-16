@@ -12,7 +12,7 @@ import type { Block, LegalDocument, Section } from "@/lib/legal/types";
  * Bumped on 2026-08-08: removed the Google Analytics references and the
  * traffic-measurement cookie purpose, none of which the site actually does.
  */
-export const LAST_UPDATED = "August 8, 2026";
+export const LAST_UPDATED = "August 16, 2026";
 
 export const SITE_URL = "https://www.sherryberries.com";
 export const PRIVACY_EMAIL = "sherryvanessanichols@gmail.com";
@@ -151,9 +151,12 @@ const SECTIONS: Section[] = [
     blocks: [
       {
         kind: "p",
-        text: "If you submit a product review, testimonial, rating, or other content, that information may become publicly visible on the Website.",
+        text: "We do not currently accept product reviews, testimonials, or ratings on the Website, so we hold no such content about you.",
       },
-      { kind: "p", text: "Please avoid including sensitive personal information in any public review." },
+      {
+        kind: "p",
+        text: "If we introduce reviews, anything you submit may become publicly visible on the Website, and we would ask you to avoid including sensitive personal information in one.",
+      },
     ],
   },
   {

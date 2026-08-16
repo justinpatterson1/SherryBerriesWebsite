@@ -2,19 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import type { WishSnapshotItem } from "@/app/api/wishlist/snapshot/route";
 
-function Stars({ rating }: { rating: number }) {
-  const full = Math.round(rating);
-  return (
-    <span
-      aria-label={`${rating.toFixed(1)} out of 5 stars`}
-      className="text-gold tracking-[1px] text-[13px] leading-none light:text-[#b8860b]"
-    >
-      {"★".repeat(full)}
-      {"☆".repeat(Math.max(0, 5 - full))}
-    </span>
-  );
-}
-
 function HeartIcon() {
   return (
     <svg
@@ -161,13 +148,6 @@ export function WishCard({
         <span className="font-sans text-[10px] tracking-[0.18em] uppercase text-blush">
           {item.categoryName}
         </span>
-
-        <div className="flex items-center gap-2 font-sans text-[11px] text-ink-faint tracking-[0.04em]">
-          <Stars rating={item.rating || 4.9} />
-          <span>
-            {(item.rating || 4.9).toFixed(1)} · {item.reviewCount || 264}
-          </span>
-        </div>
 
         <Link
           href={`/products/${item.slug}`}
