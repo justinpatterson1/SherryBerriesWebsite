@@ -1,17 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { AdminData, AdminOrder, AdminOrderStatus, AdminProduct } from "@/lib/queries/admin";
-import type { ProductFormData } from "@/lib/admin/options";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type {
+  AdminCategory,
+  AdminData,
+  AdminOrder,
+  AdminOrderStatus,
+  AdminProduct,
+} from "@/lib/queries/admin";
+import type { CategoryFormData, ProductFormData } from "@/lib/admin/options";
 import { ICONS } from "@/components/admin/shared";
 import { OverviewView } from "@/components/admin/overview-view";
 import { OrdersView } from "@/components/admin/orders-view";
 import { OrderDetailView } from "@/components/admin/order-detail-view";
 import { InventoryView } from "@/components/admin/inventory-view";
+import { CategoriesView } from "@/components/admin/categories-view";
 import { AnalyticsView } from "@/components/admin/analytics-view";
 
-type View = "overview" | "orders" | "order-detail" | "inventory" | "analytics";
+type View = "overview" | "orders" | "order-detail" | "inventory" | "categories" | "analytics";
 
 const THEME_KEY = "sb-theme";
 
@@ -19,6 +26,7 @@ const SIDEBAR: { view: View; label: string; icon: keyof typeof ICONS }[] = [
   { view: "overview", label: "Overview", icon: "overview" },
   { view: "orders", label: "Orders", icon: "orders" },
   { view: "inventory", label: "Inventory", icon: "inventory" },
+  { view: "categories", label: "Categories", icon: "categories" },
   { view: "analytics", label: "Analytics", icon: "analytics" },
 ];
 
@@ -37,6 +45,9 @@ export function AdminClient({
   // Live, editable copies so status updates + inventory edits re-render in place.
   const [orders, setOrders] = useState<AdminOrder[]>(data.orders);
   const [products, setProducts] = useState<AdminProduct[]>(data.products);
+  // Held in state, not read from `data`, so a category added here is selectable
+  // in the product form immediately — without a page reload.
+  const [categories, setCategories] = useState<AdminCategory[]>(data.categories);
 
   // Toast
   const [toast, setToast] = useState<{ msg: string; id: number } | null>(null);
@@ -146,10 +157,9 @@ export function AdminClient({
         });
         const json = await res.json();
         if (!res.ok || !json.product) throw new Error(json.error);
-        setProducts((prev) =>
-          [json.product as AdminProduct, ...prev].sort((a, b) => a.name.localeCompare(b.name)),
-        );
-        showToast(`Added “${json.product.name}”`);
+        const created = json.product as AdminProduct;
+        setProducts((prev) => [created, ...prev].sort((a, b) => a.name.localeCompare(b.name)));
+        showToast(`Added “${created.name}”`);
         return true;
       } catch (e) {
         showToast(e instanceof Error && e.message ? e.message : "Couldn't add the product.");
@@ -169,10 +179,9 @@ export function AdminClient({
         });
         const json = await res.json();
         if (!res.ok || !json.product) throw new Error(json.error);
-        setProducts((prev) =>
-          prev.map((p) => (p.id === id ? (json.product as AdminProduct) : p)),
-        );
-        showToast(`Updated “${json.product.name}”`);
+        const next = json.product as AdminProduct;
+        setProducts((prev) => prev.map((p) => (p.id === id ? next : p)));
+        showToast(`Updated “${next.name}”`);
         return true;
       } catch (e) {
         showToast(e instanceof Error && e.message ? e.message : "Couldn't update the product.");
@@ -181,6 +190,84 @@ export function AdminClient({
     },
     [showToast],
   );
+
+  const createCategory = useCallback(
+    async (data: CategoryFormData): Promise<boolean> => {
+      try {
+        const res = await fetch("/api/admin/categories", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        const json = await res.json();
+        if (!res.ok || !json.category) throw new Error(json.error);
+        setCategories((prev) =>
+          [json.category as AdminCategory, ...prev].sort((a, b) => a.name.localeCompare(b.name)),
+        );
+        showToast(`Added “${json.category.name}”`);
+        return true;
+      } catch (e) {
+        showToast(e instanceof Error && e.message ? e.message : "Couldn't add the category.");
+        return false;
+      }
+    },
+    [showToast],
+  );
+
+  const updateCategory = useCallback(
+    async (id: string, data: CategoryFormData): Promise<boolean> => {
+      try {
+        const res = await fetch("/api/admin/categories", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, ...data }),
+        });
+        const json = await res.json();
+        if (!res.ok || !json.category) throw new Error(json.error);
+        const next = json.category as AdminCategory;
+        setCategories((prev) =>
+          prev.map((c) => (c.id === id ? next : c)).sort((a, b) => a.name.localeCompare(b.name)),
+        );
+        // A renamed category is stamped on every product row that shows it.
+        setProducts((prev) =>
+          prev.map((p) => (p.categoryId === id ? { ...p, category: next.name } : p)),
+        );
+        showToast(`Updated “${next.name}”`);
+        return true;
+      } catch (e) {
+        showToast(e instanceof Error && e.message ? e.message : "Couldn't update the category.");
+        return false;
+      }
+    },
+    [showToast],
+  );
+
+  const deleteCategory = useCallback(
+    async (id: string): Promise<boolean> => {
+      try {
+        const res = await fetch(`/api/admin/categories?id=${encodeURIComponent(id)}`, {
+          method: "DELETE",
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error);
+        setCategories((prev) => prev.filter((c) => c.id !== id));
+        showToast("Category deleted");
+        return true;
+      } catch (e) {
+        showToast(e instanceof Error && e.message ? e.message : "Couldn't delete the category.");
+        return false;
+      }
+    },
+    [showToast],
+  );
+
+  // Derived, not stored: `products` is the whole catalog, so these counts stay
+  // correct as products are added or moved without any bookkeeping.
+  const productCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const p of products) counts[p.categoryId] = (counts[p.categoryId] ?? 0) + 1;
+    return counts;
+  }, [products]);
 
   const sidebarActive: View = view === "order-detail" ? "orders" : view;
   const ordersBadge = orders.filter((o) => o.needsAction).length;
@@ -284,11 +371,20 @@ export function AdminClient({
           {view === "inventory" && (
             <InventoryView
               products={products}
-              categories={data.categories}
+              categories={categories}
               onSave={saveInventory}
               onConfirmDiscard={(fn) => setConfirmDiscard(() => fn)}
               onCreateProduct={createProduct}
               onUpdateProduct={updateProduct}
+            />
+          )}
+          {view === "categories" && (
+            <CategoriesView
+              categories={categories}
+              productCounts={productCounts}
+              onCreate={createCategory}
+              onUpdate={updateCategory}
+              onDelete={deleteCategory}
             />
           )}
           {view === "analytics" && <AnalyticsView data={data} />}

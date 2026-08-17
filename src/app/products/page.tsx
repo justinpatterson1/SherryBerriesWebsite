@@ -151,7 +151,6 @@ function ProductCard({
   product: Awaited<ReturnType<typeof listProducts>>[number];
   showCategory: boolean;
 }) {
-  const full = Math.round(product.rating);
   const out = product.inventory <= 0;
   return (
     <Link
@@ -193,21 +192,6 @@ function ProductCard({
       </div>
 
       <div className="p-4 pb-5 flex flex-col gap-2">
-        <div className="flex items-center gap-2 font-sans text-[11px] text-ink-faint">
-          <span
-            aria-label={`${product.rating.toFixed(1)} out of 5 stars`}
-            className="text-gold tracking-[1px] text-[13px] leading-none"
-          >
-            {"★".repeat(full)}
-            {"☆".repeat(Math.max(0, 5 - full))}
-          </span>
-          {product.reviewCount > 0 && (
-            <span>
-              {product.rating.toFixed(1)} · {product.reviewCount}
-            </span>
-          )}
-        </div>
-
         <span className="font-serif text-lg leading-[1.25] text-ink">
           {product.name}
         </span>

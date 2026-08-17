@@ -19,7 +19,7 @@ const HELP = [
   { label: "Contact", href: "/contact" },
   { label: "Shipping", href: "/help/shipping" },
   { label: "Returns", href: "/help/returns" },
-  { label: "Order Status", href: "/account/orders" },
+  { label: "Order Status", href: "/account?view=orders" },
   { label: "FAQ", href: "/#faq" },
 ];
 
@@ -79,9 +79,9 @@ export function Footer() {
           <Link href="/terms" className="text-[#8a8084] no-underline transition-colors duration-200 hover:text-blush">
             Terms
           </Link>
-          <Link href="/accessibility" className="text-[#8a8084] no-underline transition-colors duration-200 hover:text-blush">
-            Accessibility
-          </Link>
+          {/* No /accessibility page yet. Publishing a conformance statement while
+              known WCAG issues are open would be a claim we can't back, so the
+              link stays out until the page exists. */}
         </nav>
       </div>
     </footer>

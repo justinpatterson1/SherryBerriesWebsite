@@ -10,8 +10,6 @@ export type WishSnapshotItem = {
   imageUrl: string | null;
   price: number;
   compareAtPrice: number | null;
-  rating: number;
-  reviewCount: number;
   chips: string[];
   pin: "Bestseller" | "New" | null;
   addedAt: string | null;
@@ -56,7 +54,6 @@ export async function POST() {
       images: { orderBy: { position: "asc" }, take: 1 },
       category: { select: { name: true } },
       tags: { select: { name: true } },
-      reviews: { where: { approved: true }, select: { rating: true } },
     },
   });
 
@@ -66,11 +63,6 @@ export async function POST() {
   const items: WishSnapshotItem[] = ids.flatMap((id) => {
     const p = productById.get(id);
     if (!p) return [];
-    const reviewCount = p.reviews.length;
-    const rating =
-      reviewCount > 0
-        ? p.reviews.reduce((acc, r) => acc + r.rating, 0) / reviewCount
-        : 0;
     const tagNames = p.tags.map((t) => t.name);
     const chips = [
       ...(p.material ? [p.material] : []),
@@ -86,8 +78,6 @@ export async function POST() {
         imageUrl: p.images[0]?.imageUrl ?? null,
         price: Number(p.price),
         compareAtPrice: p.compareAtPrice ? Number(p.compareAtPrice) : null,
-        rating,
-        reviewCount,
         chips,
         pin: pinFor(tagNames),
         addedAt: added ? added.toISOString() : null,

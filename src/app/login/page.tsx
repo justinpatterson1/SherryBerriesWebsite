@@ -464,16 +464,13 @@ export default function LoginPage() {
 
           <p className="font-sans text-[13px] text-ink-faint text-center mt-1.5">
             {COPY[mode].foot}
-            <a
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                setMode(mode === "login" ? "signup" : "login");
-              }}
-              className="text-blush font-semibold no-underline transition-colors duration-200 hover:text-pink"
+            <button
+              type="button"
+              onClick={() => setMode(mode === "login" ? "signup" : "login")}
+              className="bg-transparent border-0 p-0 cursor-pointer font-sans text-[13px] text-blush font-semibold transition-colors duration-200 hover:text-pink"
             >
               {mode === "login" ? "Create an account" : "Sign in"}
-            </a>
+            </button>
           </p>
         </div>
       </section>

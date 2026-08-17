@@ -16,6 +16,34 @@ export const JEWELRY_TYPES: { value: string; label: string }[] = [
 
 export const JEWELRY_TYPE_VALUES = JEWELRY_TYPES.map((t) => t.value);
 
+// Types filed under these are treated as "not jewelry" by the products query,
+// so they never surface in the unfiltered Jewelry listing — only on their own
+// category page. Mirrors NON_JEWELRY_TYPES in lib/queries/product.ts; kept here
+// too so the admin form can warn before the choice hides a product.
+export const NON_JEWELRY_TYPE_VALUES = ["AFTERCARE", "ELIXIR"];
+
+/**
+ * Turn a category name into a URL slug. Shared by the form (to preview the
+ * address as you type) and the API route (which re-derives it, since the
+ * client's value is never trusted) so the two cannot disagree.
+ */
+export function slugifyCategory(s: string): string {
+  return s
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+export type CategoryFormData = {
+  name: string;
+  slug: string;
+  description: string;
+  imageUrl: string;
+  seoTitle: string;
+  seoDescription: string;
+};
+
 export type ProductFormData = {
   name: string;
   sku: string;

@@ -7,8 +7,12 @@
 
 import type { Block, LegalDocument, Section } from "@/lib/legal/types";
 
-/** Rendered in the hero and referenced by "Changes to This Privacy Policy". */
-export const LAST_UPDATED = "July 31, 2026";
+/**
+ * Rendered in the hero and referenced by "Changes to This Privacy Policy".
+ * Bumped on 2026-08-08: removed the Google Analytics references and the
+ * traffic-measurement cookie purpose, none of which the site actually does.
+ */
+export const LAST_UPDATED = "August 16, 2026";
 
 export const SITE_URL = "https://www.sherryberries.com";
 export const PRIVACY_EMAIL = "sherryvanessanichols@gmail.com";
@@ -106,7 +110,6 @@ const SECTIONS: Section[] = [
           "Remember your shopping cart",
           "Save your preferences",
           "Improve website performance",
-          "Measure website traffic",
           "Enhance your shopping experience",
         ],
       },
@@ -148,9 +151,12 @@ const SECTIONS: Section[] = [
     blocks: [
       {
         kind: "p",
-        text: "If you submit a product review, testimonial, rating, or other content, that information may become publicly visible on the Website.",
+        text: "We do not currently accept product reviews, testimonials, or ratings on the Website, so we hold no such content about you.",
       },
-      { kind: "p", text: "Please avoid including sensitive personal information in any public review." },
+      {
+        kind: "p",
+        text: "If we introduce reviews, anything you submit may become publicly visible on the Website, and we would ask you to avoid including sensitive personal information in one.",
+      },
     ],
   },
   {
@@ -165,7 +171,6 @@ const SECTIONS: Section[] = [
         kind: "list",
         items: [
           [{ b: "WiPay" }, " for secure payment processing"],
-          [{ b: "Google Analytics" }, " for website analytics"],
           "Email service providers for transactional and marketing emails",
           "Website hosting and infrastructure providers",
         ],
@@ -173,10 +178,6 @@ const SECTIONS: Section[] = [
       {
         kind: "p",
         text: "These providers only receive the information necessary to perform services on our behalf.",
-      },
-      {
-        kind: "p",
-        text: "For more information about Google Analytics, please visit Google's Privacy Policy.",
       },
     ],
   },
@@ -202,7 +203,6 @@ const SECTIONS: Section[] = [
           "Shipping providers",
           "Email service providers",
           "Website hosting providers",
-          "Analytics providers",
         ],
       },
       {

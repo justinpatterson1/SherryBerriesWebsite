@@ -11,24 +11,6 @@ export type View =
   | "profile"
   | "security";
 
-export type ReturnStatus =
-  | "Pending Review"
-  | "Approved"
-  | "Rejected"
-  | "In Transit"
-  | "Completed";
-
-export type ReturnRequest = {
-  id: string;
-  orderId: string;
-  orderNumber: string;
-  product: string;
-  reason: string;
-  notes: string;
-  status: ReturnStatus;
-  date: string; // "Mar 12, 2024"
-};
-
 export const money = (n: number) => `$${n.toFixed(2)}`;
 
 export function initials(firstName: string, lastName: string): string {

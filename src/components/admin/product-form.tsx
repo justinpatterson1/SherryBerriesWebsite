@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { AdminProduct, AdminCategory } from "@/lib/queries/admin";
-import { JEWELRY_TYPES, type ProductFormData } from "@/lib/admin/options";
+import { JEWELRY_TYPES, NON_JEWELRY_TYPE_VALUES, type ProductFormData } from "@/lib/admin/options";
 import { ProductThumb, btnSolid, btnOutline, ICONS } from "@/components/admin/shared";
 
 const fieldClass =
@@ -239,6 +239,13 @@ export function ProductForm({
                   </option>
                 ))}
               </select>
+              {/* The Jewelry listing hides these types, so the choice quietly
+                  decides whether the product is browsable. Say so. */}
+              <p className="mt-1.5 font-sans text-[11px] leading-[1.5] text-ink-faint">
+                {NON_JEWELRY_TYPE_VALUES.includes(f.jewelryType)
+                  ? "Hidden from the main Jewelry page — reachable only from its own category."
+                  : "Shown on the Jewelry page as well as its category."}
+              </p>
             </div>
           </div>
 

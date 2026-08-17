@@ -8,7 +8,7 @@
 import type { Block, LegalDocument, Section } from "@/lib/legal/types";
 
 /** Rendered in the hero and referenced by "Changes to These Terms". */
-export const LAST_UPDATED = "August 1, 2026";
+export const LAST_UPDATED = "August 16, 2026";
 
 export const SITE_URL = "https://www.sherryberries.com";
 export const TERMS_EMAIL = "sherryvanessanichols@gmail.com";
@@ -243,12 +243,15 @@ const SECTIONS: Section[] = [
     chip: "Reviews",
     kicker: "Your content",
     blocks: [
-      { kind: "p", text: "Customers may submit reviews, ratings, and other content." },
       {
         kind: "p",
-        text: "By submitting content you grant SherryBerries a non-exclusive, royalty-free license to display, reproduce, and use that content for operating and promoting our Website.",
+        text: "We do not currently accept customer reviews, ratings, or other submitted content on the Website. This section sets out the terms that will apply if we introduce them.",
       },
-      { kind: "p", text: "You agree not to submit content that:" },
+      {
+        kind: "p",
+        text: "Should you submit such content, you would grant SherryBerries a non-exclusive, royalty-free license to display, reproduce, and use that content for operating and promoting our Website.",
+      },
+      { kind: "p", text: "You would also agree not to submit content that:" },
       {
         kind: "list",
         items: [

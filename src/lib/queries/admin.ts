@@ -78,7 +78,15 @@ export type AdminProduct = {
   active: boolean;
 };
 
-export type AdminCategory = { id: string; name: string };
+export type AdminCategory = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  imageUrl: string | null;
+  seoTitle: string | null;
+  seoDescription: string | null;
+};
 
 export type TopProduct = {
   id: string;
@@ -254,8 +262,21 @@ export async function getAdminData(): Promise<AdminData> {
       where: { order: { createdAt: { gte: thirtyDaysAgo } } },
       _sum: { quantity: true },
     }),
-    // Category options for the add/edit product form.
-    prisma.category.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    // Category options for the add/edit product form, and the rows the
+    // Categories view manages. Product counts are derived client-side from the
+    // catalog above — it is every product, unfiltered, so the two always agree.
+    prisma.category.findMany({
+      orderBy: { name: "asc" },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        description: true,
+        imageUrl: true,
+        seoTitle: true,
+        seoDescription: true,
+      },
+    }),
   ]);
 
   // --- All-time + monthly trend ---------------------------------------------

@@ -8,26 +8,22 @@
 // reasons list is generated from RETURN_REASONS, the same list the request form
 // renders — and to be consistent with the hygiene exclusion already stated in
 // the Terms of Service.
-//
-// ⚠ OWNER SIGN-OFF NEEDED on the values in OWNER_DECISIONS below. They are
-// reasonable defaults for a Trinidad and Tobago jewelry retailer, not facts read
-// out of the codebase.
 
 import { RETURN_REASONS } from "@/lib/account/returns";
 import type { Block, LegalDocument, Section } from "@/lib/legal/types";
 
-export const LAST_UPDATED = "August 3, 2026";
+export const LAST_UPDATED = "August 15, 2026";
 
 export const SITE_URL = "https://www.sherryberries.com";
 export const SUPPORT_EMAIL = "sherryvanessanichols@gmail.com";
 
 /**
- * ⚠ Assumptions awaiting the owner's confirmation — nothing in the codebase
- * pins these down. Each is used exactly once below, so editing here is enough.
+ * Owner-confirmed on 2026-08-15. Nothing in the codebase pins these down, so
+ * they live here; each is used exactly once below, so editing here is enough.
  */
 const OWNER_DECISIONS = {
   /** Days after delivery in which a return may be opened. */
-  windowDays: 7,
+  windowDays: 14,
   /** How long a refund takes once the returned item has been inspected. */
   refundTime: "5 to 10 business days",
   /** Who pays return postage when the customer simply changed their mind. */

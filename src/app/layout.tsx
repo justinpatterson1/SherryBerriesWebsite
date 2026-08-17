@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Italiana, Playfair_Display, Inter, Caveat } from "next/font/google";
 import "./globals.css";
 import { SiteNavbar, SiteFooter } from "@/components/layout/site-chrome";
@@ -36,7 +36,13 @@ const caveat = Caveat({
 export const metadata: Metadata = {
   title: "SherryBerries",
   description: "Luxury body jewelry and aftercare from Trinidad and Tobago.",
-  viewport: "width=device-width, initial-scale=1",
+};
+
+// Must be its own export — Next ignores `viewport` inside `metadata` and warns
+// on every page that inherits this layout.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({

@@ -68,19 +68,6 @@ export function Hero() {
           </div>
         </div>
 
-        <div className={`${chipBase} bottom-7 right-7 [animation-delay:-3s] max-[900px]:bottom-3.5 max-[900px]:right-3.5`}>
-          <span className="w-9 h-9 rounded-full bg-gradient-to-br from-pink to-pink-deep inline-flex items-center justify-center text-white shrink-0 shadow-[0_6px_16px_rgba(255,79,163,0.45)] [&_svg]:w-[18px] [&_svg]:h-[18px] max-[900px]:w-7 max-[900px]:h-7 max-[900px]:[&_svg]:w-3.5 max-[900px]:[&_svg]:h-3.5">
-            <StarIcon />
-          </span>
-          <div>
-            <div className="font-sans text-[11px] font-semibold text-ink-faint tracking-[0.14em] uppercase leading-none mb-1 max-[900px]:text-[9px]">
-              4.9 / 5
-            </div>
-            <div className="font-sans text-sm font-semibold text-ink leading-[1.2] max-[900px]:text-xs">
-              2,400+ reviews
-            </div>
-          </div>
-        </div>
       </div>
 
       <div className="w-full px-[8%] max-[900px]:px-[6%]">
@@ -186,14 +173,6 @@ function ShieldIcon() {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M12 2 4 5v6c0 5 3.5 9.3 8 11 4.5-1.7 8-6 8-11V5l-8-3z" />
       <path d="m9 12 2 2 4-4" />
-    </svg>
-  );
-}
-
-function StarIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <path d="M12 2.5 14.9 9l7 .6-5.3 4.6L18.2 21 12 17.3 5.8 21l1.6-6.8L2.1 9.6l7-.6L12 2.5z" />
     </svg>
   );
 }

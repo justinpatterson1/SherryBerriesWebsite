@@ -3,19 +3,6 @@ import Link from "next/link";
 import type { BestsellerProduct, BestsellerPin } from "@/lib/queries/home";
 import { WishlistButton } from "./wishlist-button";
 
-function Stars({ rating }: { rating: number }) {
-  const full = Math.round(rating);
-  return (
-    <span
-      aria-label={`${rating.toFixed(1)} out of 5 stars`}
-      className="text-gold tracking-[1px] text-[13px] leading-none"
-    >
-      {"★".repeat(full)}
-      {"☆".repeat(Math.max(0, 5 - full))}
-    </span>
-  );
-}
-
 function tagClasses(tag: BestsellerPin) {
   const base =
     "absolute top-3.5 left-3.5 z-[2] py-[5px] px-[11px] rounded-full font-sans text-[9.5px] font-bold tracking-[0.16em] uppercase leading-none";
@@ -82,13 +69,6 @@ export function BestsellerCard({ product }: { product: BestsellerProduct }) {
       </button>
 
       <div className="p-4 pb-[18px] flex flex-col gap-2">
-        <div className="flex items-center gap-2 font-sans text-[11px] text-ink-faint tracking-[0.04em]">
-          <Stars rating={product.rating} />
-          <span>
-            {product.rating.toFixed(1)} · {product.reviewCount} reviews
-          </span>
-        </div>
-
         <Link
           href={`/products/${product.slug}`}
           className="font-serif text-lg leading-[1.25] text-ink no-underline hover:text-pink"

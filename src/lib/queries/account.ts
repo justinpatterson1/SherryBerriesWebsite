@@ -1,4 +1,5 @@
 import "server-only";
+import { isHygieneExcluded } from "@/lib/account/returns";
 import { prisma } from "@/lib/db";
 import type { FulfillmentStatus, PaymentStatus } from "@/generated/prisma/client";
 
@@ -45,6 +46,8 @@ export type AccountOrderItem = {
   price: number;
   lineTotal: number;
   img: string | null;
+  /** True where the published hygiene exclusion applies once unsealed. */
+  hygieneExcluded: boolean;
 };
 
 export type AccountOrder = {
@@ -176,6 +179,7 @@ export async function getAccountData(userId: string): Promise<AccountData | null
               select: {
                 name: true,
                 slug: true,
+                category: { select: { slug: true } },
                 images: {
                   orderBy: { position: "asc" },
                   take: 1,
@@ -237,6 +241,7 @@ export async function getAccountData(userId: string): Promise<AccountData | null
           price,
           lineTotal: Number((price * it.quantity).toFixed(2)),
           img: it.product.images[0]?.imageUrl ?? null,
+          hygieneExcluded: isHygieneExcluded(it.product.category.slug),
         };
       }),
     };

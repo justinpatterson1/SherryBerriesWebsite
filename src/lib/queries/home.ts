@@ -9,9 +9,15 @@ export type HomeCategory = {
   imageUrl: string | null;
 };
 
-export async function getHomeCategories(): Promise<HomeCategory[]> {
+/**
+ * Every category, or the first `limit` of them by name. The homepage caps its
+ * grid; the /products filter bar deliberately does not, so a category is always
+ * reachable even when it is not one of the ones featured on the homepage.
+ */
+export async function getHomeCategories(limit?: number): Promise<HomeCategory[]> {
   return prisma.category.findMany({
     orderBy: { name: "asc" },
+    take: limit,
     select: {
       id: true,
       slug: true,
@@ -31,8 +37,6 @@ export type BestsellerProduct = {
   imageUrl: string | null;
   priceNow: number;
   priceOld?: number;
-  rating: number;
-  reviewCount: number;
   chips: string[];
   pin?: BestsellerPin;
 };
@@ -59,16 +63,10 @@ export async function getBestsellers(limit = 8): Promise<BestsellerProduct[]> {
     include: {
       images: { orderBy: { position: "asc" }, take: 1 },
       tags: { select: { name: true } },
-      reviews: { where: { approved: true }, select: { rating: true } },
     },
   });
 
   return rows.map((p) => {
-    const reviewCount = p.reviews.length;
-    const rating =
-      reviewCount > 0
-        ? p.reviews.reduce((acc, r) => acc + r.rating, 0) / reviewCount
-        : 0;
     const tagNames = p.tags.map((t) => t.name);
     const pinMatch = PIN_PRIORITY.find((p) => tagNames.includes(p.tag));
     const chips = tagNames.filter((t) => CHIP_TAGS.has(t)).slice(0, 2);
@@ -79,8 +77,6 @@ export async function getBestsellers(limit = 8): Promise<BestsellerProduct[]> {
       imageUrl: p.images[0]?.imageUrl ?? null,
       priceNow: Number(p.price),
       priceOld: p.compareAtPrice ? Number(p.compareAtPrice) : undefined,
-      rating,
-      reviewCount,
       chips,
       pin: pinMatch?.pin,
     };

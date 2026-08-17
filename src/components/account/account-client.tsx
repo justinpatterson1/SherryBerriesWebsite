@@ -14,26 +14,17 @@ import type {
   AccountData,
   AccountProfile,
 } from "@/lib/queries/account";
-import { RETURN_REASONS } from "@/lib/account/returns";
-import {
-  ICONS,
-  initials,
-  type ReturnRequest,
-  type View,
-} from "./shared";
+import { ICONS, initials, type View } from "./shared";
 import { DashboardView, OrdersView, OrderDetailView } from "./order-views";
 import { ReturnsView } from "./returns-view";
 import { AddressesView, AddressForm } from "./addresses-view";
 import { ProfileView } from "./profile-view";
 import { SecurityView } from "./security-view";
 
-const RETURNS_KEY = "sb-acct-returns";
-
 type Modal =
   | { kind: "none" }
   | { kind: "address"; address: AccountAddress | null }
-  | { kind: "confirm-delete-address"; address: AccountAddress }
-  | { kind: "confirm-delete-account" };
+  | { kind: "confirm-delete-address"; address: AccountAddress };
 
 const SIDEBAR: { view: View; label: string; icon: keyof typeof ICONS }[] = [
   { view: "dashboard", label: "Dashboard", icon: "dashboard" },
@@ -60,10 +51,8 @@ export function AccountClient({ initial }: { initial: AccountData }) {
   const [addresses, setAddresses] = useState<AccountAddress[]>(initial.addresses);
   const orders = initial.orders;
 
-  const [returns, setReturns] = useState<ReturnRequest[]>([]);
   const [view, setView] = useState<View>("dashboard");
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
-  const [returnPrefill, setReturnPrefill] = useState<string | null>(null);
   const [modal, setModal] = useState<Modal>({ kind: "none" });
   const [modalBusy, setModalBusy] = useState(false);
   const [toast, setToast] = useState<{ msg: string; id: number } | null>(null);
@@ -74,34 +63,6 @@ export function AccountClient({ initial }: { initial: AccountData }) {
     setToast({ msg, id: Date.now() });
     toastTimer.current = setTimeout(() => setToast(null), 2600);
   }, []);
-
-  // Hydrate returns from sessionStorage; seed two demo requests from real orders
-  // on first visit (Returns has no DB model — this is client-state only).
-  useEffect(() => {
-    const stored = sessionStorage.getItem(RETURNS_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored) as ReturnRequest[];
-        // Deferred to a microtask to satisfy React 19's no-sync-setState-in-effect rule.
-        queueMicrotask(() => setReturns(parsed));
-        return;
-      } catch {
-        /* fall through to seed */
-      }
-    }
-    const seed: ReturnRequest[] = orders.slice(0, 2).map((o, i) => ({
-      id: `RT-${2041 - i}`,
-      orderId: o.id,
-      orderNumber: o.orderNumber,
-      product: o.items[0]?.name ?? "Item",
-      reason: i === 0 ? "Damaged Item" : "Changed Mind",
-      notes: i === 0 ? "The clasp arrived slightly bent." : "",
-      status: i === 0 ? "Approved" : "Pending Review",
-      date: o.dateLabel,
-    }));
-    queueMicrotask(() => setReturns(seed));
-    sessionStorage.setItem(RETURNS_KEY, JSON.stringify(seed));
-  }, [orders]);
 
   // Deep-link via ?view= (read once on mount; window avoids a Suspense boundary).
   useEffect(() => {
@@ -133,11 +94,6 @@ export function AccountClient({ initial }: { initial: AccountData }) {
     [],
   );
 
-  const persistReturns = useCallback((next: ReturnRequest[]) => {
-    setReturns(next);
-    sessionStorage.setItem(RETURNS_KEY, JSON.stringify(next));
-  }, []);
-
   const goto = useCallback((v: View) => setView(v), []);
 
   const openOrder = useCallback((id: string) => {
@@ -145,10 +101,7 @@ export function AccountClient({ initial }: { initial: AccountData }) {
     setView("order-detail");
   }, []);
 
-  const startReturn = useCallback((orderId: string) => {
-    setReturnPrefill(orderId);
-    setView("returns");
-  }, []);
+  const startReturn = useCallback(() => setView("returns"), []);
 
   const selectedOrder = useMemo(
     () => orders.find((o) => o.id === selectedOrderId) ?? null,
@@ -275,40 +228,6 @@ export function AccountClient({ initial }: { initial: AccountData }) {
     [showToast],
   );
 
-  // --- Returns -------------------------------------------------------------
-  const submitReturn = useCallback(
-    (data: { orderId: string; product: string; reason: string; notes: string }) => {
-      const order = orders.find((o) => o.id === data.orderId);
-      const next: ReturnRequest = {
-        id: `RT-${Math.floor(1000 + Math.random() * 9000)}`,
-        orderId: data.orderId,
-        orderNumber: order?.orderNumber ?? data.orderId,
-        product: data.product,
-        reason: data.reason,
-        notes: data.notes,
-        status: "Pending Review",
-        date: new Date().toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        }),
-      };
-      persistReturns([next, ...returns]);
-      setReturnPrefill(null);
-      showToast("Return request submitted ✦");
-    },
-    [orders, returns, persistReturns, showToast],
-  );
-
-  // --- Delete account ------------------------------------------------------
-  const deleteAccount = useCallback(() => {
-    setModal({ kind: "none" });
-    showToast("Account scheduled for deletion — redirecting…");
-    setTimeout(() => {
-      window.location.href = "/";
-    }, 1800);
-  }, [showToast]);
-
   const sidebarActive: View = view === "order-detail" ? "orders" : view;
 
   return (
@@ -363,13 +282,7 @@ export function AccountClient({ initial }: { initial: AccountData }) {
                   onClick={() => goto(item.view)}
                   icon={ICONS[item.icon]}
                   label={item.label}
-                  badge={
-                    item.view === "orders"
-                      ? orders.length
-                      : item.view === "returns"
-                        ? returns.length
-                        : undefined
-                  }
+                  badge={item.view === "orders" ? orders.length : undefined}
                 />
               ))}
 
@@ -427,15 +340,7 @@ export function AccountClient({ initial }: { initial: AccountData }) {
               onStartReturn={startReturn}
             />
           )}
-          {view === "returns" && (
-            <ReturnsView
-              eligibleOrders={eligibleOrders}
-              reasons={[...RETURN_REASONS]}
-              returns={returns}
-              prefillOrderId={returnPrefill}
-              onSubmit={submitReturn}
-            />
-          )}
+          {view === "returns" && <ReturnsView eligibleOrders={eligibleOrders} />}
           {view === "addresses" && (
             <AddressesView
               addresses={addresses}
@@ -448,12 +353,7 @@ export function AccountClient({ initial }: { initial: AccountData }) {
           {view === "profile" && (
             <ProfileView profile={profile} onSave={saveProfile} />
           )}
-          {view === "security" && (
-            <SecurityView
-              onChangePassword={changePassword}
-              onDeleteAccount={() => setModal({ kind: "confirm-delete-account" })}
-            />
-          )}
+          {view === "security" && <SecurityView onChangePassword={changePassword} />}
         </section>
       </div>
 
@@ -474,12 +374,6 @@ export function AccountClient({ initial }: { initial: AccountData }) {
               busy={modalBusy}
               onCancel={() => setModal({ kind: "none" })}
               onConfirm={() => confirmDeleteAddress(modal.address.id)}
-            />
-          )}
-          {modal.kind === "confirm-delete-account" && (
-            <ConfirmDeleteAccount
-              onCancel={() => setModal({ kind: "none" })}
-              onConfirm={deleteAccount}
             />
           )}
         </ModalScrim>
@@ -559,16 +453,21 @@ function ModalScrim({
   onClose: () => void;
 }) {
   return (
-    <div
-      onClick={onClose}
-      className="fixed inset-0 z-[300] grid place-items-center p-6 bg-black/60 backdrop-blur-[6px] animate-[fadeIn_0.2s_ease]"
-    >
+    <div className="fixed inset-0 z-[300] grid place-items-center p-6">
+      {/* Real button rather than a click handler on the backdrop div: it is
+          keyboard-reachable, carries an accessible name, and removes the
+          stopPropagation dance the dialog needed to avoid closing itself. */}
+      <button
+        type="button"
+        aria-label="Close dialog"
+        onClick={onClose}
+        className="absolute inset-0 w-full h-full cursor-default border-0 bg-black/60 backdrop-blur-[6px] animate-[fadeIn_0.2s_ease]"
+      />
       <div
-        onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         className={
-          "w-full max-w-[520px] max-h-[88vh] overflow-y-auto rounded-[22px] border border-line-pink " +
+          "relative w-full max-w-[520px] max-h-[88vh] overflow-y-auto rounded-[22px] border border-line-pink " +
           "bg-canvas-elev p-7 shadow-[0_30px_80px_rgba(0,0,0,0.6)] " +
           "animate-[modalIn_0.26s_cubic-bezier(0.22,1,0.36,1)] light:bg-card"
         }
@@ -619,56 +518,3 @@ function ConfirmDeleteAddress({
   );
 }
 
-function ConfirmDeleteAccount({
-  onCancel,
-  onConfirm,
-}: {
-  onCancel: () => void;
-  onConfirm: () => void;
-}) {
-  const [pwd, setPwd] = useState("");
-  return (
-    <div>
-      <div className="mb-5 p-4 rounded-xl border border-[rgba(192,57,43,0.4)] bg-[rgba(192,57,43,0.12)]">
-        <p className="font-sans text-[13px] font-semibold text-[#ff8d8d] m-0">
-          ⚠ This is permanent
-        </p>
-        <p className="font-sans text-[13px] leading-[1.6] text-ink-dim m-0 mt-1.5">
-          Your profile and saved addresses will be removed. Past orders are
-          retained in anonymized form for our records.
-        </p>
-      </div>
-      <h2 className="font-display text-[24px] text-ink m-0 mb-2">
-        Delete your account
-      </h2>
-      <p className="font-sans text-[13px] leading-[1.6] text-ink-dim m-0 mb-4">
-        Enter your password to confirm.
-      </p>
-      <input
-        type="password"
-        value={pwd}
-        onChange={(e) => setPwd(e.target.value)}
-        placeholder="Password"
-        autoComplete="current-password"
-        className="w-full h-12 px-4 mb-6 rounded-xl border border-white/12 bg-white/[0.03] font-sans text-[15px] text-ink placeholder:text-ink-faint outline-none focus:border-pink focus:bg-pink/[0.04] light:bg-white light:border-[rgba(26,13,18,0.12)]"
-      />
-      <div className="flex justify-end gap-2.5">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="py-2.5 px-5 rounded-full border border-white/14 bg-transparent text-ink-dim font-sans text-[12px] font-bold tracking-[0.12em] uppercase cursor-pointer hover:text-ink hover:border-blush transition-colors light:border-[rgba(26,13,18,0.14)]"
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          disabled={!pwd}
-          onClick={onConfirm}
-          className="py-2.5 px-5 rounded-full border-0 bg-[#c0392b] text-white font-sans text-[12px] font-bold tracking-[0.12em] uppercase cursor-pointer hover:bg-[#d6453a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Delete account
-        </button>
-      </div>
-    </div>
-  );
-}

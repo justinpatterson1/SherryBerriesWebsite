@@ -30,8 +30,6 @@ export default async function WishlistPage() {
       price: p.price,
       compareAtPrice: p.compareAtPrice,
       categoryName: p.categoryName,
-      rating: p.rating,
-      reviewCount: p.reviewCount,
     }));
 
   return <WishlistClient recPool={recPool} />;

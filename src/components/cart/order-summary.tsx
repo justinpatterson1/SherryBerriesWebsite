@@ -117,6 +117,7 @@ export function OrderSummary({
             onChange={(e) => setCode(e.target.value)}
             onKeyDown={onPromoKeyDown}
             placeholder="Promo code"
+            aria-label="Promo code"
             autoComplete="off"
             className={
               "h-11 px-3.5 rounded-xl border border-white/12 bg-white/[0.03] " +
