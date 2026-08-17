@@ -1,13 +1,50 @@
-# Current Feature
+# Current Feature: Admin-managed jewelry categories
 
 ## Status
-Not Started
+In Progress
+
+## Decisions (locked at `start`, 2026-08-16)
+1. **Category CRUD only.** `JewelryType` stays a Prisma enum a developer extends; a new category picks an existing enum value, exactly as the seed already does for `accessories` and `merch`. No migration on this branch.
+2. **A Categories tab in `/admin`**, alongside Inventory — list, add/edit modal, delete — matching how the admin area is already built, so the image and SEO fields have somewhere to live.
+3. **Delete is blocked while products reference the category**, reporting the count. `Product.categoryId` is required with no `onDelete`, so the database refuses it regardless; the UI surfaces that honestly rather than pretending to cascade.
 
 ## Goals
-<!-- Populated by /feature load -->
+- An admin can **create a new jewelry category** from the admin area — name, slug, description, image, SEO fields — without a developer, a deploy, or a migration.
+- An admin can **edit and remove** an existing category, with removal blocked (or reassignment forced) while products still reference it.
+- A new category is immediately **usable as a filter**: it appears in the `/products` chip row and `?category=<slug>` returns its products.
+- A new category is immediately **selectable when adding or editing a product** in the admin product form.
+- Adding a category does not silently mis-classify its products anywhere downstream — the Jewelry-vs-non-jewelry split, the homepage category cards, and the returns hygiene rule all account for it.
 
 ## Notes
-<!-- Populated by /feature load -->
+
+### The request spans two different things, and only one of them is a database row
+
+The ask — "add a category … so it can be used to filter … and used when choosing **jewelry type** for new jewelry" — touches two separate fields on `Product`, which behave very differently:
+
+| | `categoryId` → `Category` | `jewelryType` → `JewelryType` |
+|---|---|---|
+| Storage | a **table row** ([schema.prisma:161](../prisma/schema.prisma#L161)) | a **Prisma enum** ([schema.prisma:29](../prisma/schema.prisma#L29)) |
+| Add a value | insert a row — no deploy | edit the schema, **migrate**, regenerate the client, redeploy |
+| Drives | `/products?category=<slug>`, the chip row, homepage cards | the Jewelry-vs-aftercare split, PDP breadcrumb |
+| Admin UI today | **none** — categories exist only from the seed | fixed list in [options.ts](../src/lib/admin/options.ts) `JEWELRY_TYPES` |
+
+So "add a category" is genuinely runtime data, but "add a jewelry type" is a schema change as the code stands. **This is the decision to lock at `start`:**
+
+1. **Category CRUD only** — admin manages categories; `jewelryType` stays a fixed enum a developer extends. Smallest change, ships fast, but a new category still has to borrow an existing enum value (the seed already does this — `accessories` and `merch` are both filed under the `AFTERCARE` catch-all).
+2. **Promote `JewelryType` to a table too** — both become runtime-managed and the distinction mostly collapses into one concept. Honest and future-proof, but it's a migration touching `Product`, the seed, the admin form, the products query and the PDP breadcrumb.
+3. **Collapse the two into one** — decide category *is* the jewelry type and drop the enum. Simplest final model; largest blast radius.
+
+### Existing couplings a new category must not break
+
+- **[product.ts](../src/lib/queries/product.ts) `NON_JEWELRY_TYPES`** — `["AFTERCARE","ELIXIR"]` decides what the unfiltered `/products` Jewelry view hides. A new category needs an answer for whether it is jewelry.
+- **[returns.ts](../src/lib/account/returns.ts) `isHygieneExcluded`** — an allowlist over category slugs; anything unrecognised is treated as hygiene-excluded **by design** (written 2026-08-16). A new returnable category must be added there or it will show "Sealed & unopened only" in the account Returns view.
+- **[products/page.tsx:47](../src/app/products/page.tsx#L47)** — `aftercare` and `merch` are hardcoded as the two "not a jewelry browse" slugs that suppress the filter bar.
+- **`getHomeCategories`** feeds the homepage cards and the filter chips; `Category.imageUrl` is optional, so a new category needs an image or a graceful fallback.
+- **`Category.slug` is `@unique`** and `Product.categoryId` is required with no `onDelete` — deleting a category that still has products will fail at the database, so the UI must handle it.
+- **[footer.tsx](../src/components/layout/footer.tsx)** hardcodes five category links; new categories will not appear there automatically. Worth deciding whether that list should become dynamic.
+
+### Out of scope unless raised at `start`
+Reordering categories on the homepage, per-category SEO landing copy, and category images uploaded through R2 (the upload route exists at `/api/admin/upload`, but wiring it into a category form is extra).
 
 ---
 

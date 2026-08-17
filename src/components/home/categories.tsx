@@ -14,8 +14,13 @@ const cardClass =
   "before:bg-[radial-gradient(circle,rgba(255,79,163,0.5),transparent_65%)] " +
   "before:opacity-0 before:transition-opacity before:duration-[380ms] hover:before:opacity-100";
 
+// The grid is four columns, so eight fills exactly two rows at every breakpoint
+// that has more than one. Categories beyond this are still reachable from the
+// filter bar on /products, which is not capped.
+const HOME_CATEGORY_LIMIT = 8;
+
 export async function Categories() {
-  const categories = await getHomeCategories();
+  const categories = await getHomeCategories(HOME_CATEGORY_LIMIT);
 
   return (
     <section

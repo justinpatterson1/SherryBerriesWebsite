@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/db";
+import { NON_JEWELRY_TYPE_VALUES } from "@/lib/admin/options";
 import type { JewelryType } from "@/generated/prisma/client";
 
 export type ProductDetail = NonNullable<Awaited<ReturnType<typeof getProductBySlug>>>;
@@ -70,8 +71,10 @@ export type ProductListItem = {
 
 // Aftercare and elixirs — plus accessories and merch, which reuse the AFTERCARE
 // jewelry type as a catch-all — are not jewelry. The Jewelry listing excludes
-// them so they only surface on their own category pages.
-const NON_JEWELRY_TYPES: JewelryType[] = ["AFTERCARE", "ELIXIR"];
+// them so they only surface on their own category pages. The list lives in
+// lib/admin/options so the admin product form can warn that picking one of
+// these hides the product from the Jewelry page.
+const NON_JEWELRY_TYPES = NON_JEWELRY_TYPE_VALUES as JewelryType[];
 
 export async function listProducts(opts: {
   categorySlug?: string;

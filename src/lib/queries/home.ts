@@ -9,9 +9,15 @@ export type HomeCategory = {
   imageUrl: string | null;
 };
 
-export async function getHomeCategories(): Promise<HomeCategory[]> {
+/**
+ * Every category, or the first `limit` of them by name. The homepage caps its
+ * grid; the /products filter bar deliberately does not, so a category is always
+ * reachable even when it is not one of the ones featured on the homepage.
+ */
+export async function getHomeCategories(limit?: number): Promise<HomeCategory[]> {
   return prisma.category.findMany({
     orderBy: { name: "asc" },
+    take: limit,
     select: {
       id: true,
       slug: true,
