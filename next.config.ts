@@ -17,6 +17,7 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "loremflickr.com" },
+      { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "live.staticflickr.com" },
       { protocol: "https", hostname: "**.r2.dev" },
       ...r2Pattern(),
