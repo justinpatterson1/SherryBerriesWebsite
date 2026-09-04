@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import type { ReactNode } from "react";
-import type { AccountAddress, AccountOrder } from "@/lib/queries/account";
+import type { AccountOrder } from "@/lib/queries/account";
 import { StatusBadge, btnOutline, btnSolid, cardClass, money, type View } from "./shared";
 
 // --- shared bits ------------------------------------------------------------
@@ -225,14 +225,15 @@ export function OrdersView({
 
 const TRACK_STAGES = ["Pending", "Processing", "Packed", "Shipped", "Delivered"];
 
+// The ship-to comes off the order itself, not from the customer's address book.
+// It used to be passed in as their current default, which made every past order
+// look as though it had shipped wherever they live now.
 export function OrderDetailView({
   order,
-  shipTo,
   onBack,
   onStartReturn,
 }: {
   order: AccountOrder | null;
-  shipTo: AccountAddress | null;
   onBack: () => void;
   onStartReturn: (orderId: string) => void;
 }) {
@@ -266,27 +267,36 @@ export function OrderDetailView({
         </div>
         <div className={cardClass}>
           <CardTitle>Shipping</CardTitle>
-          {shipTo ? (
+          {order.shipTo ? (
             <>
-              <Row label="Recipient" value={shipTo.fullName} />
+              <Row label="Recipient" value={order.shipTo.name ?? "—"} />
               <Row
                 label="Address"
                 value={
                   <span className="text-right">
-                    {shipTo.line1}
-                    {shipTo.line2 ? <><br />{shipTo.line2}</> : null}
-                    <br />
-                    {[shipTo.city, shipTo.region].filter(Boolean).join(", ")}
-                    <br />
-                    {shipTo.country}
+                    {order.shipTo.line1}
+                    {order.shipTo.city ? (
+                      <>
+                        <br />
+                        {order.shipTo.city}
+                      </>
+                    ) : null}
+                    {order.shipTo.landmark ? (
+                      <>
+                        <br />
+                        <span className="text-ink-faint">
+                          Near {order.shipTo.landmark}
+                        </span>
+                      </>
+                    ) : null}
                   </span>
                 }
               />
-              <Row label="Contact" value={shipTo.phone || "—"} last />
+              <Row label="Contact" value={order.shipTo.phone || "—"} last />
             </>
           ) : (
             <p className="font-sans text-[13px] text-ink-dim m-0">
-              No saved address on file.
+              We don&apos;t have a delivery address recorded against this order.
             </p>
           )}
         </div>

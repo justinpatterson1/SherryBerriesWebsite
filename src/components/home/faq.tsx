@@ -198,15 +198,18 @@ export function Faq() {
               className="object-cover"
             />
           </div>
+          {/* Was "Free Aftercare Guide" — a 12-page emailed guide that does not
+              exist, with a CTA to /aftercare-guide, which has never been a
+              route. Now promotes the real aftercare range the photo shows. */}
           <h3 className="font-display text-[28px] leading-[1.1] text-ink mt-[22px] mb-2.5 mx-1">
-            Free Aftercare Guide
+            Aftercare Essentials
           </h3>
           <p className="font-sans text-[17px] leading-[1.6] text-ink-dim m-1 mb-6">
-            A 12-page studio-tested guide to cleaning, healing, and downsizing — emailed
-            straight to your inbox.
+            Saline mists, healing oils, and salt soaks — the studio-tested pieces we
+            reach for while a piercing settles.
           </p>
           <Link
-            href="/aftercare-guide"
+            href="/products?category=aftercare"
             className={
               "flex items-center justify-center gap-2.5 w-full py-[18px] px-6 rounded-full " +
               "bg-blush text-[#1a0d12] font-sans text-base font-bold tracking-[0.14em] uppercase no-underline " +
@@ -216,7 +219,7 @@ export function Faq() {
               "hover:-translate-y-0.5 hover:gap-4 hover:shadow-[0_14px_30px_rgba(247,182,210,0.4)]"
             }
           >
-            Get yours free <span aria-hidden="true">→</span>
+            Shop aftercare <span aria-hidden="true">→</span>
           </Link>
         </aside>
       </div>

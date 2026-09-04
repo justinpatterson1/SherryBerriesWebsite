@@ -18,21 +18,7 @@ a legal page that the code contradicts.
 
 ### 1. ~~"Free shipping over $80" advertised but never applied~~ — **RESOLVED 2026-08-06**, see Resolved section
 
-### 1a. Other product-page and cart claims contradict the published policies
-
-Removing the $80 claim left the surrounding copy in those same components, and it disagrees with the [Returns Policy](../src/lib/legal/returns-policy.ts) and [Shipping Policy](../src/lib/legal/shipping-policy.ts) published on 2026-08-03:
-
-| Claim | Where | Published policy says |
-|---|---|---|
-| "14-day returns · **Free** returns on unworn pieces" | [trust-strip.tsx](../src/components/cart/trust-strip.tsx) | change-of-mind postage paid by the **customer** — returns are not free *(the 14 days is now correct)* |
-| "returnable within 14 days for **store credit**" | [products/[slug]/page.tsx](../src/app/products/%5Bslug%5D/page.tsx) | refund to the **original payment method**, not store credit *(the 14 days is now correct)* |
-| "Trinidad & Tobago delivery in **2–4 business days**" | [products/[slug]/page.tsx](../src/app/products/%5Bslug%5D/page.tsx) | TTPost **3–5**, courier **1–2** — 2–4 matches neither |
-
-Same failure mode as issue 1: marketing copy written before the policies existed.
-
-**Resolved rows:** the return *window* is settled — the owner chose **14 days** on 2026-08-15 (issue 3), which is what these badges already said, so [product-trust-badges.tsx](../src/components/product/product-trust-badges.tsx) needed no change and dropped off this table. The Afterpay row went with issue 15.
-
-**Fix:** correct the "Free" returns claim and the "store credit" wording, and decide the real delivery estimate.
+### 1a. ~~Other product-page and cart claims contradict the published policies~~ — **RESOLVED 2026-08-17**, see Resolved section
 
 ### 2. ~~`/cart` and `/checkout` compute completely different totals~~ — **RESOLVED 2026-08-07**, see Resolved section
 
@@ -60,13 +46,9 @@ This survived the 2026-08-16 review removal by the owner's explicit decision —
 
 **Fix:** owner supplies genuine quotes; paste them into `TESTIMONIALS` and delete the placeholder note. No code change needed.
 
-### 6b. The hero asserts a fabricated customer count
+### 6b. ~~The hero asserts a fabricated customer count~~ — **RESOLVED 2026-08-17**, see Resolved section
 
-[hero.tsx:132](../src/components/home/hero.tsx#L132) — *"Trusted by 12,400+ sweet berries worldwide — and counting"* — beside four decorative gradient circles standing in for customer avatars. The number has no source. "worldwide" also contradicts the [Shipping Policy](../src/lib/legal/shipping-policy.ts), which says the business does not ship internationally.
-
-Deliberately left in place on 2026-08-16 as out of scope for the reviews work; the adjacent "4.9 / 5 · 2,400+ reviews" tile *was* removed in that pass.
-
-**Fix:** cut the tile, or replace the count with something true.
+### 6c. ~~Two membership perks are advertised but not implemented~~ — **RESOLVED 2026-08-17**, see Resolved section
 
 ### 7. ~~The Terms' hygiene exclusion contradicts the Returns UI~~ — **RESOLVED 2026-08-15**, see Resolved section
 
@@ -108,21 +90,9 @@ Until a domain is verified, Resend only delivers to the account owner. Order con
 
 ## P4 — Known limitations and code hygiene
 
-### 16. Returns still have no Prisma model
+### 16. ~~Returns still have no Prisma model~~ — **RESOLVED 2026-08-18**, see Resolved section
 
-**Partly addressed.** The `sessionStorage` request form and its two fabricated demo entries are **gone** — the view now points the customer at `/contact`, so nothing pretends to be submitted any more *(this happened in the launch-prep pass; the register described the old form until 2026-08-15)*.
-
-What remains is the underlying gap: there is **no `ReturnRequest` model**, so a return is an email thread with no record in the system and no status a customer can check.
-
-**Fix:** add the model and rebuild the request flow on top of it. Lower urgency than it was — the UI is now honest about what it does.
-
-### 17. Orders carry no address snapshot
-
-The `Order` schema has no address columns, so `/account` shows the customer's **current default address** as the ship-to for every historical order. Change your address and past orders appear to have shipped there.
-
-Typed shipping details are snapshotted into `Order.notes` as a workaround.
-
-**Fix:** add address columns (a migration) and read from them.
+### 17. ~~Orders carry no address snapshot~~ — **RESOLVED 2026-08-19**, see Resolved section
 
 ### 18. Delete-account is a mock
 
@@ -146,18 +116,103 @@ Produces a build warning on every page that inherits it (`/privacy`, `/terms`, `
 
 **Fix:** move it to the separate `viewport` export Next asks for.
 
-### 23. No legal or policy page has been verified in a browser
+### 24. ~~The newsletter signup does nothing~~ — **RESOLVED 2026-08-18**, see Resolved section
 
-`/privacy`, `/terms`, `/help/returns` and `/help/shipping` were verified by production-build server render, structural HTML checks, and a verbatim copy diff — **not** visually. The Playwright MCP server did not connect during either session.
+### 25. ⚠ The subscriber list contains 200 fake seeded addresses
 
-Unverified: responsive breakpoints, light theme, and the **18 jump chips** on `/terms` wrapping (the densest chip row on the site).
+`seedNewsletter()` in [seed.ts](../prisma/seed.ts) creates **200 faker addresses** at `@berrymail.test`, and they are already in the production Neon database — that is why the newsletter migration needed a backfill step.
 
-**Fix:** one manual pass over the four pages at a narrow viewport and in light theme.
+Now that the signup writes to that same table, **the list is 200 fake rows plus any real signups**. Sending to it would blow the sender's bounce rate on a domain that is not even verified yet (issue 12).
+
+**Fix:** before the first send, delete the seeded rows — `DELETE FROM "NewsletterSubscriber" WHERE source = 'seed' OR email LIKE '%@berrymail.test'` — and stop seeding them, or gate `seedNewsletter()` to non-production.
+
+### 23. ~~No legal or policy page has been verified in a browser~~ — **RESOLVED 2026-08-19**, see Resolved section
+
+### 26. The public site's light theme resets on every navigation
+
+[navbar.tsx:66](../src/components/layout/navbar.tsx#L66) holds the theme in `useState<Theme>("dark")` and writes it to `<html data-theme>` — but it **never reads or writes `localStorage`**. So the navbar's toggle works on the page you are looking at and is forgotten the moment you navigate or reload.
+
+The admin area, by contrast, *does* persist to `localStorage["sb-theme"]` ([admin-client.tsx:32](../src/components/admin/admin-client.tsx#L32)). **Both use the same key**, so an admin who picks light in `/admin` still gets dark everywhere else — the public site ignores the stored value entirely.
+
+Found while verifying issue 23: `localStorage` held `light` while the page rendered `dark`. The `light:` Tailwind variants throughout the codebase are therefore near-unreachable in normal use, despite being carefully maintained (they render correctly when forced — see the Resolved entry).
+
+**Fix:** read `sb-theme` on mount in the navbar and write on toggle, matching the admin. Note the naive version causes a hydration mismatch — the server cannot know the stored value, so it needs the usual inline-script-before-paint or a `suppressHydrationWarning` pass.
 
 ---
 
 ## Resolved
 
+- **2026-08-19** — *(was P4 issue 23)* **All four legal pages verified in a real browser.** Playwright connected this time, so the visual pass that had been outstanding since 2026-08-03 is done. Checked `/terms`, `/privacy`, `/help/returns` and `/help/shipping` at **360 / 753 / 1425 px**, in both themes.
+  - **The specific worry was unfounded.** `/terms`' **18 jump chips** wrap cleanly — 8 rows at 360px, 4 at 753px, 3 at 1425px — with **no clipping and every chip ≥44px tall**. Nothing overflows: `scrollWidth === clientWidth` on all four pages at all three widths, and a sweep of every element's bounding box found **zero** extending past the viewport.
+  - **Light theme renders correctly** and all three body-text tokens pass **WCAG AA** against the cream background: `ink` 17.82:1, `ink-dim` 8.84:1, `ink-faint` 5.92:1.
+  - **Structure confirmed live**, not just in the HTML: 1 `h1` per page; `/terms` 18 chips / 18 `h2`, `/privacy` 14, `/help/returns` 10, `/help/shipping` 10 — and **every jump-chip anchor resolves to a real section** on all four pages. The Shipping Policy's generated rates render with the right money — Pickup Free, TTPost $25.00, Courier $40.00 — confirming the [shipping.ts](../src/lib/checkout/shipping.ts) derivation survives to the page.
+  - **⚠ Found a self-contradiction and fixed it:** the Terms intro still listed *"leaving reviews"* among what the Website is for, while the Customer Reviews section says *"We do not currently accept customer reviews."* That was **my own miss from issue 6** — I rewrote the section and never checked the intro. Removed. *(This edits owner-supplied copy, which the module header says to keep verbatim; a legal page contradicting itself was the worse option.)*
+  - **⚠ Found a real bug, logged as issue 26, not fixed:** the public site's light theme **resets on every navigation** — the navbar never persists it, while the admin does, using the same `localStorage` key. Caught precisely because `localStorage` said `light` and the page rendered `dark`. Fixing it properly needs hydration handling, so it is its own task.
+
+  **Verification method matters here:** overflow and tap-target checks were done by measuring `getBoundingClientRect()` across every element rather than eyeballing screenshots, which is why "nothing overflows" is a real claim and not an impression. Screenshots were taken alongside and confirmed the same. Typecheck, `npm test` 48/48 and production build clean after the Terms edit.
+- **2026-08-19** — *(was P4 issue 17)* **Orders now carry their own ship-to address.** `/account` had been showing the customer's **current default address** as the destination for every historical order — [account-client.tsx](../src/components/account/account-client.tsx) passed `addresses.find(a => a.isDefault)` into the detail view, so changing your address rewrote where every past order appeared to have gone.
+  - **Migration `20260820021856_order_address_snapshot`** adds six nullable columns to `Order` — `shipName`, `shipPhone`, `shipEmail`, `shipLine1`, `shipCity`, `shipLandmark` — matching what the checkout form actually collects (no region/postal/country; every order is domestic).
+  - **The migration backfills existing orders** from the JSON the checkout had been stuffing into `Order.notes` as a workaround, so real past orders keep the address they genuinely shipped to. Written as a row-by-row `DO` block with a **per-row exception handler**, because `notes` is `TEXT` and seeded orders hold a plain lorem sentence there — a set-based `notes::jsonb` would abort on the first one. Rows that are not the expected shape are left unsnapshotted, which is correct: they never had an address.
+  - **[ship-to.ts](../src/lib/account/ship-to.ts)** is a new pure module: prefer the snapshot columns, fall back to parsing legacy `notes`, and **return null when neither exists**. "Unknown" had to be representable — the alternative is exactly the bug being fixed. Extracted out of the `server-only` query module so it is unit-testable without a database.
+  - **Checkout writes the snapshot** alongside the existing `notes` blob, which is kept because it also carries shipping method, payment and promo.
+  - **The customer detail view reads `order.shipTo`**, and the `shipTo` prop is gone from `OrderDetailView` entirely, so the old address-book value cannot be passed back in by accident. Landmark now renders as "Near …", which the address book had no field for.
+  - **⚠ Scope note — one thing added beyond the issue:** the *admin* order detail view showed **no delivery address at all**, which made it unusable for actually packing an order. Now that the snapshot exists it was a few lines to add a "Ship to" card, so it is in. Legacy orders there say so explicitly rather than showing a blank.
+
+  **Verification:** `npm test` **48/48** (6 new on the resolver — snapshot wins over stale notes, non-JSON notes do not throw, JSON without an address line yields null). Typecheck, lint (28 pre-existing warnings, unchanged) and production build all clean. **Not verified in a browser** — both views need a signed-in session, and confirming the backfill needs an order placed through checkout before today.
+- **2026-08-18** — *(was P4 issue 24)* **The newsletter signup writes to a real list, with a working unsubscribe.** It previously took an address, waited 600 ms on a `setTimeout`, showed success, and discarded it.
+  - **The table already existed.** `NewsletterSubscriber` has been in the schema since the original migration — the form simply never wrote to it. Extended rather than replaced: added `source`, `unsubscribedAt`, and a unique `unsubscribeToken`.
+  - **Migration `20260818040000_newsletter_subscriptions` is hand-written**, because Prisma refused to generate it: the table already held **200 rows**, so a required unique column cannot be added in one step. The SQL adds the token nullable, backfills it with `gen_random_uuid()`, then applies `NOT NULL` and the unique index. **Verified against the live database with an empty `--create-only` probe** — no drift, the hand-written SQL matches the schema exactly.
+  - **`POST /api/newsletter`** — rate-limited on the existing contact bucket (5/hour/IP), validates through a shared pure module, and **upserts**: re-signing up an address that had unsubscribed clears `unsubscribedAt`, which is the point. The reply is **identical** whether the address is new, already subscribed, or returning, so the endpoint cannot be used to test whether someone is on the list.
+  - **Unsubscribe works without an account** — [`/unsubscribe?token=…`](../src/app/unsubscribe/page.tsx) is idempotent, `noindex`, and stamps `unsubscribedAt` rather than deleting the row, so the link keeps working and there is a record of consent being withdrawn.
+  - **[privacy.ts](../src/lib/legal/privacy.ts) gained a Newsletter section** — what is stored, that unsubscribing is one click and needs no contact, and that it stops marketing only: order and account emails are not marketing and keep coming. `LAST_UPDATED` → **August 18, 2026**.
+  - **One more unhonoured perk removed on the way past:** the block's own blurb still promised *"members-only discounts"*, the same claim deleted in issue 6c. Now reads "Soft drops and healing tips — … Unsubscribe any time."
+
+  **Verification:** `npm test` **42/42** (5 new on validation and normalisation — case-folding matters, or `Sam@x.com` and `sam@x.com` become two rows that both get the newsletter). Typecheck, lint (28 pre-existing warnings, unchanged) and production build clean, with `/api/newsletter` and `/unsubscribe` both registered. **Not verified in a browser.**
+
+  **⚠ Read issue 25 before sending anything** — the list currently contains 200 fake seeded addresses. Also note nothing *sends* a newsletter yet; this collects the list, it does not mail it.
+- **2026-08-18** — *(was P4 issue 16)* **Return requests are real: `ReturnRequest` model, a working form, and an admin queue.** A return had been an email thread with no record and no status anyone could check.
+  - **Migration `20260818030809_add_return_requests`**, applied to Neon. New `ReturnStatus` enum (**REQUESTED → APPROVED → REFUNDED**, with **REJECTED** as the dead end) and a `ReturnRequest` model scoped to **one OrderItem**, not a whole order — that is what the customer picks and what the policy describes, so two items returned from one order open two requests with separate outcomes. The product is reachable through `orderItem`, so it is not duplicated on the row.
+  - **⚠ A schema trap worth remembering:** adding the back-relations with `sed` matched `Product` and `ProductVariant` as well as the intended models, and **`prisma format` then silently auto-completed the other side**, giving `ReturnRequest` `productId` and `productVariantId` columns nobody asked for. `prisma validate` passed — the schema was consistent, just wrong. Caught by reading the formatted model before migrating. Always re-read a model after `prisma format` adds a relation.
+  - **Final sale is now enforced, not advised.** `allowedReasonsFor(categorySlug)` drops **"Changed Mind"** on final-sale items, so the form does not offer it and `POST /api/account/returns` re-checks the same rule server-side — the select is a convenience, not the gate. **This supersedes the "advisory, not a gate" note in issue 7's entry below**, which was written when there was no submission flow to gate. Every *fault* reason stays available on final-sale items, which is the carve-out the policy and the Sale of Goods Act both require.
+  - **Customer flow** — [account/returns-view.tsx](../src/components/account/returns-view.tsx) is a real form (item → reason → notes) plus a list of requests showing reference, status and any admin note. Items already under an open request are **left out of the picker** rather than offered and refused. The API validates ownership, delivery state and category from the **database**, never from the request body.
+  - **Admin queue** — new Returns tab ([admin/returns-view.tsx](../src/components/admin/returns-view.tsx)) with a "Needs action" filter and a sidebar badge. Only forward transitions are offered; `REJECTED`/`REFUNDED` are terminal and the API refuses to reopen them, so the buttons disappear rather than failing. **Rejecting requires a note**, since that is the thing a customer would otherwise write in to ask about. Built deliberately — a model with no admin screen would have repeated the reviews black hole (issue 6).
+  - **References** are `RT-####`, `@unique`, retried on collision with a timestamp fallback so a clash cannot fail a customer's request.
+
+  **Verification:** `npm test` **37/37** (5 new, covering the reason gate on final-sale and returnable categories, unknown categories, and reasons not on the list at all). Typecheck, lint (28 pre-existing warnings, unchanged) and production build clean, with `/api/account/returns` and `/api/admin/returns` both registered. **Not verified in a browser** — both surfaces need a signed-in session, and the admin queue additionally needs a delivered order to request against.
+
+  **Still open:** nothing emails the customer when a request changes status, and nothing emails the owner when one arrives — the admin badge is the only signal. Approving does not move money; `REFUNDED` is a record that someone issued a refund by hand.
+- **2026-08-17** — *(was P1 issue 6c)* **The unhonoured membership perks are gone.** The issue listed two claims in two files; the sweep found the aftercare-guide promise in **five** places, one of them a dead link.
+  - **"10% off your first order"** — removed from [login/page.tsx](../src/app/login/page.tsx) and the [newsletter.tsx](../src/components/home/newsletter.tsx) perk row. No signup discount exists; the seeded codes are all manual entry and the one named `WELCOME20` is **20%**, so even the number was wrong.
+  - **The aftercare guide, which has never existed**, removed from: the login pitch, the newsletter perks, the [hero marquee](../src/components/home/hero.tsx) ("Free piercing aftercare guide"), and the cart's [order-summary.tsx](../src/components/cart/order-summary.tsx) ("Free aftercare guide with every order").
+  - **⚠ A dead link nobody had logged** — [faq.tsx](../src/components/home/faq.tsx) carried a whole promo card for a *"Free Aftercare Guide … 12-page studio-tested guide … emailed straight to your inbox"* whose CTA pointed at **`/aftercare-guide`, which has never been a route**. The `/aftercare-guide` footer link was commented out long ago ([footer.tsx:13](../src/components/layout/footer.tsx#L13)); this live one was missed. The card is a sticky grid column, so deleting it needed layout rework — and its photo is literally an aftercare kit. It now promotes the **real aftercare range** (`/products?category=aftercare`, "Aftercare Essentials", CTA "Shop aftercare"), which removes the false claim and fixes the dead link without a redesign. *Say the word if you would rather the card went entirely.*
+  - **The login pitch now sells what actually exists** — "Track your orders, save the pieces you love, and check out faster next time." All three are real: `/account?view=orders`, the auth-gated wishlist, and checkout prefilling from the saved default address.
+  - **The newsletter perk row is down to one item**, "Early access drops" — and note the newsletter **does not work**: [newsletter.tsx](../src/components/home/newsletter.tsx) still has `// TODO: wire to real subscribe action` and fakes success with a 600 ms timer, so nobody is subscribed to receive those drops. **Logged as new issue 24.**
+
+  **Verification:** zero live occurrences of "10% off", "aftercare guide" or `/aftercare-guide` in `src` outside explanatory comments. Typecheck, `npm test` 32/32, lint (28 pre-existing warnings, unchanged) and production build all clean. **Not visually verified** — the hero marquee dropped to 2 items and the cart perk list to 2.
+- **2026-08-17** — *(was P1 issue 6b)* **The fabricated customer count is gone from both places it appeared.**
+  - **Homepage hero tile deleted** — [hero.tsx](../src/components/home/hero.tsx). The whole block went, not just the number: it was four decorative gradient circles standing in for customer avatars plus *"Trusted by 12,400+ sweet berries worldwide — and counting."* There was no coherent partial removal — strip the figure and the sentence reads *"Trusted by sweet berries worldwide"*, still fake social proof, still implying customers via the avatars, and **"worldwide" separately contradicts the [Shipping Policy](../src/lib/legal/shipping-policy.ts)**, which says the business does not ship internationally.
+  - **A second instance the register never listed** — [login/page.tsx](../src/app/login/page.tsx) opened its signup pitch with *"Join 12,400+ berries"*, the same invented figure. Removed; the rest of that sentence was left alone and logged as **new issue 6c**, since it advertises a signup discount and free aftercare that do not exist.
+
+  **Verification:** zero occurrences of `12,400`, `2,400` or "Trusted by" anywhere in `src`. Typecheck, `npm test` 32/32, lint (28 pre-existing warnings, unchanged) and production build all clean. **Not visually verified** — the hero lost a block beneath its CTA row, so the column spacing is worth a look.
+- **2026-08-17** — *(owner rule change, not an issue fix)* **Jewelry and aftercare are now FINAL SALE.** The owner's rule: nothing comes back once it has left the business. This replaced the 14-day-on-sealed-jewelry position published hours earlier the same day, so parts of the 1a entry below are already superseded — the *claims* it fixed were made accurate, then the underlying policy changed.
+  - **Scope, as decided:** final sale covers **jewelry, aftercare and elixirs**; **merch and accessories stay returnable** while unused within **14 days** (no hygiene risk in a tote bag). **Cancellation before dispatch is still allowed** with a full refund — nothing has left yet.
+  - **⚠ The one thing deliberately not disclaimed:** items that arrive **damaged, defective, or incorrect** are always replaced or refunded, final sale or not, with postage on us. A blanket no-returns term would not survive the **Sale of Goods Act** — goods must be of merchantable quality and match their description, and a published term cannot remove that. The owner was asked and chose this carve-out. The Terms now say so explicitly, including that nothing in them removes a customer's statutory rights.
+  - **`isHygieneExcluded` renamed `isFinalSale`** in [returns.ts](../src/lib/account/returns.ts). The allowlist logic is unchanged — the *consequence* changed from "returnable while sealed" to "does not come back", and the old name would have been a lie in every call site.
+  - **Surfaces updated:** [returns-policy.ts](../src/lib/legal/returns-policy.ts) (the "Return Window" section is gone, folded into eligibility; "Items That Cannot Be Returned" became **"Jewelry and Aftercare Are Final Sale"**), [terms.ts](../src/lib/legal/terms.ts), [trust-strip.tsx](../src/components/cart/trust-strip.tsx), [product-trust-badges.tsx](../src/components/product/product-trust-badges.tsx), the PDP accordion, [returns-view.tsx](../src/components/account/returns-view.tsx) and the admin [categories-view.tsx](../src/components/admin/categories-view.tsx) pill. `LAST_UPDATED` bumped to **August 17, 2026** on both legal pages.
+  - **The PDP is now product-aware:** `ProductTrustBadges` takes a `categorySlug` and renders **"Final sale"** or **"Easy returns"** accordingly, and the accordion copy branches the same way. A single badge would have been wrong on half the catalogue — a tee is not final sale.
+  - **The cart strip states the rule instead of a promise** — it cannot know what is in the bag, so it reads *"Final sale on jewelry · merch returnable in 14 days · faults always covered."*
+
+  **Verification:** `npm test` **32/32**, including three new assertions that the *published* policy really says final sale, really keeps the damaged/defective carve-out, and never says "free returns". Typecheck, lint (28 pre-existing warnings, unchanged) and production build all clean. **Not visually verified.**
+
+  **Still open:** the account Returns view lets a customer open a request against any delivered order and only *labels* items final sale — it is a heads-up, not a gate (see issue 16; there is still no `ReturnRequest` model to gate).
+- **2026-08-17** — *(was P1 issue 1a)* **The last three product-page and cart claims now match the published policies**, and are generated rather than retyped so they cannot drift again.
+  - **"Free returns" deleted** — [trust-strip.tsx](../src/components/cart/trust-strip.tsx) now reads *"Sealed, unopened pieces · return postage yours"*. Change-of-mind postage is the customer's, per the owner's 2026-08-15 sign-off.
+  - **"Store credit" corrected** — the PDP accordion now says refunds go to **the original payment method**, which is what the Returns Policy has always said.
+  - **"2–4 business days" replaced with the real rate table** — the accordion now lists Pickup / TTPost / Courier with fees and ETAs **generated from [shipping.ts](../src/lib/checkout/shipping.ts)**, the same module the checkout API charges from. The old figure matched no method the site offers. This is the pattern [shipping-policy.ts](../src/lib/legal/shipping-policy.ts) already used; the PDP simply wasn't wired to it.
+  - **A fourth error the register never listed:** both badges said returns apply to **"unworn"** pieces. The hygiene exclusion turns on whether the packaging was **opened**, not whether the item was worn — an opened-but-unworn piece cannot come back. Both now say *sealed*. [product-trust-badges.tsx](../src/components/product/product-trust-badges.tsx) had been declared correct and dropped from the table on 2026-08-15 because its **14 days** was right; the "unworn" wording next to it was not.
+  - **`RETURN_WINDOW_DAYS` added to [returns.ts](../src/lib/account/returns.ts)** — one constant, imported by the cart strip, the product badge, the PDP accordion **and** `OWNER_DECISIONS` in [returns-policy.ts](../src/lib/legal/returns-policy.ts). It lives in that light client-safe module rather than in the policy document so the cart doesn't pull the whole legal doc into the browser bundle. Changing the window is now a one-line edit that moves every surface at once.
+
+  **Verification:** two new tests — one pinning the constant, one asserting the **rendered policy section** actually contains the same window, since a constant agreeing with itself proves nothing. `npm test` **29/29**, typecheck, lint (28 pre-existing warnings, unchanged) and production build all clean. Zero occurrences of "store credit", "2–4 business", "Free returns" or "Unworn pieces" left in `src` outside the explanatory comments. **Not visually verified** — the accordion body went from one sentence to a short list, so it is worth a look on a narrow viewport.
 - **2026-08-16** — *(was P1 issue 6)* **Reviews removed from the site; the legal clauses rewritten as forward-looking.** The owner chose removal over building a submission flow. The register framed this as a licence-clause problem, but the live problem was larger: **seeded faker reviews were driving star ratings and review counts across the storefront**, so every product card displayed social proof that no customer had given.
   - **Display removed** — star rows and counts deleted from [products/page.tsx](../src/app/products/page.tsx), [bestseller-card.tsx](../src/components/home/bestseller-card.tsx), [wish-card.tsx](../src/components/wishlist/wish-card.tsx) and [wish-recs.tsx](../src/components/wishlist/wish-recs.tsx), along with the four local `Stars` components. The two wishlist cards were the worst of it: they rendered `item.rating || 4.9` and `item.reviewCount || 264`, **fabricating "4.9 · 264" whenever the real data was zero**.
   - **Hero tile removed** — the floating "4.9 / 5 · 2,400+ reviews" chip and its now-unused `StarIcon` in [hero.tsx](../src/components/home/hero.tsx).

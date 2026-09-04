@@ -8,7 +8,7 @@
 import type { Block, LegalDocument, Section } from "@/lib/legal/types";
 
 /** Rendered in the hero and referenced by "Changes to These Terms". */
-export const LAST_UPDATED = "August 16, 2026";
+export const LAST_UPDATED = "August 17, 2026";
 
 export const SITE_URL = "https://www.sherryberries.com";
 export const TERMS_EMAIL = "sherryvanessanichols@gmail.com";
@@ -29,7 +29,10 @@ const INTRO: Block[] = [
     text: [
       'These Terms of Service ("Terms") govern your access to and use of ',
       { href: "http://www.sherryberries.com", text: "www.sherryberries.com" },
-      ' (the "Website"), including browsing our products, creating an account, placing orders, leaving reviews, and using any services offered through our Website.',
+      // "leaving reviews" removed 2026-08-19: reviews were taken off the site
+      // (issue 6) and the Customer Reviews section below now says we do not
+      // accept them, so the intro was contradicting it.
+      ' (the "Website"), including browsing our products, creating an account, placing orders, and using any services offered through our Website.',
     ],
   },
   {
@@ -187,7 +190,11 @@ const SECTIONS: Section[] = [
       },
       {
         kind: "p",
-        text: "For hygiene and safety reasons, certain body jewelry and pierced jewelry products may not be eligible for return unless they arrive damaged or defective.",
+        text: "For hygiene and safety reasons, body jewelry, pierced jewelry, and aftercare products are sold as final sale: once an order has been collected or handed to a carrier, they cannot be returned or exchanged, whether or not the packaging has been opened.",
+      },
+      {
+        kind: "p",
+        text: "This does not limit your rights where an item arrives damaged, defective, or is not what you ordered. Those items are always replaced or refunded, and nothing in these Terms removes any right you have under the laws of Trinidad and Tobago.",
       },
       {
         kind: "p",

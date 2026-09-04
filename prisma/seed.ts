@@ -14,6 +14,7 @@
  */
 
 import "dotenv/config";
+import { randomBytes } from "node:crypto";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { faker } from "@faker-js/faker";
 import bcrypt from "bcrypt";
@@ -743,6 +744,8 @@ async function seedNewsletter() {
       create: {
         email,
         subscribedAt: faker.date.past({ years: 2 }),
+        source: "seed",
+        unsubscribeToken: randomBytes(24).toString("hex"),
       },
     });
   }

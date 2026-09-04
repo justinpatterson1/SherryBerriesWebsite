@@ -13,6 +13,7 @@ import type {
   AccountAddress,
   AccountData,
   AccountProfile,
+  AccountReturn,
 } from "@/lib/queries/account";
 import { ICONS, initials, type View } from "./shared";
 import { DashboardView, OrdersView, OrderDetailView } from "./order-views";
@@ -50,6 +51,8 @@ export function AccountClient({ initial }: { initial: AccountData }) {
   const [profile, setProfile] = useState<AccountProfile>(initial.profile);
   const [addresses, setAddresses] = useState<AccountAddress[]>(initial.addresses);
   const orders = initial.orders;
+  // Held in state so a newly opened request appears in the list immediately.
+  const [returns, setReturns] = useState<AccountReturn[]>(initial.returns);
 
   const [view, setView] = useState<View>("dashboard");
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
@@ -282,7 +285,15 @@ export function AccountClient({ initial }: { initial: AccountData }) {
                   onClick={() => goto(item.view)}
                   icon={ICONS[item.icon]}
                   label={item.label}
-                  badge={item.view === "orders" ? orders.length : undefined}
+                  badge={
+                    item.view === "orders"
+                      ? orders.length
+                      : item.view === "returns"
+                        ? returns.filter(
+                            (r) => r.status === "REQUESTED" || r.status === "APPROVED",
+                          ).length
+                        : undefined
+                  }
                 />
               ))}
 
@@ -335,12 +346,20 @@ export function AccountClient({ initial }: { initial: AccountData }) {
           {view === "order-detail" && (
             <OrderDetailView
               order={selectedOrder}
-              shipTo={addresses.find((a) => a.isDefault) ?? addresses[0] ?? null}
               onBack={() => goto("orders")}
               onStartReturn={startReturn}
             />
           )}
-          {view === "returns" && <ReturnsView eligibleOrders={eligibleOrders} />}
+          {view === "returns" && (
+            <ReturnsView
+              eligibleOrders={eligibleOrders}
+              returns={returns}
+              onSubmitted={(created) => {
+                setReturns((prev) => [created, ...prev]);
+                showToast(`Return ${created.reference} opened`);
+              }}
+            />
+          )}
           {view === "addresses" && (
             <AddressesView
               addresses={addresses}

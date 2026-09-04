@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { AdminCategory } from "@/lib/queries/admin";
 import { slugifyCategory, type CategoryFormData } from "@/lib/admin/options";
-import { isHygieneExcluded } from "@/lib/account/returns";
+import { isFinalSale } from "@/lib/account/returns";
 import { ProductThumb, btnSolid, btnOutline, cardClass, ICONS } from "@/components/admin/shared";
 
 const fieldClass =
@@ -102,11 +102,7 @@ export function CategoriesView({
                     <Pill>
                       {count} product{count === 1 ? "" : "s"}
                     </Pill>
-                    <Pill>
-                      {isHygieneExcluded(c.slug)
-                        ? "Returns: sealed only"
-                        : "Returns: if unused"}
-                    </Pill>
+                    <Pill>{isFinalSale(c.slug) ? "Final sale" : "Returnable if unused"}</Pill>
                   </div>
                 </div>
 
@@ -142,10 +138,11 @@ export function CategoriesView({
       </div>
 
       <p className="font-sans text-[12px] leading-[1.6] text-ink-faint m-0 px-1">
-        <span className="text-ink-dim">Note:</span> the &ldquo;Returns&rdquo; label reflects the
-        published hygiene exclusion, which treats anything that is not merchandise or an
-        accessory as returnable only while sealed. A new category is classified as
-        sealed-only until a developer says otherwise.
+        <span className="text-ink-dim">Note:</span> jewelry and aftercare are final sale once
+        an order leaves — anything that is not merchandise or an accessory is treated that
+        way, so a new category is <strong>final sale</strong> until a developer says
+        otherwise. Items that arrive damaged, defective, or incorrect are always covered,
+        whatever this label says.
       </p>
 
       {(adding || editing) && (

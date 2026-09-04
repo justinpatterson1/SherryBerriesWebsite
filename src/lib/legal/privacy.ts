@@ -12,7 +12,7 @@ import type { Block, LegalDocument, Section } from "@/lib/legal/types";
  * Bumped on 2026-08-08: removed the Google Analytics references and the
  * traffic-measurement cookie purpose, none of which the site actually does.
  */
-export const LAST_UPDATED = "August 16, 2026";
+export const LAST_UPDATED = "August 18, 2026";
 
 export const SITE_URL = "https://www.sherryberries.com";
 export const PRIVACY_EMAIL = "sherryvanessanichols@gmail.com";
@@ -156,6 +156,28 @@ const SECTIONS: Section[] = [
       {
         kind: "p",
         text: "If we introduce reviews, anything you submit may become publicly visible on the Website, and we would ask you to avoid including sensitive personal information in one.",
+      },
+    ],
+  },
+  {
+    id: "newsletter",
+    title: "Newsletter Emails",
+    chip: "Newsletter",
+    kicker: "Marketing",
+    blocks: [
+      {
+        kind: "p",
+        text: "If you sign up for our newsletter, we store the email address you gave us, the date you signed up, and where on the Website you signed up from. We do not need an account for this, and we do not use the address for anything else.",
+      },
+      {
+        kind: "p",
+        text: [
+          "Every newsletter carries an unsubscribe link, and you can use it at any time without contacting us. Unsubscribing stops the newsletter only — order confirmations, shipping updates, and account emails are not marketing and keep coming, because you need them.",
+        ],
+      },
+      {
+        kind: "p",
+        text: "When you unsubscribe we keep a record that the address opted out, rather than deleting it outright, so that we do not add you back by mistake. You can ask us to erase it entirely.",
       },
     ],
   },

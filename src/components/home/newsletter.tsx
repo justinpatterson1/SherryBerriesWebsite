@@ -1,24 +1,47 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { validateNewsletterEmail } from "@/lib/newsletter/validate";
 
-const PERKS = [
-  "10% off your first order",
-  "Early access drops",
-  "Free aftercare guide",
-];
+// Only perks the site can actually deliver. Removed 2026-08-17: "10% off your
+// first order" (no signup discount exists — registering grants nothing, and the
+// seeded codes are all manual entry) and "Free aftercare guide" (there is no
+// aftercare guide; /aftercare-guide has never been a route).
+const PERKS = ["Early access drops"];
 
 export function Newsletter() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "submitting" | "done">("idle");
+  const [error, setError] = useState<string | null>(null);
 
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!email || status !== "idle") return;
+    if (status !== "idle") return;
+
+    // Validated here for a fast, in-place message; the API validates again,
+    // since nothing stops a request arriving without going through this form.
+    const check = validateNewsletterEmail(email);
+    if (!check.ok) return setError(check.error);
+
+    setError(null);
     setStatus("submitting");
-    // TODO: wire to real subscribe action
-    await new Promise((r) => setTimeout(r, 600));
-    setStatus("done");
+    try {
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: check.email }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error);
+      setStatus("done");
+    } catch (err) {
+      setError(
+        err instanceof Error && err.message
+          ? err.message
+          : "We couldn't sign you up just now. Please try again.",
+      );
+      setStatus("idle");
+    }
   };
 
   return (
@@ -52,8 +75,8 @@ export function Newsletter() {
           Join the <span className="font-serif italic text-pink">Berry List</span>.
         </h2>
         <p className="font-sans text-lg leading-[1.6] text-ink-dim mt-[22px] mb-10 max-w-[620px]">
-          Soft drops, healing tips, and members-only discounts — straight to your inbox,
-          never too often.
+          Soft drops and healing tips — straight to your inbox, never too often.
+          Unsubscribe any time.
         </p>
 
         {status === "done" ? (
@@ -105,6 +128,15 @@ export function Newsletter() {
               <span aria-hidden="true">→</span>
             </button>
           </form>
+        )}
+
+        {error && (
+          <p
+            role="alert"
+            className="font-sans text-[13px] text-[#ff8d8d] mt-3.5 m-0"
+          >
+            {error}
+          </p>
         )}
 
         <div className="flex items-center flex-wrap justify-center gap-4 mt-9 font-sans text-xs font-medium tracking-[0.18em] uppercase text-ink-faint">

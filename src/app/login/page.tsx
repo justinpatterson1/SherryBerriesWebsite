@@ -40,8 +40,8 @@ const COPY: Record<Mode, { title: ReactNode; sub: ReactNode; foot: ReactNode }> 
     ),
     sub: (
       <>
-        Join 12,400+ berries — get 10% off your first order, early drops, and free
-        aftercare with every piece.
+        Track your orders, save the pieces you love, and check out faster next
+        time.
       </>
     ),
     foot: <>Already have an account? </>,

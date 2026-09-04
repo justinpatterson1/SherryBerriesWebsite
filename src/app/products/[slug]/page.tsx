@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getProductBySlug, getRelatedProducts } from "@/lib/queries/product";
+import { isFinalSale, RETURN_WINDOW_DAYS } from "@/lib/account/returns";
+import { SHIPPING, SHIPPING_ORDER } from "@/lib/checkout/shipping";
 import { ProductGallery } from "@/components/product/product-gallery";
 import { ProductBuyBox } from "@/components/product/product-buy-box";
 import { ProductWishlistButton } from "@/components/product/product-wishlist-button";
@@ -142,7 +144,7 @@ export default async function ProductPage({ params }: PageProps) {
             )}
           </div>
 
-          <ProductTrustBadges />
+          <ProductTrustBadges categorySlug={product.category.slug} />
 
           <ProductAccordion
             sections={[
@@ -199,11 +201,51 @@ export default async function ProductPage({ params }: PageProps) {
               {
                 key: "shipping",
                 title: "Shipping & returns",
+                // Generated from the checkout's own rate table and the return
+                // window the policy publishes, so this can't drift from what a
+                // customer is actually charged or actually entitled to. The
+                // previous copy claimed "2–4 business days" (matching no
+                // method) and "store credit" (the policy refunds to the
+                // original payment method).
                 body: (
-                  <p className="m-0">
-                    Trinidad & Tobago delivery in 2–4 business days. Unworn pieces
-                    returnable within 14 days for store credit.
-                  </p>
+                  <div className="flex flex-col gap-2.5">
+                    <p className="m-0">
+                      Delivery within Trinidad &amp; Tobago, by the method you choose at
+                      checkout:
+                    </p>
+                    <ul className="m-0 pl-4 flex flex-col gap-1">
+                      {SHIPPING_ORDER.map((key) => {
+                        const option = SHIPPING[key];
+                        return (
+                          <li key={option.key}>
+                            {option.label} — {option.fee === 0 ? "Free" : `$${option.fee.toFixed(2)}`}.{" "}
+                            {option.eta}.
+                          </li>
+                        );
+                      })}
+                    </ul>
+                    <p className="m-0">
+                      {isFinalSale(product.category.slug) ? (
+                        <>
+                          This is a <strong>final sale</strong> item: jewelry and aftercare
+                          cannot be returned or exchanged once an order has left us, opened
+                          or not. Anything that arrives damaged, defective, or incorrect is
+                          always put right at no cost to you.
+                        </>
+                      ) : (
+                        <>
+                          Unused items can be returned within {RETURN_WINDOW_DAYS} days and are
+                          refunded to your original payment method. Anything that arrives
+                          damaged, defective, or incorrect is always covered.
+                        </>
+                      )}{" "}
+                      See our{" "}
+                      <Link href="/help/returns" className="text-blush underline">
+                        Returns Policy
+                      </Link>
+                      .
+                    </p>
+                  </div>
                 ),
               },
             ]}

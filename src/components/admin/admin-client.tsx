@@ -8,6 +8,7 @@ import type {
   AdminOrder,
   AdminOrderStatus,
   AdminProduct,
+  AdminReturn,
 } from "@/lib/queries/admin";
 import type { CategoryFormData, ProductFormData } from "@/lib/admin/options";
 import { ICONS } from "@/components/admin/shared";
@@ -16,9 +17,17 @@ import { OrdersView } from "@/components/admin/orders-view";
 import { OrderDetailView } from "@/components/admin/order-detail-view";
 import { InventoryView } from "@/components/admin/inventory-view";
 import { CategoriesView } from "@/components/admin/categories-view";
+import { AdminReturnsView } from "@/components/admin/returns-view";
 import { AnalyticsView } from "@/components/admin/analytics-view";
 
-type View = "overview" | "orders" | "order-detail" | "inventory" | "categories" | "analytics";
+type View =
+  | "overview"
+  | "orders"
+  | "order-detail"
+  | "inventory"
+  | "categories"
+  | "returns"
+  | "analytics";
 
 const THEME_KEY = "sb-theme";
 
@@ -27,6 +36,7 @@ const SIDEBAR: { view: View; label: string; icon: keyof typeof ICONS }[] = [
   { view: "orders", label: "Orders", icon: "orders" },
   { view: "inventory", label: "Inventory", icon: "inventory" },
   { view: "categories", label: "Categories", icon: "categories" },
+  { view: "returns", label: "Returns", icon: "returns" },
   { view: "analytics", label: "Analytics", icon: "analytics" },
 ];
 
@@ -48,6 +58,7 @@ export function AdminClient({
   // Held in state, not read from `data`, so a category added here is selectable
   // in the product form immediately — without a page reload.
   const [categories, setCategories] = useState<AdminCategory[]>(data.categories);
+  const [returns, setReturns] = useState<AdminReturn[]>(data.returns);
 
   // Toast
   const [toast, setToast] = useState<{ msg: string; id: number } | null>(null);
@@ -261,6 +272,33 @@ export function AdminClient({
     [showToast],
   );
 
+  const updateReturn = useCallback(
+    async (id: string, status: AdminReturn["status"], resolution: string): Promise<boolean> => {
+      try {
+        const res = await fetch("/api/admin/returns", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, status, resolution }),
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error);
+        setReturns((prev) =>
+          prev.map((r) =>
+            r.id === id
+              ? { ...r, status: json.request.status, resolution: json.request.resolution }
+              : r,
+          ),
+        );
+        showToast(`${json.request.reference} marked ${String(json.request.status).toLowerCase()}`);
+        return true;
+      } catch (e) {
+        showToast(e instanceof Error && e.message ? e.message : "Couldn't update the return.");
+        return false;
+      }
+    },
+    [showToast],
+  );
+
   // Derived, not stored: `products` is the whole catalog, so these counts stay
   // correct as products are added or moved without any bookkeeping.
   const productCounts = useMemo(() => {
@@ -272,6 +310,9 @@ export function AdminClient({
   const sidebarActive: View = view === "order-detail" ? "orders" : view;
   const ordersBadge = orders.filter((o) => o.needsAction).length;
   const lowStockBadge = products.filter((p) => p.status !== "In stock").length;
+  const returnsBadge = returns.filter(
+    (r) => r.status === "REQUESTED" || r.status === "APPROVED",
+  ).length;
   const selectedOrder = orders.find((o) => o.id === selectedOrderId) ?? null;
 
   return (
@@ -340,7 +381,9 @@ export function AdminClient({
                       ? ordersBadge
                       : item.view === "inventory"
                         ? lowStockBadge
-                        : undefined
+                        : item.view === "returns"
+                          ? returnsBadge
+                          : undefined
                   }
                 />
               ))}
@@ -386,6 +429,9 @@ export function AdminClient({
               onUpdate={updateCategory}
               onDelete={deleteCategory}
             />
+          )}
+          {view === "returns" && (
+            <AdminReturnsView returns={returns} onUpdate={updateReturn} />
           )}
           {view === "analytics" && <AnalyticsView data={data} />}
         </main>

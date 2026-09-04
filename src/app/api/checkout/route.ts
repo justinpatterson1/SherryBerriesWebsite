@@ -224,6 +224,14 @@ export async function POST(request: Request) {
         fulfillmentStatus: "UNFULFILLED",
         paymentMethod: paymentLabel,
         notes,
+        // Where this order is actually going, frozen at purchase. The customer
+        // can edit or delete the Address row this came from and these stay put.
+        shipName: `${firstName} ${lastName}`.trim(),
+        shipPhone: phone,
+        shipEmail: email,
+        shipLine1: line1,
+        shipCity: city,
+        shipLandmark: landmark || null,
         orderItems: {
           create: lines.map((l) => ({
             productId: l.productId,

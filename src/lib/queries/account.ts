@@ -1,7 +1,8 @@
 import "server-only";
-import { isHygieneExcluded } from "@/lib/account/returns";
+import { isFinalSale } from "@/lib/account/returns";
+import { resolveShipTo, type OrderShipTo } from "@/lib/account/ship-to";
 import { prisma } from "@/lib/db";
-import type { FulfillmentStatus, PaymentStatus } from "@/generated/prisma/client";
+import type { FulfillmentStatus, PaymentStatus, ReturnStatus } from "@/generated/prisma/client";
 
 // Display status shown on order badges / dashboard stats. Derived from the
 // real FulfillmentStatus enum (which has no "Packed"/"Pending" members).
@@ -46,8 +47,10 @@ export type AccountOrderItem = {
   price: number;
   lineTotal: number;
   img: string | null;
-  /** True where the published hygiene exclusion applies once unsealed. */
-  hygieneExcluded: boolean;
+  /** Drives which return reasons the request form offers. */
+  categorySlug: string;
+  /** True where the item is final sale — no change-of-mind return once shipped. */
+  finalSale: boolean;
 };
 
 export type AccountOrder = {
@@ -64,13 +67,37 @@ export type AccountOrder = {
   /** Index into [Pending, Processing, Packed, Shipped, Delivered]; -1 if cancelled. */
   stageIndex: number;
   returnEligible: boolean;
+  /**
+   * Where this order shipped, as captured at checkout. Null only for orders
+   * placed before the snapshot columns existed whose `notes` could not be
+   * read — never substituted with the customer's current address, which is the
+   * bug this replaced.
+   */
+  shipTo: OrderShipTo | null;
   items: AccountOrderItem[];
+};
+
+export type { OrderShipTo as AccountOrderShipTo } from "@/lib/account/ship-to";
+
+export type AccountReturn = {
+  id: string;
+  reference: string;
+  orderNumber: string;
+  itemName: string;
+  variant: string | null;
+  reason: string;
+  notes: string | null;
+  status: ReturnStatus;
+  /** Admin's note on approval or rejection — the customer sees this. */
+  resolution: string | null;
+  dateLabel: string;
 };
 
 export type AccountData = {
   profile: AccountProfile;
   addresses: AccountAddress[];
   orders: AccountOrder[];
+  returns: AccountReturn[];
 };
 
 function displayStatus(f: FulfillmentStatus): OrderDisplayStatus {
@@ -164,7 +191,7 @@ export async function getAccountData(userId: string): Promise<AccountData | null
   });
   if (!user) return null;
 
-  const [addressRows, orderRows] = await Promise.all([
+  const [addressRows, orderRows, returnRows] = await Promise.all([
     prisma.address.findMany({
       where: { userId },
       orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
@@ -187,6 +214,19 @@ export async function getAccountData(userId: string): Promise<AccountData | null
                 },
               },
             },
+            variant: { select: { value: true } },
+          },
+        },
+      },
+    }),
+    prisma.returnRequest.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      include: {
+        order: { select: { orderNumber: true } },
+        orderItem: {
+          select: {
+            product: { select: { name: true } },
             variant: { select: { value: true } },
           },
         },
@@ -229,6 +269,7 @@ export async function getAccountData(userId: string): Promise<AccountData | null
       trackingNumber: o.trackingNumber,
       stageIndex: stageIndexFor(o.fulfillmentStatus),
       returnEligible: o.fulfillmentStatus === "DELIVERED",
+      shipTo: resolveShipTo(o),
       items: o.orderItems.map((it) => {
         const price = Number(it.price);
         return {
@@ -241,16 +282,31 @@ export async function getAccountData(userId: string): Promise<AccountData | null
           price,
           lineTotal: Number((price * it.quantity).toFixed(2)),
           img: it.product.images[0]?.imageUrl ?? null,
-          hygieneExcluded: isHygieneExcluded(it.product.category.slug),
+          categorySlug: it.product.category.slug,
+          finalSale: isFinalSale(it.product.category.slug),
         };
       }),
     };
   });
 
+  const returns: AccountReturn[] = returnRows.map((r) => ({
+    id: r.id,
+    reference: r.reference,
+    orderNumber: r.order.orderNumber,
+    itemName: r.orderItem.product.name,
+    variant: r.orderItem.variant?.value ?? null,
+    reason: r.reason,
+    notes: r.notes,
+    status: r.status,
+    resolution: r.resolution,
+    dateLabel: shortDate.format(r.createdAt),
+  }));
+
   return {
     profile,
     addresses: addressRows.map(toAccountAddress),
     orders,
+    returns,
   };
 }
 

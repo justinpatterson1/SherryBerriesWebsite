@@ -260,6 +260,12 @@ export const ICONS: Record<string, ReactNode> = {
       <path d="M12 14v6" />
     </Svg>
   ),
+  returns: (
+    <Svg>
+      <path d="M9 14H4v5" />
+      <path d="M20.5 13a8.5 8.5 0 1 1-2-7L20 8" />
+    </Svg>
+  ),
   categories: (
     <Svg>
       <path d="M3 5.5A2.5 2.5 0 0 1 5.5 3h4.2a2 2 0 0 1 1.42.59l8.3 8.3a2 2 0 0 1 0 2.82l-4.51 4.51a2 2 0 0 1-2.82 0l-8.3-8.3A2 2 0 0 1 3 9.7z" />

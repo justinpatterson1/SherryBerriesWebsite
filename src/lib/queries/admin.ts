@@ -3,8 +3,10 @@ import { prisma } from "@/lib/db";
 import type {
   FulfillmentStatus,
   PaymentStatus,
+  ReturnStatus,
 } from "@/generated/prisma/client";
 import type { AdminOrderStatus } from "@/lib/admin/status";
+import { resolveShipTo, type OrderShipTo } from "@/lib/account/ship-to";
 
 // -----------------------------------------------------------------------------
 // Public shapes (everything the admin client renders)
@@ -53,6 +55,8 @@ export type AdminOrder = {
   total: number;
   items: AdminOrderItem[];
   needsAction: boolean;
+  /** Where the order ships, snapshotted at checkout. Null for legacy orders. */
+  shipTo: OrderShipTo | null;
 };
 
 export type StockStatus = "In stock" | "Low stock" | "Out of stock";
@@ -76,6 +80,21 @@ export type AdminProduct = {
   jewelryType: string;
   featured: boolean;
   active: boolean;
+};
+
+export type AdminReturn = {
+  id: string;
+  reference: string;
+  status: ReturnStatus;
+  orderNumber: string;
+  customerName: string;
+  customerEmail: string;
+  itemName: string;
+  variant: string | null;
+  reason: string;
+  notes: string | null;
+  resolution: string | null;
+  dateLabel: string;
 };
 
 export type AdminCategory = {
@@ -108,6 +127,7 @@ export type AdminData = {
   products: AdminProduct[];
   topProducts: TopProduct[];
   categories: AdminCategory[];
+  returns: AdminReturn[];
 };
 
 // -----------------------------------------------------------------------------
@@ -187,6 +207,7 @@ export async function getAdminData(): Promise<AdminData> {
     productRows,
     sold30Rows,
     categoryRows,
+    returnRows,
   ] = await Promise.all([
     // Light pass over every order — powers all-time totals + the monthly trend.
     prisma.order.findMany({
@@ -275,6 +296,20 @@ export async function getAdminData(): Promise<AdminData> {
         imageUrl: true,
         seoTitle: true,
         seoDescription: true,
+      },
+    }),
+    // Return requests, newest first — the Returns view's queue.
+    prisma.returnRequest.findMany({
+      orderBy: { createdAt: "desc" },
+      include: {
+        order: { select: { orderNumber: true } },
+        user: { select: { name: true, firstName: true, lastName: true, email: true } },
+        orderItem: {
+          select: {
+            product: { select: { name: true } },
+            variant: { select: { value: true } },
+          },
+        },
       },
     }),
   ]);
@@ -496,6 +531,7 @@ export async function getAdminData(): Promise<AdminData> {
       status,
       date: shortDate.format(o.createdAt),
       customer: { name, email: o.user.email, initials: initials(name) },
+      shipTo: resolveShipTo(o),
       channel: channelFor(o.paymentMethod),
       paymentMethod: o.paymentMethod ?? "—",
       subtotal,
@@ -537,6 +573,23 @@ export async function getAdminData(): Promise<AdminData> {
     products,
     topProducts,
     categories: categoryRows,
+    returns: returnRows.map((r) => ({
+      id: r.id,
+      reference: r.reference,
+      status: r.status,
+      orderNumber: r.order.orderNumber,
+      customerName:
+        r.user.name ??
+        [r.user.firstName, r.user.lastName].filter(Boolean).join(" ") ??
+        r.user.email,
+      customerEmail: r.user.email,
+      itemName: r.orderItem.product.name,
+      variant: r.orderItem.variant?.value ?? null,
+      reason: r.reason,
+      notes: r.notes,
+      resolution: r.resolution,
+      dateLabel: shortDate.format(r.createdAt),
+    })),
   };
 }
 

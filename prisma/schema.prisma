@@ -60,6 +60,15 @@ enum FulfillmentStatus {
   CANCELLED
 }
 
+/// Lifecycle of a customer's return request. REJECTED is the dead end;
+/// REFUNDED is the only successful terminal state.
+enum ReturnStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  REFUNDED
+}
+
 // -----------------------------------------------------------------------------
 // Auth (NextAuth v5 / @auth/prisma-adapter contract)
 // -----------------------------------------------------------------------------
@@ -123,13 +132,14 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  accounts      Account[]
-  sessions      Session[]
-  addresses     Address[]
-  orders        Order[]
-  reviews       Review[]
-  wishlistItems Wishlist[]
-  cart          Cart?
+  accounts       Account[]
+  sessions       Session[]
+  addresses      Address[]
+  orders         Order[]
+  reviews        Review[]
+  returnRequests ReturnRequest[]
+  wishlistItems  Wishlist[]
+  cart           Cart?
 
   @@index([email])
 }
@@ -197,13 +207,13 @@ model Product {
   categoryId String
   category   Category @relation(fields: [categoryId], references: [id])
 
-  images        ProductImage[]
-  variants      ProductVariant[]
-  reviews       Review[]
-  wishlistItems Wishlist[]
-  orderItems    OrderItem[]
-  cartItems     CartItem[]
-  tags          ProductTag[]
+  images         ProductImage[]
+  variants       ProductVariant[]
+  reviews        Review[]
+  wishlistItems  Wishlist[]
+  orderItems     OrderItem[]
+  cartItems      CartItem[]
+  tags           ProductTag[]
 
   @@index([categoryId])
   @@index([slug])
@@ -233,7 +243,7 @@ model ProductVariant {
   additionalPrice Decimal? @db.Decimal(10, 2)
   createdAt       DateTime @default(now())
 
-  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product    Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
   cartItems  CartItem[]
   orderItems OrderItem[]
 
@@ -295,11 +305,26 @@ model Order {
   trackingNumber    String?
   notes             String?
 
+  /// Where this order actually shipped, captured at checkout.
+  ///
+  /// Snapshotted onto the order rather than read back through Address, because
+  /// an address is mutable: reading the customer's current default made every
+  /// past order appear to have shipped wherever they live now. Nullable because
+  /// orders placed before these columns existed have no snapshot — the account
+  /// view falls back to the JSON in `notes` for those.
+  shipName     String?
+  shipPhone    String?
+  shipEmail    String?
+  shipLine1    String?
+  shipCity     String?
+  shipLandmark String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user       User        @relation(fields: [userId], references: [id])
-  orderItems OrderItem[]
+  user           User            @relation(fields: [userId], references: [id])
+  orderItems     OrderItem[]
+  returnRequests ReturnRequest[]
 
   @@index([userId])
   @@index([orderNumber])
@@ -318,8 +343,43 @@ model OrderItem {
   product Product         @relation(fields: [productId], references: [id])
   variant ProductVariant? @relation(fields: [variantId], references: [id])
 
+  returnRequests ReturnRequest[]
+
   @@index([orderId])
   @@index([productId])
+}
+
+/// A customer's request to return one item from one delivered order.
+///
+/// Scoped to a single OrderItem rather than a whole order because that is what
+/// the customer picks in the form and what the Returns Policy describes — a
+/// customer returning two items from one order opens two requests, each with
+/// its own reference and outcome.
+model ReturnRequest {
+  id          String       @id @default(cuid())
+  /// Customer-facing reference, e.g. RT-4821. Unique so it can be quoted.
+  reference   String       @unique
+  userId      String
+  orderId     String
+  orderItemId String
+  /// One of RETURN_REASONS in lib/account/returns.ts, validated at the API.
+  reason      String
+  notes       String?      @db.Text
+  status      ReturnStatus @default(REQUESTED)
+  /// Set by an admin when approving or rejecting; shown to the customer.
+  resolution  String?      @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // The product is reachable through orderItem, so it is not duplicated here.
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order     Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([orderId])
 }
 
 // -----------------------------------------------------------------------------
@@ -361,13 +421,13 @@ model Wishlist {
 // -----------------------------------------------------------------------------
 
 model Blog {
-  id             String   @id @default(cuid())
+  id             String  @id @default(cuid())
   title          String
-  slug           String   @unique
+  slug           String  @unique
   excerpt        String?
-  content        String   @db.Text
+  content        String  @db.Text
   featuredImage  String?
-  published      Boolean  @default(false)
+  published      Boolean @default(false)
   seoTitle       String?
   seoDescription String?
 
@@ -377,10 +437,25 @@ model Blog {
   @@index([published, createdAt])
 }
 
+/// A newsletter signup. Kept in our own table rather than pushed straight to an
+/// email provider, so the list survives changing provider and unsubscribing
+/// works without an account.
+///
+/// Rows are never deleted on unsubscribe — `unsubscribedAt` is set instead, so
+/// a later re-signup is a reactivation and there is a record of when consent
+/// was given and withdrawn.
 model NewsletterSubscriber {
-  id           String   @id @default(cuid())
+  id String @id @default(cuid())
+  /// Stored lowercased and trimmed; uniqueness is on that normalised form.
   email        String   @unique
   subscribedAt DateTime @default(now())
+  /// Where the signup came from, e.g. "homepage".
+  source String?
+  /// Secret in the unsubscribe link, so the link identifies exactly one row.
+  unsubscribeToken String    @unique
+  unsubscribedAt   DateTime?
+
+  @@index([unsubscribedAt])
 }
 
 model DiscountCode {

@@ -6,13 +6,23 @@
 // written to match what the site actually does — eligibility follows the
 // account area's rule that only delivered orders can open a request, and the
 // reasons list is generated from RETURN_REASONS, the same list the request form
-// renders — and to be consistent with the hygiene exclusion already stated in
-// the Terms of Service.
+// renders.
+//
+// ⚠ Owner's rule, 2026-08-17: jewelry and aftercare are FINAL SALE once they
+// leave the business. The previous version of this policy offered a 14-day
+// window on sealed jewelry; that is gone. The window now applies only to
+// merchandise and accessories — the categories isFinalSale() allows.
+//
+// The one thing this policy must never disclaim is our own mistake: an item
+// that arrives damaged, defective, or is not what was ordered is always put
+// right, final sale or not. Goods still have to be of merchantable quality and
+// match their description under the Sale of Goods Act, and no published term
+// changes that.
 
-import { RETURN_REASONS } from "@/lib/account/returns";
+import { RETURN_REASONS, RETURN_WINDOW_DAYS } from "@/lib/account/returns";
 import type { Block, LegalDocument, Section } from "@/lib/legal/types";
 
-export const LAST_UPDATED = "August 15, 2026";
+export const LAST_UPDATED = "August 17, 2026";
 
 export const SITE_URL = "https://www.sherryberries.com";
 export const SUPPORT_EMAIL = "sherryvanessanichols@gmail.com";
@@ -22,8 +32,8 @@ export const SUPPORT_EMAIL = "sherryvanessanichols@gmail.com";
  * they live here; each is used exactly once below, so editing here is enough.
  */
 const OWNER_DECISIONS = {
-  /** Days after delivery in which a return may be opened. */
-  windowDays: 14,
+  /** Days after delivery in which a return may be opened — merch/accessories only. */
+  windowDays: RETURN_WINDOW_DAYS,
   /** How long a refund takes once the returned item has been inspected. */
   refundTime: "5 to 10 business days",
   /** Who pays return postage when the customer simply changed their mind. */
@@ -35,7 +45,14 @@ const OWNER_DECISIONS = {
 const INTRO: Block[] = [
   {
     kind: "p",
-    text: "Body jewelry is worn in a healing or healed piercing, so returns work a little differently here than for most products. This policy explains exactly what can and cannot be returned, and how to start a return.",
+    text: "Body jewelry is worn in a healing or healed piercing, so returns work differently here than for most products. Jewelry and aftercare are sold as final sale: once an order has left us, those items cannot be returned or exchanged.",
+  },
+  {
+    kind: "p",
+    text: [
+      { b: "This does not apply when something is our fault." },
+      " If an item reaches you damaged, defective, or is not what you ordered, we will put it right — see below.",
+    ],
   },
   {
     kind: "p",
@@ -51,30 +68,14 @@ const INTRO: Block[] = [
 
 const SECTIONS: Section[] = [
   {
-    id: "return-window",
-    title: "Return Window",
-    chip: "Window",
-    kicker: "Timing",
-    blocks: [
-      {
-        kind: "p",
-        text: `You may request a return within ${OWNER_DECISIONS.windowDays} days of your order being delivered.`,
-      },
-      {
-        kind: "p",
-        text: "Requests made after that period cannot be accepted, except where an item is faulty and the fault could not reasonably have been discovered sooner.",
-      },
-    ],
-  },
-  {
     id: "not-eligible",
-    title: "Items That Cannot Be Returned",
-    chip: "Not eligible",
+    title: "Jewelry and Aftercare Are Final Sale",
+    chip: "Final sale",
     kicker: "Hygiene",
     blocks: [
       {
         kind: "p",
-        text: "For hygiene and safety reasons, we cannot accept returns on the following once they have been removed from their sealed packaging:",
+        text: "Once an order has been collected or handed to a carrier, we cannot accept a return or exchange on:",
       },
       {
         kind: "list",
@@ -82,22 +83,28 @@ const SECTIONS: Section[] = [
           "Body jewelry and pierced jewelry of any kind.",
           "Earrings and any item worn in a piercing.",
           "Aftercare products, sprays, and solutions.",
-          "Items that have been worn, used, or inserted into a piercing.",
         ],
       },
       {
         kind: "p",
-        text: "This is not a matter of preference — reselling jewelry that has been in contact with a piercing is a genuine infection risk, and we will not do it.",
+        text: "This applies whether or not the packaging has been opened. Once these items are out of our hands we have no way to verify how they were stored or handled, and reselling jewelry that may have been in contact with a piercing is a genuine infection risk. It is not a matter of preference — we will not do it.",
       },
       {
         kind: "p",
-        text: "This exclusion does not apply where an item arrives damaged, defective, or is not what you ordered. Those are always covered.",
+        text: [
+          { b: "Please choose carefully." },
+          " We would much rather answer your questions before you order than have you stuck with a piece that is not right. Message us and we will help you get the size, gauge, and material right the first time.",
+        ],
+      },
+      {
+        kind: "p",
+        text: "Final sale does not cover our mistakes. If an item arrives damaged, defective, or is not what you ordered, it is always put right — see below.",
       },
     ],
   },
   {
     id: "eligible-returns",
-    title: "Items That Can Be Returned",
+    title: "What Can Be Returned",
     chip: "Eligible",
     kicker: "Accepted",
     blocks: [
@@ -105,11 +112,14 @@ const SECTIONS: Section[] = [
       {
         kind: "list",
         items: [
-          "Items that arrive damaged or defective.",
-          "Items that are not what you ordered.",
-          "Unopened items still sealed in their original packaging, within the return window.",
-          "Merchandise and non-jewelry items in unused, resalable condition.",
+          "Items that arrive damaged or defective — any item, always.",
+          "Items that are not what you ordered — any item, always.",
+          `Merchandise and accessories in unused, resalable condition, within ${OWNER_DECISIONS.windowDays} days of delivery.`,
         ],
+      },
+      {
+        kind: "p",
+        text: `Merchandise and accessories — apparel, cases, pouches, and similar non-jewelry items — carry no hygiene risk, so they keep a ${OWNER_DECISIONS.windowDays}-day window. Requests after that period cannot be accepted, except where an item is faulty and the fault could not reasonably have been discovered sooner.`,
       },
       {
         kind: "p",
@@ -139,6 +149,10 @@ const SECTIONS: Section[] = [
       },
       {
         kind: "p",
+        text: "Because jewelry and aftercare are final sale, a request on those items can only be about something arriving damaged, defective, or incorrect.",
+      },
+      {
+        kind: "p",
         text: [
           "If you would rather not use your account, ",
           { href: "/contact", text: "contact us" },
@@ -159,7 +173,14 @@ const SECTIONS: Section[] = [
       },
       {
         kind: "p",
-        text: "We will replace the item or refund it in full, including any shipping you paid. You will not be asked to cover return postage, and the hygiene exclusion above does not apply.",
+        text: "We will replace the item or refund it in full, including any shipping you paid. You will not be asked to cover return postage.",
+      },
+      {
+        kind: "p",
+        text: [
+          { b: "Final sale does not apply here." },
+          " This covers jewelry and aftercare as much as anything else. Where we have sent you the wrong thing, or something that arrived broken or faulty, putting it right is our responsibility.",
+        ],
       },
     ],
   },
@@ -175,7 +196,7 @@ const SECTIONS: Section[] = [
       },
       {
         kind: "p",
-        text: `Where a return is because you changed your mind, return postage is paid by ${OWNER_DECISIONS.changeOfMindShipping}, and the original delivery fee is not refunded.`,
+        text: `Where a merchandise or accessory return is because you changed your mind, return postage is paid by ${OWNER_DECISIONS.changeOfMindShipping}, and the original delivery fee is not refunded. Jewelry and aftercare cannot be returned for a change of mind at all.`,
       },
       { kind: "p", text: OWNER_DECISIONS.restockingFee },
     ],
@@ -208,7 +229,7 @@ const SECTIONS: Section[] = [
     blocks: [
       {
         kind: "p",
-        text: "Because most of our jewelry cannot be returned once opened, we do not offer general exchanges — including exchanges for a different size, gauge, or style.",
+        text: "Because jewelry and aftercare are final sale, we do not offer exchanges on them — including exchanges for a different size, gauge, or style.",
       },
       {
         kind: "p",

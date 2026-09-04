@@ -195,7 +195,8 @@ export function OrderSummary({
 
       <ul className="flex flex-col gap-2 mt-1">
         <Perk>256-bit SSL secure checkout</Perk>
-        <Perk>Free aftercare guide with every order</Perk>
+        {/* "Free aftercare guide with every order" removed 2026-08-17 — no
+            such guide exists and nothing added one to an order. */}
         <Perk>Tracked shipping across Trinidad & Tobago</Perk>
       </ul>
     </aside>

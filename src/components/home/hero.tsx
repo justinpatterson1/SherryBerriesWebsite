@@ -2,10 +2,13 @@ import Image from "next/image";
 import Link from "next/link";
 import heroBanner from "../../../assets/images/Hero.png";
 
+// "Free piercing aftercare guide" removed 2026-08-17 — no such guide exists.
+// This marquee has now lost three claims in three passes (free shipping over
+// $80, Pay in 4 with Afterpay, the aftercare guide); check anything added here
+// against what the site actually does before shipping it.
 const MARQUEE_ITEMS = [
   "Implant-grade titanium",
   "Hypoallergenic certified",
-  "Free piercing aftercare guide",
 ];
 
 const chipBase =
@@ -120,20 +123,6 @@ export function Hero() {
               </Link>
             </div>
 
-            <div className="flex items-center gap-4 py-4 px-5 rounded-[20px] bg-[rgba(15,12,13,0.6)] border border-white/[0.06] backdrop-blur-[16px] max-w-[420px] light:bg-white/65 light:border-[rgba(26,13,18,0.08)]">
-              <div className="flex shrink-0" aria-hidden="true">
-                <span className="w-9 h-9 rounded-full border-2 border-canvas bg-gradient-to-br from-[#ff8fbf] to-[#d63a85]" />
-                <span className="w-9 h-9 rounded-full border-2 border-canvas -ml-2.5 bg-gradient-to-br from-[#f7b6d2] to-[#b06e8a]" />
-                <span className="w-9 h-9 rounded-full border-2 border-canvas -ml-2.5 bg-gradient-to-br from-[#e8c879] to-[#9a7b1e]" />
-                <span className="w-9 h-9 rounded-full border-2 border-canvas -ml-2.5 bg-gradient-to-br from-[#ffb4d7] to-pink" />
-              </div>
-              <div className="font-sans text-[13px] text-ink-dim leading-[1.4]">
-                <strong className="block text-ink font-semibold text-sm mb-0.5">
-                  Trusted by 12,400+ sweet berries
-                </strong>
-                worldwide — and counting.
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -146,24 +135,43 @@ export function Hero() {
           "[-webkit-mask-image:linear-gradient(90deg,transparent,#000_8%,#000_92%,transparent)]"
         }
       >
-        <div className="flex w-max gap-12 animate-hero-marquee">
-          <MarqueeRow />
-          <MarqueeRow />
+        {/* Two identical halves and NO gap between them: the animation runs
+            translateX(0 → -50%), which lands seamlessly only when half the
+            track is exactly one half's width. A flex gap here would make every
+            cycle fall short by half that gap and visibly jump. The spacing
+            after each phrase lives inside the half instead (pr-12). */}
+        <div className="flex w-max animate-hero-marquee">
+          <MarqueeHalf />
+          <MarqueeHalf />
         </div>
       </div>
     </section>
   );
 }
 
-function MarqueeRow() {
+// One pass of the list is only ~600px wide now that two phrases are left —
+// narrower than any desktop viewport, which left visible dead space mid-loop.
+// Repeating the list inside each half makes the track wide enough to always
+// cover the screen. Bump this if the list shrinks further.
+const REPEATS = 4;
+
+function MarqueeHalf() {
   return (
-    <div className="inline-flex items-center gap-12 font-sans text-[13px] font-medium tracking-[0.18em] uppercase text-ink-dim whitespace-nowrap">
-      {MARQUEE_ITEMS.map((item, i) => (
-        <span key={`${item}-${i}`} className="inline-flex items-center gap-12 whitespace-nowrap">
-          <span>{item}</span>
-          <span className="text-pink text-sm">✦</span>
-        </span>
-      ))}
+    <div
+      aria-hidden="true"
+      className="flex items-center gap-12 pr-12 font-sans text-[13px] font-medium tracking-[0.18em] uppercase text-ink-dim whitespace-nowrap"
+    >
+      {Array.from({ length: REPEATS }).flatMap((_, pass) =>
+        MARQUEE_ITEMS.map((item, i) => (
+          <span
+            key={`${pass}-${item}-${i}`}
+            className="inline-flex items-center gap-12 whitespace-nowrap"
+          >
+            <span>{item}</span>
+            <span className="text-pink text-sm">✦</span>
+          </span>
+        )),
+      )}
     </div>
   );
 }

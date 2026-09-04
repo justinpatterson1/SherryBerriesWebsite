@@ -116,6 +116,44 @@ export function OrderDetailView({
             </div>
           </AdminCard>
 
+          {/* Ship-to comes off the order's own snapshot, so it stays correct
+              even after the customer edits their address book. This card is new:
+              the detail view previously showed no destination at all, which
+              made it useless for actually packing an order. */}
+          <AdminCard title="Ship to">
+            {order.shipTo ? (
+              <div className="flex flex-col gap-2">
+                <div className="font-sans text-[14px] text-ink">
+                  {order.shipTo.name ?? "—"}
+                </div>
+                <div className="font-sans text-[13px] leading-[1.6] text-ink-dim">
+                  {order.shipTo.line1}
+                  {order.shipTo.city ? (
+                    <>
+                      <br />
+                      {order.shipTo.city}
+                    </>
+                  ) : null}
+                  {order.shipTo.landmark ? (
+                    <>
+                      <br />
+                      <span className="text-ink-faint">Near {order.shipTo.landmark}</span>
+                    </>
+                  ) : null}
+                </div>
+                <div className="mt-2 pt-3 border-t border-white/[0.06] flex flex-col gap-2 light:border-[rgba(26,13,18,0.06)]">
+                  <Row label="Phone" value={order.shipTo.phone ?? "—"} />
+                  <Row label="Email" value={order.shipTo.email ?? order.customer.email} />
+                </div>
+              </div>
+            ) : (
+              <p className="font-sans text-[13px] leading-[1.6] text-ink-dim m-0">
+                No address recorded against this order — it predates the snapshot.
+                Check with the customer before shipping.
+              </p>
+            )}
+          </AdminCard>
+
           <AdminCard title="Fulfillment">
             <label className="block font-sans text-[11px] font-bold tracking-[0.12em] uppercase text-ink-faint mb-2">
               Update status

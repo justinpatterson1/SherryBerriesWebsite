@@ -1,3 +1,5 @@
+import { RETURN_WINDOW_DAYS } from "@/lib/account/returns";
+
 export function TrustStrip() {
   return (
     <ul
@@ -26,10 +28,14 @@ export function TrustStrip() {
   );
 }
 
+// Copy here must agree with lib/legal/returns-policy.ts. The strip cannot know
+// what is in the bag, so it states the rule rather than making a promise that
+// would be wrong for half the catalogue: jewelry and aftercare are final sale,
+// merch and accessories keep the window.
 const ITEMS = [
   {
-    label: "14-day returns",
-    body: "Free returns on unworn pieces",
+    label: "Final sale on jewelry",
+    body: `Merch returnable in ${RETURN_WINDOW_DAYS} days · faults always covered`,
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M9 14H4v5" />
