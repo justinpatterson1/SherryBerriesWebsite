@@ -8,9 +8,11 @@ import type {
   AdminOrder,
   AdminOrderStatus,
   AdminProduct,
+  AdminPromo,
   AdminReturn,
 } from "@/lib/queries/admin";
 import type { CategoryFormData, ProductFormData } from "@/lib/admin/options";
+import type { PromoFormData } from "@/lib/admin/promo-validate";
 import { ICONS } from "@/components/admin/shared";
 import { OverviewView } from "@/components/admin/overview-view";
 import { OrdersView } from "@/components/admin/orders-view";
@@ -18,6 +20,7 @@ import { OrderDetailView } from "@/components/admin/order-detail-view";
 import { InventoryView } from "@/components/admin/inventory-view";
 import { CategoriesView } from "@/components/admin/categories-view";
 import { AdminReturnsView } from "@/components/admin/returns-view";
+import { PromosView } from "@/components/admin/promos-view";
 import { AnalyticsView } from "@/components/admin/analytics-view";
 import { ActivityView } from "@/components/admin/activity-view";
 
@@ -28,6 +31,7 @@ type View =
   | "inventory"
   | "categories"
   | "returns"
+  | "promos"
   | "analytics"
   | "activity";
 
@@ -39,6 +43,7 @@ const SIDEBAR: { view: View; label: string; icon: keyof typeof ICONS }[] = [
   { view: "inventory", label: "Inventory", icon: "inventory" },
   { view: "categories", label: "Categories", icon: "categories" },
   { view: "returns", label: "Returns", icon: "returns" },
+  { view: "promos", label: "Promo codes", icon: "promos" },
   { view: "analytics", label: "Analytics", icon: "analytics" },
   { view: "activity", label: "Activity", icon: "activity" },
 ];
@@ -69,6 +74,7 @@ export function AdminClient({
   // in the product form immediately — without a page reload.
   const [categories, setCategories] = useState<AdminCategory[]>(data.categories);
   const [returns, setReturns] = useState<AdminReturn[]>(data.returns);
+  const [promos, setPromos] = useState<AdminPromo[]>(data.promos);
 
   // Toast
   const [toast, setToast] = useState<{ msg: string; id: number } | null>(null);
@@ -309,6 +315,68 @@ export function AdminClient({
     [showToast],
   );
 
+  const createPromo = useCallback(
+    async (data: PromoFormData): Promise<boolean> => {
+      try {
+        const res = await fetch("/api/admin/promos", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        const json = await res.json();
+        if (!res.ok || !json.promo) throw new Error(json.error);
+        setPromos((prev) => [json.promo as AdminPromo, ...prev]);
+        showToast(`Created ${json.promo.code}`);
+        return true;
+      } catch (e) {
+        showToast(e instanceof Error && e.message ? e.message : "Couldn't create the code.");
+        return false;
+      }
+    },
+    [showToast],
+  );
+
+  const updatePromo = useCallback(
+    async (id: string, data: PromoFormData): Promise<boolean> => {
+      try {
+        const res = await fetch("/api/admin/promos", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, ...data }),
+        });
+        const json = await res.json();
+        if (!res.ok || !json.promo) throw new Error(json.error);
+        const next = json.promo as AdminPromo;
+        setPromos((prev) => prev.map((p) => (p.id === id ? next : p)));
+        showToast(`${next.code} ${next.active ? "is live" : "switched off"}`);
+        return true;
+      } catch (e) {
+        showToast(e instanceof Error && e.message ? e.message : "Couldn't update the code.");
+        return false;
+      }
+    },
+    [showToast],
+  );
+
+  const deletePromo = useCallback(
+    async (id: string): Promise<boolean> => {
+      try {
+        const res = await fetch(`/api/admin/promos?id=${encodeURIComponent(id)}`, {
+          method: "DELETE",
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error);
+        setPromos((prev) => prev.filter((p) => p.id !== id));
+        showToast("Code deleted");
+        return true;
+      } catch (e) {
+        showToast(e instanceof Error && e.message ? e.message : "Couldn't delete the code.");
+        return false;
+      }
+    },
+    [showToast],
+  );
+
   // Derived, not stored: `products` is the whole catalog, so these counts stay
   // correct as products are added or moved without any bookkeeping.
   const productCounts = useMemo(() => {
@@ -442,6 +510,14 @@ export function AdminClient({
           )}
           {view === "returns" && (
             <AdminReturnsView returns={returns} onUpdate={updateReturn} />
+          )}
+          {view === "promos" && (
+            <PromosView
+              promos={promos}
+              onCreate={createPromo}
+              onUpdate={updatePromo}
+              onDelete={deletePromo}
+            />
           )}
           {view === "analytics" && <AnalyticsView data={data} />}
           {view === "activity" && canSeeActivity && (

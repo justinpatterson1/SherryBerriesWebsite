@@ -82,6 +82,18 @@ export type AdminProduct = {
   active: boolean;
 };
 
+export type AdminPromo = {
+  id: string;
+  code: string;
+  percentageOff: number | null;
+  amountOff: number | null;
+  active: boolean;
+  usageLimit: number | null;
+  timesUsed: number;
+  /** ISO string, or null for no expiry. */
+  expiresAt: string | null;
+};
+
 export type AdminAuditEntry = {
   id: string;
   actorEmail: string;
@@ -139,6 +151,7 @@ export type AdminData = {
   products: AdminProduct[];
   topProducts: TopProduct[];
   categories: AdminCategory[];
+  promos: AdminPromo[];
   returns: AdminReturn[];
   /**
    * Admin activity log. Empty for a plain ADMIN — the owner restricted this to
@@ -239,6 +252,7 @@ export async function getAdminData(
     productRows,
     sold30Rows,
     categoryRows,
+    promoRows,
     auditRows,
     returnRows,
   ] = await Promise.all([
@@ -331,6 +345,9 @@ export async function getAdminData(
         seoDescription: true,
       },
     }),
+    // Promo codes for the Promos view. Newest first: the one just created is
+    // the one you want to see.
+    prisma.discountCode.findMany({ orderBy: { createdAt: "desc" } }),
     // Audit log — only queried at all for a SUPERADMIN.
     role === "SUPERADMIN"
       ? prisma.adminAuditLog.findMany({
@@ -613,6 +630,16 @@ export async function getAdminData(
     products,
     topProducts,
     categories: categoryRows,
+    promos: promoRows.map((p) => ({
+      id: p.id,
+      code: p.code,
+      percentageOff: p.percentageOff,
+      amountOff: p.amountOff == null ? null : Number(p.amountOff),
+      active: p.active,
+      usageLimit: p.usageLimit,
+      timesUsed: p.timesUsed,
+      expiresAt: p.expiresAt ? p.expiresAt.toISOString() : null,
+    })),
     auditLog: auditRows.map((a) => ({
       id: a.id,
       actorEmail: a.actorEmail,

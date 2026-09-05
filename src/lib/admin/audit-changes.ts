@@ -14,6 +14,9 @@ export const AUDIT_ACTIONS = {
   orderStatusChange: "order.status_change",
   returnStatusChange: "return.status_change",
   imageUpload: "image.upload",
+  promoCreate: "promo.create",
+  promoUpdate: "promo.update",
+  promoDelete: "promo.delete",
 } as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];
