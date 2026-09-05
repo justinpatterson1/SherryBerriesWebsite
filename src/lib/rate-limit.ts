@@ -33,6 +33,20 @@ export const authLimiters = {
 // Contact form — deter spam without blocking genuine follow-ups (per IP).
 export const contactLimiter = makeLimiter(5, "1 h", "contact");
 
+// Promo codes. /api/promo is public and unauthenticated, and it answers
+// "does this code exist?" — which makes it an enumeration oracle. Our codes are
+// guessable words (BERRY10, WELCOME20), so an attacker does not need a huge
+// dictionary; the defence is making each guess expensive rather than hiding the
+// answer, since a customer with a genuinely expired code deserves to be told so.
+// A real customer types a code once or twice per order.
+export const promoLimiter = makeLimiter(10, "1 h", "promo");
+
+// Catalog search index. Fetched once per session when the overlay first opens,
+// so a generous ceiling still stops someone scraping the whole catalog in a
+// loop. Caching (see the route) is the first line of defence; this is the
+// second.
+export const searchLimiter = makeLimiter(30, "1 h", "search");
+
 export type RateLimitResult = {
   success: boolean;
   remaining: number;
@@ -81,6 +95,15 @@ export function tooManyRequests(reset: number): NextResponse {
         minutes === 1 ? "" : "s"
       }.`,
     },
-    { status: 429, headers: { "Retry-After": String(seconds) } },
+    {
+      status: 429,
+      headers: {
+        "Retry-After": String(seconds),
+        // Never let a CDN cache a 429: on a route that sets s-maxage (see
+        // /api/search) a cached rejection would be served to every visitor
+        // until it expired, turning one abuser into an outage.
+        "Cache-Control": "no-store",
+      },
+    },
   );
 }

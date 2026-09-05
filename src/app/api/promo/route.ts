@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import {
+  checkRateLimit,
+  getClientIp,
+  promoLimiter,
+  tooManyRequests,
+} from "@/lib/rate-limit";
 
 export type PromoSuccess = {
   ok: true;
@@ -9,7 +15,14 @@ export type PromoSuccess = {
   label: string;
 };
 
+// Rate-limited because this endpoint tells anyone whether a code exists, and
+// our codes are guessable words. Limiting is what makes guessing expensive —
+// the wording below stays specific on purpose, since a customer holding a
+// genuinely expired code should be told that rather than "didn't work".
 export async function POST(request: Request) {
+  const rl = await checkRateLimit(promoLimiter, getClientIp(request));
+  if (!rl.success) return tooManyRequests(rl.reset);
+
   let body: unknown;
   try {
     body = await request.json();

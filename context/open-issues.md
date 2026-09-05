@@ -54,6 +54,49 @@ This survived the 2026-08-16 review removal by the owner's explicit decision —
 
 ---
 
+## P1s — Security gaps found in the 2026-09-04 pre-launch audit
+
+Audited against the owner's 28-point checklist. **Already solid, not repeated below:** SQL injection (Prisma only, zero raw queries), XSS (zero `dangerouslySetInnerHTML`), bcrypt hashing, authorization (every `/api/admin/*` route calls `requireAdmin()`, role read fresh from the DB), server-side validation, error handling that leaks nothing, secret management, and WiPay hash verification (a `success` with a bad hash leaves the order **PENDING**).
+
+### S1. No security headers, and no Content Security Policy
+
+[next.config.ts](../next.config.ts) sets none, there is no middleware, and no `vercel.json`. Missing **HSTS**, `X-Content-Type-Options`, `X-Frame-Options`/`frame-ancestors`, `Referrer-Policy`, `Permissions-Policy`, and any CSP.
+
+**Fix:** a `headers()` block in the Next config. Cheapest item on the whole list.
+
+### S2. Admin logs in exactly like a customer
+
+Same form, same session policy, no 2FA, no IP restriction. One reused password on one admin account is full store compromise — pricing, orders, customer data.
+
+**Fix:** 2FA on admin accounts, or at minimum a shorter admin session and a login alert.
+
+### S3. No audit log of admin activity
+
+Nothing records who changed a price, approved a return, deleted a category, or moved an order's status. If something goes wrong there is no way to reconstruct it.
+
+**Fix:** an `AdminAuditLog` model written to from the admin API routes.
+
+### S4. No bot protection, monitoring, dependency scanning, or security testing
+
+- **Bot protection:** none on register, contact, or newsletter. The newsletter table is publicly writable.
+- **Monitoring:** 6 `console.error` calls and nothing else. No Sentry, no alerting — you will not know when something breaks.
+- **Dependency scanning:** no CI at all (`.github/workflows` absent). `npm audit` could not run on 2026-09-04 (registry returned 503), so the current vulnerability state is **unknown**.
+- **Security testing:** none. (Not to be confused with issue 23, which covered *visual* verification of the legal pages and was resolved 2026-08-19 — no security testing of any kind has been done.)
+
+### S5. Rate limiting fails open, silently
+
+By design in [rate-limit.ts](../src/lib/rate-limit.ts): no Upstash credentials, or Redis unreachable, means every request is allowed so an outage cannot lock people out of signing in. The consequence is that **if `UPSTASH_*` is unset in production there is no rate limiting anywhere and nothing reports it**. Set locally as of 2026-09-04; unverified in production.
+
+**Fix:** confirm the production environment has both `UPSTASH_*` values, and consider logging loudly at boot when the limiter is disabled.
+
+### S6. Smaller items
+
+- **CSRF:** NextAuth covers its own routes and SameSite=Lax blocks the obvious cases, but custom mutating routes have no Origin check.
+- **Uploads:** admin-only, 5 MB cap, random UUID names, off-origin in R2 — but [r2.ts](../src/lib/storage/r2.ts) trusts the *client-declared* content type with no magic-byte check.
+- **Backups:** nothing in the repo; depends on the Neon plan's PITR. Verify in their console.
+
+---
+
 ## P2 — Broken links and unset configuration
 
 ### 8. ~~`/accessibility` is a dead footer link~~ — **RESOLVED**, see Resolved section
@@ -142,6 +185,14 @@ Found while verifying issue 23: `localStorage` held `light` while the page rende
 
 ## Resolved
 
+- **2026-09-04** — *(from the pre-launch security audit)* **`/api/promo` and `/api/search` are no longer unmetered public endpoints.** They were the only two routes with neither authentication nor rate limiting.
+  - **`/api/promo` was a discount-code oracle** — unauthenticated, unlimited, and it answers *"does this code exist?"*, distinguishing invalid from expired from limit-reached. The seeded codes are guessable words (`BERRY10`, `WELCOME20`, `STUDIO50`), so no large dictionary was needed. Now **10 attempts per hour per IP**. **The specific wording was kept deliberately**: a customer holding a genuinely expired code deserves to be told that rather than "didn't work", so the defence is making each guess expensive rather than hiding the answer.
+  - **`/api/search` returns the entire catalog in one response** and did so on every call. Now two layers: **CDN caching** (`s-maxage=300, stale-while-revalidate=3600`) so repeat requests never reach the function or the database — this is the layer that absorbs volume — plus **30/hour per IP** for anyone busting the cache to scrape in a loop.
+  - **⚠ A hazard the caching introduced, fixed in the same pass:** `tooManyRequests()` now sends `Cache-Control: no-store`. Without it, a 429 on a route that sets `s-maxage` could be cached by the CDN and served to **every** visitor until it expired — one abuser causing an outage. This applies to every route using the helper, not just search.
+
+  **Verification:** new [rate-limit.test.ts](../src/lib/rate-limit.test.ts) — 8 tests pinning the no-store header, `Retry-After` rounding, `x-forwarded-for` parsing, and the fail-open contract. `npm test` **55/55**, typecheck, lint (28 pre-existing warnings, unchanged) and production build clean. **Not verified against a live Redis** — the limits are unexercised until something actually trips them.
+
+  **Does not fix S5:** these limiters fail open like every other one, so they do nothing unless `UPSTASH_*` is set in production.
 - **2026-08-19** — *(was P4 issue 23)* **All four legal pages verified in a real browser.** Playwright connected this time, so the visual pass that had been outstanding since 2026-08-03 is done. Checked `/terms`, `/privacy`, `/help/returns` and `/help/shipping` at **360 / 753 / 1425 px**, in both themes.
   - **The specific worry was unfounded.** `/terms`' **18 jump chips** wrap cleanly — 8 rows at 360px, 4 at 753px, 3 at 1425px — with **no clipping and every chip ≥44px tall**. Nothing overflows: `scrollWidth === clientWidth` on all four pages at all three widths, and a sweep of every element's bounding box found **zero** extending past the viewport.
   - **Light theme renders correctly** and all three body-text tokens pass **WCAG AA** against the cream background: `ink` 17.82:1, `ink-dim` 8.84:1, `ink-faint` 5.92:1.
