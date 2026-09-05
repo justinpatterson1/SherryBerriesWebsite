@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin/guard";
+import {
+  AUDIT_ACTIONS,
+  auditIp,
+  maybePurgeAuditLogs,
+  writeAuditLog,
+} from "@/lib/admin/audit";
 import { prisma } from "@/lib/db";
 import type { ReturnStatus } from "@/generated/prisma/client";
 
@@ -57,11 +63,34 @@ export async function PATCH(request: Request) {
     return bad("Please say why the return was rejected — the customer sees this.");
   }
 
-  const updated = await prisma.returnRequest.update({
-    where: { id },
-    data: { status, ...(resolution ? { resolution } : {}) },
-    select: { id: true, status: true, resolution: true, reference: true },
+  // Audited in the same transaction: approving or refunding a return is a money
+  // decision, and "who approved this, and why did they reject that one?" is the
+  // question this log exists to answer. The rejection note is the admin's own
+  // words about their decision, so it is recorded; the customer's details are
+  // not — the reference points at the request, which already holds them.
+  const updated = await prisma.$transaction(async (tx) => {
+    const row = await tx.returnRequest.update({
+      where: { id },
+      data: { status, ...(resolution ? { resolution } : {}) },
+      select: { id: true, status: true, resolution: true, reference: true },
+    });
+
+    await writeAuditLog(tx, {
+      actor: admin,
+      action: AUDIT_ACTIONS.returnStatusChange,
+      entityType: "ReturnRequest",
+      entityId: id,
+      summary: `${row.reference}: ${existing.status} → ${status}`,
+      changes: {
+        status: { from: existing.status, to: status },
+        ...(resolution ? { resolution: { from: null, to: resolution } } : {}),
+      },
+      ip: auditIp(request),
+    });
+
+    return row;
   });
+  maybePurgeAuditLogs();
 
   return NextResponse.json({ ok: true, request: updated });
 }

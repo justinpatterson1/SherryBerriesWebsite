@@ -458,6 +458,39 @@ model NewsletterSubscriber {
   @@index([unsubscribedAt])
 }
 
+/// Append-only record of every change an admin makes through the admin panel.
+/// Rows are written inside the same transaction as the change they describe, so
+/// a change cannot happen without being logged; nothing ever updates them, and
+/// only the 12-month retention sweep deletes them.
+///
+/// Deliberately holds NO customer personal data. Order and return entries point
+/// at the record by its number or reference — the customer's details already
+/// live on that record, so the log never becomes a second copy of them.
+///
+/// There is no relation to User: the actor's email is copied in, so the log
+/// still says who did something after that account is renamed or deleted.
+model AdminAuditLog {
+  id         String @id @default(cuid())
+  actorId    String
+  actorEmail String
+  /// Verb, e.g. "order.status_change" or "category.delete".
+  action String
+  /// What was acted on, e.g. "Order" + the order's id.
+  entityType String
+  entityId   String
+  /// Human-readable one-liner for the Activity screen.
+  summary String
+  /// Machine-readable detail, e.g. {"price":{"from":45,"to":39}}.
+  changes Json?
+  ip      String?
+
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([entityType, entityId])
+  @@index([actorId])
+}
+
 model DiscountCode {
   id            String    @id @default(cuid())
   code          String    @unique

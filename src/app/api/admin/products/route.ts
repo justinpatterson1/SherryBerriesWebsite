@@ -1,5 +1,13 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin/guard";
+import {
+  AUDIT_ACTIONS,
+  auditIp,
+  diffFields,
+  hasChanges,
+  maybePurgeAuditLogs,
+  writeAuditLog,
+} from "@/lib/admin/audit";
 import { getAdminProduct } from "@/lib/queries/admin";
 import { prisma } from "@/lib/db";
 import { JEWELRY_TYPE_VALUES } from "@/lib/admin/options";
@@ -127,26 +135,40 @@ export async function POST(request: Request) {
 
   const slug = await uniqueSlug(slugify(d.name));
 
-  const created = await prisma.product.create({
-    data: {
-      name: d.name,
-      slug,
-      shortDescription: d.shortDescription,
-      description: d.description,
-      sku: d.sku,
-      price: d.price,
-      compareAtPrice: d.compareAtPrice,
-      inventory: d.stock,
-      lowStockThreshold: d.reorder,
-      jewelryType: d.jewelryType,
-      material: d.material || null,
-      featured: d.featured,
-      active: d.active,
-      categoryId: d.categoryId,
-      images: d.imageUrl ? { create: [{ imageUrl: d.imageUrl, position: 0 }] } : undefined,
-    },
-    select: { id: true },
+  const created = await prisma.$transaction(async (tx) => {
+    const row = await tx.product.create({
+      data: {
+        name: d.name,
+        slug,
+        shortDescription: d.shortDescription,
+        description: d.description,
+        sku: d.sku,
+        price: d.price,
+        compareAtPrice: d.compareAtPrice,
+        inventory: d.stock,
+        lowStockThreshold: d.reorder,
+        jewelryType: d.jewelryType,
+        material: d.material || null,
+        featured: d.featured,
+        active: d.active,
+        categoryId: d.categoryId,
+        images: d.imageUrl ? { create: [{ imageUrl: d.imageUrl, position: 0 }] } : undefined,
+      },
+      select: { id: true },
+    });
+
+    await writeAuditLog(tx, {
+      actor: admin,
+      action: AUDIT_ACTIONS.productCreate,
+      entityType: "Product",
+      entityId: row.id,
+      summary: `Created “${d.name}” (${d.sku}) at $${d.price.toFixed(2)}`,
+      ip: auditIp(request),
+    });
+
+    return row;
   });
+  maybePurgeAuditLogs();
 
   const product = await getAdminProduct(created.id);
   return NextResponse.json({ ok: true, product });
@@ -172,7 +194,25 @@ export async function PATCH(request: Request) {
   if ("error" in parsed) return bad(parsed.error);
   const d = parsed.data;
 
-  const existing = await prisma.product.findUnique({ where: { id }, select: { id: true } });
+  const existing = await prisma.product.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      name: true,
+      sku: true,
+      price: true,
+      compareAtPrice: true,
+      inventory: true,
+      lowStockThreshold: true,
+      shortDescription: true,
+      description: true,
+      jewelryType: true,
+      material: true,
+      featured: true,
+      active: true,
+      categoryId: true,
+    },
+  });
   if (!existing) return bad("Product not found.", 404);
 
   const category = await prisma.category.findUnique({ where: { id: d.categoryId }, select: { id: true } });
@@ -181,25 +221,58 @@ export async function PATCH(request: Request) {
   const skuClash = await prisma.product.findUnique({ where: { sku: d.sku }, select: { id: true } });
   if (skuClash && skuClash.id !== id) return bad("That SKU is already in use.", 409);
 
+  const data = {
+    name: d.name,
+    shortDescription: d.shortDescription,
+    description: d.description,
+    sku: d.sku,
+    price: d.price,
+    compareAtPrice: d.compareAtPrice,
+    inventory: d.stock,
+    lowStockThreshold: d.reorder,
+    jewelryType: d.jewelryType,
+    material: d.material || null,
+    featured: d.featured,
+    active: d.active,
+    categoryId: d.categoryId,
+  };
+
+  const changes = diffFields(existing, data, [
+    "name",
+    "sku",
+    "price",
+    "compareAtPrice",
+    "inventory",
+    "lowStockThreshold",
+    "shortDescription",
+    "description",
+    "jewelryType",
+    "material",
+    "featured",
+    "active",
+    "categoryId",
+  ]);
+
   // Slug is intentionally left untouched on update so existing product URLs stay stable.
-  await prisma.product.update({
-    where: { id },
-    data: {
-      name: d.name,
-      shortDescription: d.shortDescription,
-      description: d.description,
-      sku: d.sku,
-      price: d.price,
-      compareAtPrice: d.compareAtPrice,
-      inventory: d.stock,
-      lowStockThreshold: d.reorder,
-      jewelryType: d.jewelryType,
-      material: d.material || null,
-      featured: d.featured,
-      active: d.active,
-      categoryId: d.categoryId,
-    },
+  await prisma.$transaction(async (tx) => {
+    await tx.product.update({ where: { id }, data });
+    if (hasChanges(changes)) {
+      await writeAuditLog(tx, {
+        actor: admin,
+        action: AUDIT_ACTIONS.productUpdate,
+        entityType: "Product",
+        entityId: id,
+        // Price is the field worth reading at a glance; everything else is
+        // listed by name and the detail sits in `changes`.
+        summary: changes.price
+          ? `${d.name}: price $${Number(changes.price.from).toFixed(2)} → $${Number(changes.price.to).toFixed(2)}`
+          : `${d.name}: updated ${Object.keys(changes).join(", ")}`,
+        changes,
+        ip: auditIp(request),
+      });
+    }
   });
+  maybePurgeAuditLogs();
 
   // Manage the primary (position 0) image only; an empty URL leaves it as-is.
   if (d.imageUrl) {

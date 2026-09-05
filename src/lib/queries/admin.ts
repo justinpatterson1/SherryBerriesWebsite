@@ -82,6 +82,18 @@ export type AdminProduct = {
   active: boolean;
 };
 
+export type AdminAuditEntry = {
+  id: string;
+  actorEmail: string;
+  action: string;
+  entityType: string;
+  entityId: string;
+  summary: string;
+  ip: string | null;
+  /** "Sep 5, 2026, 3:04 PM" — audit needs the time, not just the date. */
+  timeLabel: string;
+};
+
 export type AdminReturn = {
   id: string;
   reference: string;
@@ -128,6 +140,12 @@ export type AdminData = {
   topProducts: TopProduct[];
   categories: AdminCategory[];
   returns: AdminReturn[];
+  /**
+   * Admin activity log. Empty for a plain ADMIN — the owner restricted this to
+   * SUPERADMIN, and it is filtered at the query rather than hidden in the UI so
+   * the rows never reach a browser that should not have them.
+   */
+  auditLog: AdminAuditEntry[];
 };
 
 // -----------------------------------------------------------------------------
@@ -194,7 +212,21 @@ function pctChange(current: number, prior: number): number | null {
 // Main query
 // -----------------------------------------------------------------------------
 
-export async function getAdminData(): Promise<AdminData> {
+/** Most recent audit rows shown on the Activity screen. */
+const AUDIT_PAGE_SIZE = 200;
+
+const dateTime = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
+});
+
+export async function getAdminData(
+  /** SUPERADMIN unlocks the audit log; anything else gets an empty array. */
+  role: "ADMIN" | "SUPERADMIN" = "ADMIN",
+): Promise<AdminData> {
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 864e5);
   // First day of the month, 11 months back → start of a trailing-12-month window.
@@ -207,6 +239,7 @@ export async function getAdminData(): Promise<AdminData> {
     productRows,
     sold30Rows,
     categoryRows,
+    auditRows,
     returnRows,
   ] = await Promise.all([
     // Light pass over every order — powers all-time totals + the monthly trend.
@@ -298,6 +331,13 @@ export async function getAdminData(): Promise<AdminData> {
         seoDescription: true,
       },
     }),
+    // Audit log — only queried at all for a SUPERADMIN.
+    role === "SUPERADMIN"
+      ? prisma.adminAuditLog.findMany({
+          orderBy: { createdAt: "desc" },
+          take: AUDIT_PAGE_SIZE,
+        })
+      : Promise.resolve([]),
     // Return requests, newest first — the Returns view's queue.
     prisma.returnRequest.findMany({
       orderBy: { createdAt: "desc" },
@@ -573,6 +613,16 @@ export async function getAdminData(): Promise<AdminData> {
     products,
     topProducts,
     categories: categoryRows,
+    auditLog: auditRows.map((a) => ({
+      id: a.id,
+      actorEmail: a.actorEmail,
+      action: a.action,
+      entityType: a.entityType,
+      entityId: a.entityId,
+      summary: a.summary,
+      ip: a.ip,
+      timeLabel: dateTime.format(a.createdAt),
+    })),
     returns: returnRows.map((r) => ({
       id: r.id,
       reference: r.reference,

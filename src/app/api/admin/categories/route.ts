@@ -1,5 +1,13 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin/guard";
+import {
+  AUDIT_ACTIONS,
+  auditIp,
+  diffFields,
+  hasChanges,
+  maybePurgeAuditLogs,
+  writeAuditLog,
+} from "@/lib/admin/audit";
 import { prisma } from "@/lib/db";
 import { slugifyCategory } from "@/lib/admin/options";
 
@@ -83,7 +91,20 @@ export async function POST(request: Request) {
   const clash = await prisma.category.findUnique({ where: { slug: d.slug }, select: { id: true } });
   if (clash) return bad(`The web address “/products?category=${d.slug}” is already taken.`, 409);
 
-  const created = await prisma.category.create({ data: d, select: SELECT });
+  const created = await prisma.$transaction(async (tx) => {
+    const row = await tx.category.create({ data: d, select: SELECT });
+    await writeAuditLog(tx, {
+      actor: admin,
+      action: AUDIT_ACTIONS.categoryCreate,
+      entityType: "Category",
+      entityId: row.id,
+      summary: `Created “${row.name}” (/products?category=${row.slug})`,
+      ip: auditIp(request),
+    });
+    return row;
+  });
+  maybePurgeAuditLogs();
+
   return NextResponse.json({ ok: true, category: created });
 }
 
@@ -103,7 +124,7 @@ export async function PATCH(request: Request) {
   if ("error" in parsed) return bad(parsed.error);
   const d = parsed.data;
 
-  const existing = await prisma.category.findUnique({ where: { id }, select: { id: true, slug: true } });
+  const existing = await prisma.category.findUnique({ where: { id }, select: SELECT });
   if (!existing) return bad("Category not found.", 404);
 
   const clash = await prisma.category.findUnique({ where: { slug: d.slug }, select: { id: true } });
@@ -114,7 +135,36 @@ export async function PATCH(request: Request) {
   // Changing the slug changes the category's public URL, so any link already
   // shared — or hardcoded in the footer — will stop resolving. Allowed, but the
   // form warns before it happens.
-  const updated = await prisma.category.update({ where: { id }, data: d, select: SELECT });
+  const changes = diffFields(existing, d, [
+    "name",
+    "slug",
+    "description",
+    "imageUrl",
+    "seoTitle",
+    "seoDescription",
+  ]);
+
+  const updated = await prisma.$transaction(async (tx) => {
+    const row = await tx.category.update({ where: { id }, data: d, select: SELECT });
+    if (hasChanges(changes)) {
+      await writeAuditLog(tx, {
+        actor: admin,
+        action: AUDIT_ACTIONS.categoryUpdate,
+        entityType: "Category",
+        entityId: id,
+        // A slug change breaks shared links, so name it in the summary rather
+        // than leaving it buried in the JSON.
+        summary: changes.slug
+          ? `Updated “${row.name}” — web address ${existing.slug} → ${row.slug}`
+          : `Updated “${row.name}” (${Object.keys(changes).join(", ")})`,
+        changes,
+        ip: auditIp(request),
+      });
+    }
+    return row;
+  });
+  maybePurgeAuditLogs();
+
   return NextResponse.json({ ok: true, category: updated });
 }
 
@@ -129,7 +179,7 @@ export async function DELETE(request: Request) {
 
   const existing = await prisma.category.findUnique({
     where: { id },
-    select: { id: true, name: true, _count: { select: { products: true } } },
+    select: { id: true, name: true, slug: true, _count: { select: { products: true } } },
   });
   if (!existing) return bad("Category not found.", 404);
 
@@ -144,6 +194,22 @@ export async function DELETE(request: Request) {
     );
   }
 
-  await prisma.category.delete({ where: { id } });
+  // Deletion is the one action with nothing left behind to inspect afterwards,
+  // so the log keeps the name and slug — otherwise the row would point at an
+  // id that no longer resolves to anything.
+  await prisma.$transaction(async (tx) => {
+    await tx.category.delete({ where: { id } });
+    await writeAuditLog(tx, {
+      actor: admin,
+      action: AUDIT_ACTIONS.categoryDelete,
+      entityType: "Category",
+      entityId: id,
+      summary: `Deleted “${existing.name}” (/products?category=${existing.slug})`,
+      changes: { name: { from: existing.name, to: null } },
+      ip: auditIp(request),
+    });
+  });
+  maybePurgeAuditLogs();
+
   return NextResponse.json({ ok: true, id });
 }

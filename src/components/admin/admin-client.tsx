@@ -19,6 +19,7 @@ import { InventoryView } from "@/components/admin/inventory-view";
 import { CategoriesView } from "@/components/admin/categories-view";
 import { AdminReturnsView } from "@/components/admin/returns-view";
 import { AnalyticsView } from "@/components/admin/analytics-view";
+import { ActivityView } from "@/components/admin/activity-view";
 
 type View =
   | "overview"
@@ -27,7 +28,8 @@ type View =
   | "inventory"
   | "categories"
   | "returns"
-  | "analytics";
+  | "analytics"
+  | "activity";
 
 const THEME_KEY = "sb-theme";
 
@@ -38,6 +40,7 @@ const SIDEBAR: { view: View; label: string; icon: keyof typeof ICONS }[] = [
   { view: "categories", label: "Categories", icon: "categories" },
   { view: "returns", label: "Returns", icon: "returns" },
   { view: "analytics", label: "Analytics", icon: "analytics" },
+  { view: "activity", label: "Activity", icon: "activity" },
 ];
 
 export function AdminClient({
@@ -45,8 +48,15 @@ export function AdminClient({
   admin,
 }: {
   data: AdminData;
-  admin: { name: string; email: string };
+  admin: { name: string; email: string; role: "ADMIN" | "SUPERADMIN" };
 }) {
+  // The Activity tab is SUPERADMIN-only. The rows are already withheld at the
+  // query for anyone else, so this hides a tab that would always be empty
+  // rather than being the thing that enforces the restriction.
+  const canSeeActivity = admin.role === "SUPERADMIN";
+  const sidebarItems = canSeeActivity
+    ? SIDEBAR
+    : SIDEBAR.filter((i) => i.view !== "activity");
   const [view, setView] = useState<View>("overview");
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
@@ -369,7 +379,7 @@ export function AdminClient({
             </div>
 
             <nav className="flex min-[940px]:flex-col gap-1.5 overflow-x-auto min-[940px]:overflow-visible">
-              {SIDEBAR.map((item) => (
+              {sidebarItems.map((item) => (
                 <SideLink
                   key={item.view}
                   active={sidebarActive === item.view}
@@ -434,6 +444,9 @@ export function AdminClient({
             <AdminReturnsView returns={returns} onUpdate={updateReturn} />
           )}
           {view === "analytics" && <AnalyticsView data={data} />}
+          {view === "activity" && canSeeActivity && (
+            <ActivityView entries={data.auditLog} />
+          )}
         </main>
       </div>
 

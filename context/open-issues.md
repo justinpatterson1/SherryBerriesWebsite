@@ -70,11 +70,7 @@ Same form, same session policy, no 2FA, no IP restriction. One reused password o
 
 **Fix:** 2FA on admin accounts, or at minimum a shorter admin session and a login alert.
 
-### S3. No audit log of admin activity
-
-Nothing records who changed a price, approved a return, deleted a category, or moved an order's status. If something goes wrong there is no way to reconstruct it.
-
-**Fix:** an `AdminAuditLog` model written to from the admin API routes.
+### S3. ~~No audit log of admin activity~~ — **RESOLVED 2026-09-05**, see Resolved section
 
 ### S4. No bot protection, monitoring, dependency scanning, or security testing
 
@@ -185,6 +181,19 @@ Found while verifying issue 23: `localStorage` held `light` while the page rende
 
 ## Resolved
 
+- **2026-09-05** — *(was security issue S3)* **Every change made through the admin panel is now recorded.** Migration `20260905030057_admin_audit_log` adds `AdminAuditLog`; nothing before this recorded who changed a price, approved a refund, or deleted a category.
+  - **Owner's decisions:** strict transactions, no logging of denied attempts (non-admins are redirected anyway), **SUPERADMIN-only** viewing, **12-month** retention, and orders + returns included.
+  - **Strict means strict.** Each log row is written inside the same `prisma.$transaction` as the change it describes, so a change cannot land unlogged — if the log write fails, the change rolls back with it. The cost, accepted deliberately: a broken log table would block admins from working.
+  - **Nine write points wired:** product create/update, inventory bulk edits, category create/update/delete, order status, return status. Bulk inventory saves write **one row per product that actually moved**, not one per batch, so "what happened to this product" is answerable — and untouched rows in a batch are not logged at all.
+  - **No customer personal data in the log, by design.** Order and return entries store the **order number / return reference** and the transition; the customer's details already live on that record, so the log never becomes a second copy of them. A deletion request therefore does not need to touch it. The one exception is deliberate: a return **rejection note** is recorded, because "why was this refused?" is the question the log exists to answer, and those are the admin's own words.
+  - **⚠ The subtle bug this could easily have had:** Prisma returns `price` as a `Decimal` object while the route parses a `number`. Compared raw, **every save would have looked like it changed the price**, filling the log with noise. `diffFields()` normalises Decimal and Date before comparing; there is a test pinning exactly this.
+  - **SUPERADMIN restriction is enforced at the query**, not in the UI — `getAdminData(role)` does not fetch the rows at all for a plain `ADMIN`, so they never reach that browser. Hiding the tab is cosmetic on top of that.
+  - **Retention runs without a cron:** roughly 1 write in 50 triggers a sweep of rows older than 12 months. It runs outside the transaction and swallows its own errors — housekeeping must never be why an admin's change fails.
+  - **Pure logic split into [audit-changes.ts](../src/lib/admin/audit-changes.ts)**, matching how `contact/validate.ts` is split, because the test could not import the module while it pulled in the Prisma client.
+
+  **Verification:** 10 new tests (65 total) covering Decimal-vs-number equality, cleared fields, untouched fields, Date normalisation, and the null-IP rule. Typecheck, lint (28 pre-existing warnings, unchanged) and production build clean. **Not verified in a browser** — needs a SUPERADMIN session.
+
+  **Known limitation, stated plainly:** this records what happens *through the app*. Anyone with the Neon connection string can still change data — or edit this table — without a trace. Real tamper-proofing means shipping logs somewhere the app cannot reach.
 - **2026-09-04** — *(from the pre-launch security audit)* **`/api/promo` and `/api/search` are no longer unmetered public endpoints.** They were the only two routes with neither authentication nor rate limiting.
   - **`/api/promo` was a discount-code oracle** — unauthenticated, unlimited, and it answers *"does this code exist?"*, distinguishing invalid from expired from limit-reached. The seeded codes are guessable words (`BERRY10`, `WELCOME20`, `STUDIO50`), so no large dictionary was needed. Now **10 attempts per hour per IP**. **The specific wording was kept deliberately**: a customer holding a genuinely expired code deserves to be told that rather than "didn't work", so the defence is making each guess expensive rather than hiding the answer.
   - **`/api/search` returns the entire catalog in one response** and did so on every call. Now two layers: **CDN caching** (`s-maxage=300, stale-while-revalidate=3600`) so repeat requests never reach the function or the database — this is the layer that absorbs volume — plus **30/hour per IP** for anyone busting the cache to scrape in a loop.

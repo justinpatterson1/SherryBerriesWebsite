@@ -20,6 +20,14 @@ export default async function AdminPage() {
     redirect("/");
   }
 
-  const data = await getAdminData();
-  return <AdminClient data={data} admin={{ name: admin.name, email: admin.email }} />;
+  // Role decides whether the audit log is even queried — a plain ADMIN's page
+  // payload never contains those rows, so the restriction cannot be undone by
+  // poking at the client.
+  const data = await getAdminData(admin.role);
+  return (
+    <AdminClient
+      data={data}
+      admin={{ name: admin.name, email: admin.email, role: admin.role }}
+    />
+  );
 }

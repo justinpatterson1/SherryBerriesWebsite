@@ -260,6 +260,13 @@ export const ICONS: Record<string, ReactNode> = {
       <path d="M12 14v6" />
     </Svg>
   ),
+  activity: (
+    <Svg>
+      <path d="M12 8v4l2.5 2.5" />
+      <path d="M3.05 11a9 9 0 1 1 .5 4" />
+      <path d="M3 20v-5h5" />
+    </Svg>
+  ),
   returns: (
     <Svg>
       <path d="M9 14H4v5" />

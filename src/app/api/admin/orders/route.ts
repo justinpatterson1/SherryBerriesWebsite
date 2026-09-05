@@ -1,10 +1,26 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin/guard";
+import {
+  AUDIT_ACTIONS,
+  auditIp,
+  diffFields,
+  hasChanges,
+  maybePurgeAuditLogs,
+  writeAuditLog,
+  type ChangeSet,
+} from "@/lib/admin/audit";
 import { prisma } from "@/lib/db";
 import type {
   FulfillmentStatus,
   PaymentStatus,
 } from "@/generated/prisma/client";
+
+/** "Processing → Shipped", or both transitions when payment changed too. */
+function describeOrderChange(changes: ChangeSet): string {
+  return Object.values(changes)
+    .map((c) => `${String(c.from)} → ${String(c.to)}`)
+    .join(", ");
+}
 
 const STATUS_TO_FULFILLMENT: Record<string, FulfillmentStatus> = {
   Pending: "UNFULFILLED",
@@ -47,13 +63,37 @@ export async function PATCH(request: Request) {
 
   const existing = await prisma.order.findUnique({
     where: { id: orderId },
-    select: { id: true },
+    select: {
+      id: true,
+      orderNumber: true,
+      fulfillmentStatus: true,
+      paymentStatus: true,
+    },
   });
   if (!existing) {
     return NextResponse.json({ error: "Order not found." }, { status: 404 });
   }
 
-  await prisma.order.update({ where: { id: orderId }, data });
+  const changes = diffFields(existing, data, ["fulfillmentStatus", "paymentStatus"]);
+
+  // Audited in the same transaction as the change: money moves here, so a
+  // status change must not be able to land unrecorded. The log stores the
+  // order NUMBER and the transition — never the customer's details.
+  await prisma.$transaction(async (tx) => {
+    await tx.order.update({ where: { id: orderId }, data });
+    if (hasChanges(changes)) {
+      await writeAuditLog(tx, {
+        actor: admin,
+        action: AUDIT_ACTIONS.orderStatusChange,
+        entityType: "Order",
+        entityId: orderId,
+        summary: `${existing.orderNumber}: ${describeOrderChange(changes)}`,
+        changes,
+        ip: auditIp(request),
+      });
+    }
+  });
+  maybePurgeAuditLogs();
 
   return NextResponse.json({ ok: true, status });
 }
