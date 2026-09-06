@@ -152,7 +152,7 @@ const CATEGORY_BLUEPRINTS: Array<{
     priceMax: 180,
     productPool: ["Halo Hoop", "Petal Press Stud", "Honey Drip Ring", "Constellation Helix", "Sherbet Cuff", "Moonbeam Daith"],
     imageTags: "ear-piercing,helix,cartilage,jewelry",
-    categoryImageUrl: "/images/categories/tragus.jpg",
+    categoryImageUrl: "/images/categories/cartilage.jpg",
   },
   {
     slug: "aftercare",
@@ -174,8 +174,7 @@ const CATEGORY_BLUEPRINTS: Array<{
     priceMax: 180,
     productPool: ["Rose Quartz Elixir", "Velvet Rebuild Serum", "Berry Glow Drops", "Midnight Repair Elixir"],
     imageTags: "serum,beauty,skincare,oil",
-    // No dedicated elixir image yet — reusing the aftercare photo until a real one exists.
-    categoryImageUrl: "/images/categories/aftercare.jpg",
+    categoryImageUrl: "/images/categories/elixir.jpg",
   },
   {
     slug: "accessories",
