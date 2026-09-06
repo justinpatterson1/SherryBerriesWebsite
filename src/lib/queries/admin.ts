@@ -94,6 +94,17 @@ export type AdminPromo = {
   expiresAt: string | null;
 };
 
+export type AdminSubscriber = {
+  id: string;
+  email: string;
+  /** Where the signup came from — "admin" for one added on this screen. */
+  source: string | null;
+  /** ISO string. */
+  subscribedAt: string;
+  /** ISO string, or null while they are still subscribed. */
+  unsubscribedAt: string | null;
+};
+
 export type AdminAuditEntry = {
   id: string;
   actorEmail: string;
@@ -152,6 +163,7 @@ export type AdminData = {
   topProducts: TopProduct[];
   categories: AdminCategory[];
   promos: AdminPromo[];
+  subscribers: AdminSubscriber[];
   returns: AdminReturn[];
   /**
    * Admin activity log. Empty for a plain ADMIN — the owner restricted this to
@@ -253,6 +265,7 @@ export async function getAdminData(
     sold30Rows,
     categoryRows,
     promoRows,
+    subscriberRows,
     auditRows,
     returnRows,
   ] = await Promise.all([
@@ -348,6 +361,19 @@ export async function getAdminData(
     // Promo codes for the Promos view. Newest first: the one just created is
     // the one you want to see.
     prisma.discountCode.findMany({ orderBy: { createdAt: "desc" } }),
+    // Newsletter list for the Subscribers view. Newest first, and unsubscribed
+    // rows are included — the view has to show them so an address can be
+    // resubscribed or cleared out.
+    prisma.newsletterSubscriber.findMany({
+      orderBy: { subscribedAt: "desc" },
+      select: {
+        id: true,
+        email: true,
+        source: true,
+        subscribedAt: true,
+        unsubscribedAt: true,
+      },
+    }),
     // Audit log — only queried at all for a SUPERADMIN.
     role === "SUPERADMIN"
       ? prisma.adminAuditLog.findMany({
@@ -639,6 +665,13 @@ export async function getAdminData(
       usageLimit: p.usageLimit,
       timesUsed: p.timesUsed,
       expiresAt: p.expiresAt ? p.expiresAt.toISOString() : null,
+    })),
+    subscribers: subscriberRows.map((s) => ({
+      id: s.id,
+      email: s.email,
+      source: s.source,
+      subscribedAt: s.subscribedAt.toISOString(),
+      unsubscribedAt: s.unsubscribedAt ? s.unsubscribedAt.toISOString() : null,
     })),
     auditLog: auditRows.map((a) => ({
       id: a.id,

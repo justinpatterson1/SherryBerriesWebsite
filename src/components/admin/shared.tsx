@@ -260,6 +260,12 @@ export const ICONS: Record<string, ReactNode> = {
       <path d="M12 14v6" />
     </Svg>
   ),
+  subscribers: (
+    <Svg>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m3 7 9 6 9-6" />
+    </Svg>
+  ),
   promos: (
     <Svg>
       <path d="M20 12a2 2 0 0 1 0-4V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v2a2 2 0 0 1 0 4v2a2 2 0 0 1 0 4v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2a2 2 0 0 1 0-4z" />

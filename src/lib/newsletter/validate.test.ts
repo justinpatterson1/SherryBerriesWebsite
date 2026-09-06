@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { EMAIL_MAX, normalizeEmail, validateNewsletterEmail } from "./validate";
+import { EMAIL_MAX, maskEmail, normalizeEmail, validateNewsletterEmail } from "./validate";
 
 describe("normalizeEmail", () => {
   it("trims and lowercases so one person cannot become two rows", () => {
@@ -36,5 +36,24 @@ describe("validateNewsletterEmail", () => {
       ok: false,
       error: "That email is too long.",
     });
+  });
+});
+
+describe("maskEmail", () => {
+  it("keeps the first character and the whole domain", () => {
+    expect(maskEmail("sam@example.com")).toBe("s***@example.com");
+  });
+
+  it("drops a single-character local part rather than exposing it", () => {
+    expect(maskEmail("a@example.com")).toBe("***@example.com");
+  });
+
+  it("splits on the last @, so a local part containing one is not mishandled", () => {
+    expect(maskEmail('"a@b"@example.com')).toBe('"***@example.com');
+  });
+
+  it("returns *** when there is no local part to keep", () => {
+    expect(maskEmail("@example.com")).toBe("***");
+    expect(maskEmail("not-an-email")).toBe("***");
   });
 });

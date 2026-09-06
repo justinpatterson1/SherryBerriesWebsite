@@ -9,6 +9,8 @@ import type {
   AdminOrderStatus,
   AdminProduct,
   AdminPromo,
+
+  AdminSubscriber,
   AdminReturn,
 } from "@/lib/queries/admin";
 import type { CategoryFormData, ProductFormData } from "@/lib/admin/options";
@@ -21,6 +23,7 @@ import { InventoryView } from "@/components/admin/inventory-view";
 import { CategoriesView } from "@/components/admin/categories-view";
 import { AdminReturnsView } from "@/components/admin/returns-view";
 import { PromosView } from "@/components/admin/promos-view";
+import { SubscribersView } from "@/components/admin/subscribers-view";
 import { AnalyticsView } from "@/components/admin/analytics-view";
 import { ActivityView } from "@/components/admin/activity-view";
 
@@ -32,6 +35,7 @@ type View =
   | "categories"
   | "returns"
   | "promos"
+  | "subscribers"
   | "analytics"
   | "activity";
 
@@ -44,6 +48,7 @@ const SIDEBAR: { view: View; label: string; icon: keyof typeof ICONS }[] = [
   { view: "categories", label: "Categories", icon: "categories" },
   { view: "returns", label: "Returns", icon: "returns" },
   { view: "promos", label: "Promo codes", icon: "promos" },
+  { view: "subscribers", label: "Newsletter", icon: "subscribers" },
   { view: "analytics", label: "Analytics", icon: "analytics" },
   { view: "activity", label: "Activity", icon: "activity" },
 ];
@@ -75,6 +80,7 @@ export function AdminClient({
   const [categories, setCategories] = useState<AdminCategory[]>(data.categories);
   const [returns, setReturns] = useState<AdminReturn[]>(data.returns);
   const [promos, setPromos] = useState<AdminPromo[]>(data.promos);
+  const [subscribers, setSubscribers] = useState<AdminSubscriber[]>(data.subscribers);
 
   // Toast
   const [toast, setToast] = useState<{ msg: string; id: number } | null>(null);
@@ -358,6 +364,77 @@ export function AdminClient({
     [showToast],
   );
 
+  // --- Newsletter -----------------------------------------------------------
+
+  const addSubscriber = useCallback(
+    async (email: string): Promise<boolean> => {
+      try {
+        const res = await fetch("/api/admin/subscribers", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+        const json = await res.json();
+        if (!res.ok || !json.subscriber) throw new Error(json.error);
+        const next = json.subscriber as AdminSubscriber;
+        // Resubscribing an existing address returns the same row, so replace
+        // it in place rather than adding a duplicate to the list.
+        setSubscribers((prev) =>
+          prev.some((s) => s.id === next.id)
+            ? prev.map((s) => (s.id === next.id ? next : s))
+            : [next, ...prev],
+        );
+        showToast(`${next.email} added`);
+        return true;
+      } catch (e) {
+        showToast(e instanceof Error && e.message ? e.message : "Couldn't add that address.");
+        return false;
+      }
+    },
+    [showToast],
+  );
+
+  const setSubscribed = useCallback(
+    async (id: string, subscribed: boolean): Promise<boolean> => {
+      try {
+        const res = await fetch("/api/admin/subscribers", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, subscribed }),
+        });
+        const json = await res.json();
+        if (!res.ok || !json.subscriber) throw new Error(json.error);
+        const next = json.subscriber as AdminSubscriber;
+        setSubscribers((prev) => prev.map((s) => (s.id === id ? next : s)));
+        showToast(`${next.email} ${subscribed ? "resubscribed" : "unsubscribed"}`);
+        return true;
+      } catch (e) {
+        showToast(e instanceof Error && e.message ? e.message : "Couldn't update that address.");
+        return false;
+      }
+    },
+    [showToast],
+  );
+
+  const deleteSubscriber = useCallback(
+    async (id: string): Promise<boolean> => {
+      try {
+        const res = await fetch(`/api/admin/subscribers?id=${encodeURIComponent(id)}`, {
+          method: "DELETE",
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error);
+        setSubscribers((prev) => prev.filter((s) => s.id !== id));
+        showToast("Address deleted");
+        return true;
+      } catch (e) {
+        showToast(e instanceof Error && e.message ? e.message : "Couldn't delete that address.");
+        return false;
+      }
+    },
+    [showToast],
+  );
+
   const deletePromo = useCallback(
     async (id: string): Promise<boolean> => {
       try {
@@ -517,6 +594,14 @@ export function AdminClient({
               onCreate={createPromo}
               onUpdate={updatePromo}
               onDelete={deletePromo}
+            />
+          )}
+          {view === "subscribers" && (
+            <SubscribersView
+              subscribers={subscribers}
+              onAdd={addSubscriber}
+              onSetSubscribed={setSubscribed}
+              onDelete={deleteSubscriber}
             />
           )}
           {view === "analytics" && <AnalyticsView data={data} />}

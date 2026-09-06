@@ -17,6 +17,9 @@ export const AUDIT_ACTIONS = {
   promoCreate: "promo.create",
   promoUpdate: "promo.update",
   promoDelete: "promo.delete",
+  subscriberCreate: "subscriber.create",
+  subscriberUpdate: "subscriber.update",
+  subscriberDelete: "subscriber.delete",
 } as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];
