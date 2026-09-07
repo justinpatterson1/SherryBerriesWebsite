@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import heroBanner from "../../../assets/images/Hero.png";
+import heroBanner from "../../../assets/images/hero.jpg";
 
 // "Free piercing aftercare guide" removed 2026-08-17 — no such guide exists.
 // This marquee has now lost three claims in three passes (free shipping over
@@ -36,13 +36,13 @@ export function Hero() {
             aria-hidden="true"
             className="w-[7px] h-[7px] rounded-full bg-pink animate-hero-pulse"
           />
-          Luxury Body Jewelry · Piercing Aftercare · Est. 2022
+          Luxury Body Jewelry · Piercing Aftercare · Est. 2017
         </span>
       </div>
 
       <div
         className={
-          "relative w-[75%] self-center aspect-[1672/941] rounded-[28px] overflow-hidden " +
+          "relative w-[75%] self-center aspect-video rounded-[28px] overflow-hidden " +
           "shadow-[0_30px_80px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.04)_inset,0_30px_100px_rgba(255,79,163,0.18),0_60px_160px_rgba(255,79,163,0.1)] " +
           "max-[900px]:w-[92%]"
         }
@@ -78,12 +78,11 @@ export function Hero() {
           <div>
             <h1 className="font-display text-[clamp(40px,5.4vw,76px)] leading-[1.04] tracking-[-0.01em] text-ink m-0">
               Luxury body jewelry &amp;{" "}
-              <span className="font-serif italic font-medium">piercing care</span>{" "}
-              designed to make you{" "}
+              <span className="font-serif italic font-medium">piercing aftercare</span>{" "}
+              for every version of{" "}
               <span className="font-serif italic bg-gradient-to-r from-pink to-gold-soft bg-clip-text text-transparent">
-                glow
-              </span>{" "}
-              confidently.
+                you
+              </span>
             </h1>
             <p className="font-sans text-[17px] leading-[1.65] text-ink-dim mt-6 mb-0 max-w-[540px]">
               Implant-grade titanium, gold-fill, and editorial-grade pieces — paired with

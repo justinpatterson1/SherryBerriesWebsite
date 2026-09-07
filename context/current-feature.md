@@ -1,13 +1,56 @@
-# Current Feature
+# Current Feature: Jewelry lengths with per-length stock
 
 ## Status
 Not Started
 
 ## Goals
-<!-- Populated by /feature load -->
+- The admin **New product** / **Edit product** modal can hold a repeatable list of size rows — each a length value (e.g. `8mm`) and the quantity in stock at that length.
+- Rows can be added and removed in the modal, and an existing product opens with its current sizes already populated and editable.
+- Sizes persist as `ProductVariant` rows and survive a reload; removing a row deletes the variant.
+- `/api/admin/products` accepts and returns variants, behind `requireAdmin`, audited in the same transaction as the product write — matching the promos and subscribers routes.
+- The storefront product page, cart and checkout keep working against the variants the modal creates, exactly as they do against seeded ones.
+- No Prisma migration (see Notes — the schema already covers this).
 
 ## Notes
-<!-- Populated by /feature load -->
+
+### The schema already allows it — no migration needed
+
+`ProductVariant` ([schema.prisma:236](../prisma/schema.prisma#L236)) is already this exact shape:
+
+```prisma
+name            String    // the axis — the seed uses "Gauge"
+value           String    // the size itself — "16G", or "8mm"
+sku             String  @unique
+inventory       Int     @default(0)   // quantity at THIS size
+additionalPrice Decimal?              // optional price delta
+```
+
+`inventory` is per-variant, so "quantity of jewelry in that particular length" needs no new column. The `"ensure db schema allows for this change"` part of the request is already satisfied — this should be **verified, not migrated**.
+
+### The real gap is the admin UI and its API
+
+Variants exist today **only because the seed creates them** ([seed.ts:500](../prisma/seed.ts#L500), `name: "Gauge"`). Grepping for `variant` returns **zero** matches in all four admin files:
+
+- `src/components/admin/product-form.tsx` — the modal has no size fields at all
+- `src/app/api/admin/products/route.ts` — never reads or writes variants
+- `src/components/admin/inventory-view.tsx`
+- `src/app/api/admin/inventory/route.ts` — edits `Product.inventory` only
+
+So an admin can create a product but cannot give it sizes, and cannot see or correct the stock of a seeded variant.
+
+### Decisions needed at `start`
+
+1. **Which axis, and is it fixed?** The seed says `name: "Gauge"`; the request says *length*. Options: hard-code `"Length"`, let the admin pick the label per product, or key it off `jewelryType`. Gauge and length are different measurements and a piece can need both.
+2. **`Product.inventory` vs the sum of its variants.** Both are live today: the WiPay failure path restocks `productVariant.inventory` when an order line has a `variantId` and `product.inventory` when it doesn't ([route.ts:150](../src/app/api/checkout/wipay/return/route.ts#L150)). Does the product total become derived, stay independent, or get hidden once sizes exist? Getting this wrong oversells or strands stock.
+3. **SKU.** `ProductVariant.sku` is required and `@unique`. Auto-derive from product + value, or collect it? The seed's `V-{productId}-{value}-{i}` guarantees uniqueness but is not a SKU a human would print.
+4. **`additionalPrice`.** Expose a per-length price delta in the modal, or leave it null for now? A longer bar often costs more.
+5. **Deleting a size that has been ordered.** `OrderItem.variantId` references it. Same shape as the promo-delete rule — block, or soft-retire.
+
+### Conventions to follow
+
+- Admin resources are `/api/admin/<name>/route.ts` + a `*-view.tsx` + handlers in `admin-client.tsx`.
+- Every write is audited inside its own transaction via `writeAuditLog` — add `AUDIT_ACTIONS` entries rather than reusing `productUpdate` for a stock change.
+- Pure validation belongs in `src/lib/**` with a co-located `*.test.ts` (Vitest, actions and utilities only).
 
 ---
 

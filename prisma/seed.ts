@@ -260,9 +260,9 @@ async function seedUsers() {
     update: { role: "ADMIN" },
     create: {
       email: "admin@sherryberries.test",
-      firstName: "Sherry",
-      lastName: "Antoine",
-      name: "Sherry Antoine",
+      firstName: "Sherry-Vanessa",
+      lastName: "Nichols",
+      name: "Sherry-Vanessa Nichols",
       password: passwordHash,
       phoneNumber: ttPhone(),
       role: "ADMIN",

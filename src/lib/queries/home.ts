@@ -28,6 +28,43 @@ export async function getHomeCategories(limit?: number): Promise<HomeCategory[]>
   });
 }
 
+/**
+ * The categories the homepage grid features, in the order they appear.
+ *
+ * Explicit rather than "the first N by name": there are more categories than
+ * slots, so alphabetical truncation silently decided which one fell off the
+ * end. Swapping a tile is now an edit to this list. Anything not listed here
+ * is still reachable from the /products filter bar, which is uncapped.
+ */
+export const FEATURED_CATEGORY_SLUGS = [
+  "accessories",
+  "aftercare",
+  "belly-rings",
+  "cartilage-jewelry",
+  "elixirs",
+  "merch",
+  "nose-rings",
+  "tongue-ring",
+] as const;
+
+/** The homepage grid's categories, ordered by FEATURED_CATEGORY_SLUGS. */
+export async function getFeaturedCategories(): Promise<HomeCategory[]> {
+  const rows = await prisma.category.findMany({
+    where: { slug: { in: [...FEATURED_CATEGORY_SLUGS] } },
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      description: true,
+      imageUrl: true,
+    },
+  });
+  // Order in JS: the list above is the source of truth, and a slug missing
+  // from the database simply leaves the grid one tile shorter.
+  const order = new Map(FEATURED_CATEGORY_SLUGS.map((slug, i) => [slug as string, i]));
+  return rows.sort((a, b) => (order.get(a.slug) ?? 0) - (order.get(b.slug) ?? 0));
+}
+
 export type BestsellerPin = "Bestseller" | "New" | "Studio pick";
 
 export type BestsellerProduct = {

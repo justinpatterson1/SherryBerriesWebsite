@@ -26,7 +26,7 @@ const NAV_LINKS: NavItem[] = [
       { label: "Aftercare", href: "/products?category=aftercare" },
       { label: "Merchandise", href: "/products?category=merch" },
       { label: "Bestsellers", href: "/bestsellers" },
-  // { label: "Our Story", href: "/our-story" },
+      { label: "Our Story", href: "/our-story" },
   // { label: "FAQ", href: "/faq" },
   // { label: "Community", href: "/community" },
 ];

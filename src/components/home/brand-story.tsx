@@ -55,7 +55,7 @@ export function BrandStory() {
             beautiful — never clinical.
           </p>
           <p className="font-sans text-[17px] leading-[1.7] text-ink-dim mt-6 max-w-[600px]">
-            Founder Sherry Antoine spent a decade behind the needle, frustrated by
+            Founder Sherry-Vanessa Nichols spent a decade behind the needle, frustrated by
             jewelry that looked like medical hardware and aftercare that smelled like a
             hospital. So she built the line she wished her clients could buy: studio-grade
             titanium and gold-fill pieces, healing essentials with skincare-grade
@@ -80,10 +80,10 @@ export function BrandStory() {
 
           <div className="mt-10 flex flex-col gap-0.5">
             <span className="font-script text-[46px] leading-none text-blush tracking-[0.01em]">
-              Sherry A.
+              Sherry-Vanessa N.
             </span>
             <span className="font-sans text-[13px] font-medium tracking-[0.18em] uppercase text-ink-faint leading-[1.6]">
-              Founder · Studio piercer
+              Founder
               <br />
               Trinidad &amp; Tobago
             </span>
