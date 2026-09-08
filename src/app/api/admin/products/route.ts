@@ -10,6 +10,7 @@ import {
 } from "@/lib/admin/audit";
 import { getAdminProduct } from "@/lib/queries/admin";
 import { prisma } from "@/lib/db";
+import { revalidateCatalog } from "@/lib/admin/revalidate";
 import { JEWELRY_TYPE_VALUES } from "@/lib/admin/options";
 import {
   sizesSummary,
@@ -299,6 +300,7 @@ export async function POST(request: Request) {
     throw e;
   }
   maybePurgeAuditLogs();
+  revalidateCatalog();
 
   const product = await getAdminProduct(created.id);
   return NextResponse.json({ ok: true, product });
@@ -446,6 +448,7 @@ export async function PATCH(request: Request) {
     throw e;
   }
   maybePurgeAuditLogs();
+  revalidateCatalog();
 
   // Manage the primary (position 0) image only; an empty URL leaves it as-is.
   if (d.imageUrl) {

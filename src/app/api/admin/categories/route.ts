@@ -10,6 +10,7 @@ import {
 } from "@/lib/admin/audit";
 import { prisma } from "@/lib/db";
 import { slugifyCategory } from "@/lib/admin/options";
+import { revalidateCategories } from "@/lib/admin/revalidate";
 
 // Categories are the storefront's filtering dimension: every row here becomes a
 // chip on /products and a page at /products?category=<slug>. They are plain
@@ -104,6 +105,7 @@ export async function POST(request: Request) {
     return row;
   });
   maybePurgeAuditLogs();
+  revalidateCategories();
 
   return NextResponse.json({ ok: true, category: created });
 }
@@ -164,6 +166,7 @@ export async function PATCH(request: Request) {
     return row;
   });
   maybePurgeAuditLogs();
+  revalidateCategories();
 
   return NextResponse.json({ ok: true, category: updated });
 }
@@ -210,6 +213,7 @@ export async function DELETE(request: Request) {
     });
   });
   maybePurgeAuditLogs();
+  revalidateCategories();
 
   return NextResponse.json({ ok: true, id });
 }

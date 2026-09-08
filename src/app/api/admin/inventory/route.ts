@@ -10,6 +10,7 @@ import {
   type ChangeSet,
 } from "@/lib/admin/audit";
 import { prisma } from "@/lib/db";
+import { revalidateCatalog } from "@/lib/admin/revalidate";
 
 type Edit = { id: string; price: number; stock: number };
 
@@ -132,6 +133,7 @@ export async function PATCH(request: Request) {
     }
   });
   maybePurgeAuditLogs();
+  revalidateCatalog();
 
   // Re-read so the client can refresh stock-status pills from authoritative data.
   const updated = await prisma.product.findMany({
