@@ -55,12 +55,11 @@ export function BrandStory() {
             beautiful — never clinical.
           </p>
           <p className="font-sans text-[17px] leading-[1.7] text-ink-dim mt-6 max-w-[600px]">
-            Founder Sherry-Vanessa Nichols spent a decade behind the needle, frustrated by
-            jewelry that looked like medical hardware and aftercare that smelled like a
-            hospital. So she built the line she wished her clients could buy: studio-grade
-            titanium and gold-fill pieces, healing essentials with skincare-grade
-            ingredients, and a brand that treats your piercing like an act of softness,
-            not a wound.
+            SherryBerries started with a love for cute, affordable body jewelry and the
+            simple idea that expressing yourself should be fun. But over the years, it
+            grew into something much bigger. As we connected with more of our Sweet
+            Berries, we realized that choosing the jewelry was only one part of the
+            journey.
           </p>
 
           <Link

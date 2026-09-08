@@ -7,8 +7,10 @@ import heroBanner from "../../../assets/images/hero.jpg";
 // $80, Pay in 4 with Afterpay, the aftercare guide); check anything added here
 // against what the site actually does before shipping it.
 const MARQUEE_ITEMS = [
-  "Implant-grade titanium",
-  "Hypoallergenic certified",
+  "Serving Sweet Looks Since Forever. 🍓",
+  "Warning: Compliments May Occur",
+  "SELF-LOVE LOOKS GOOD ON YOU",
+  "Sweet like you",
 ];
 
 const chipBase =

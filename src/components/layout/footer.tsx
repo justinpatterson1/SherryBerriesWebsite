@@ -51,12 +51,6 @@ export function Footer() {
             <SocialLink href="https://www.tiktok.com/@sherrybvanessa?lang=en" label="TikTok">
               <TikTokIcon />
             </SocialLink>
-            <SocialLink href="https://pinterest.com" label="Pinterest">
-              <PinterestIcon />
-            </SocialLink>
-            <SocialLink href="https://youtube.com" label="YouTube">
-              <YouTubeIcon />
-            </SocialLink>
           </div>
         </div>
 
@@ -160,20 +154,3 @@ function TikTokIcon() {
   );
 }
 
-function PinterestIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M10 17.5 12 9" />
-      <path d="M9.5 13.5c.4 1 1.3 1.5 2.3 1.5 2 0 3.7-1.7 3.7-4 0-2.2-1.6-3.6-3.7-3.6-2.5 0-4.3 1.9-4.3 4 0 .9.3 1.7.9 2.3" />
-    </svg>
-  );
-}
-
-function YouTubeIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <path d="M21.6 7.2a2.5 2.5 0 0 0-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.8 1.8C5.8 19 12 19 12 19s6.2 0 7.8-.4a2.5 2.5 0 0 0 1.8-1.8A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8zM10 15V9l5.2 3L10 15z" />
-    </svg>
-  );
-}
