@@ -61,6 +61,14 @@ export type AdminOrder = {
 
 export type StockStatus = "In stock" | "Low stock" | "Out of stock";
 
+/** One ProductVariant, as the admin screens see it. */
+export type AdminSize = {
+  id: string;
+  value: string;
+  quantity: number;
+  additionalPrice: number | null;
+};
+
 export type AdminProduct = {
   id: string;
   name: string;
@@ -80,6 +88,13 @@ export type AdminProduct = {
   jewelryType: string;
   featured: boolean;
   active: boolean;
+  /**
+   * The axis these sizes measure — all of a product's variants share it.
+   * Null when the product has no sizes.
+   */
+  sizeLabel: string | null;
+  /** Per-size stock. Empty for a product sold as a single item. */
+  sizes: AdminSize[];
 };
 
 export type AdminPromo = {
@@ -172,6 +187,29 @@ export type AdminData = {
    */
   auditLog: AdminAuditEntry[];
 };
+
+/** Variants in a stable order, so the modal's rows do not shuffle on save. */
+const SIZE_SELECT = {
+  orderBy: { createdAt: "asc" },
+  select: { id: true, name: true, value: true, inventory: true, additionalPrice: true },
+} as const;
+
+type SizeRowFromDb = {
+  id: string;
+  name: string;
+  value: string;
+  inventory: number;
+  additionalPrice: unknown;
+};
+
+function toSizes(rows: SizeRowFromDb[]): AdminSize[] {
+  return rows.map((v) => ({
+    id: v.id,
+    value: v.value,
+    quantity: v.inventory,
+    additionalPrice: v.additionalPrice == null ? null : Number(v.additionalPrice),
+  }));
+}
 
 // -----------------------------------------------------------------------------
 // Helpers
@@ -319,6 +357,7 @@ export async function getAdminData(
     prisma.product.findMany({
       orderBy: { name: "asc" },
       select: {
+        variants: SIZE_SELECT,
         id: true,
         name: true,
         sku: true,
@@ -566,6 +605,8 @@ export async function getAdminData(
       jewelryType: p.jewelryType,
       featured: p.featured,
       active: p.active,
+      sizeLabel: p.variants[0]?.name ?? null,
+      sizes: toSizes(p.variants),
     };
   });
 
@@ -730,6 +771,7 @@ export async function getAdminProduct(id: string): Promise<AdminProduct | null> 
         categoryId: true,
         category: { select: { name: true } },
         images: { orderBy: { position: "asc" }, take: 1, select: { imageUrl: true } },
+        variants: SIZE_SELECT,
       },
     }),
     prisma.orderItem.aggregate({
@@ -765,5 +807,7 @@ export async function getAdminProduct(id: string): Promise<AdminProduct | null> 
     jewelryType: p.jewelryType,
     featured: p.featured,
     active: p.active,
+    sizeLabel: p.variants[0]?.name ?? null,
+    sizes: toSizes(p.variants),
   };
 }

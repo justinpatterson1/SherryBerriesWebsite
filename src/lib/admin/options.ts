@@ -44,6 +44,14 @@ export type CategoryFormData = {
   seoDescription: string;
 };
 
+/** One size row from the product modal. `id` is null for a row being added. */
+export type ProductSizeInput = {
+  id: string | null;
+  value: string;
+  quantity: number;
+  additionalPrice: number | null;
+};
+
 export type ProductFormData = {
   name: string;
   sku: string;
@@ -59,4 +67,7 @@ export type ProductFormData = {
   featured: boolean;
   active: boolean;
   imageUrl: string;
+  /** The axis the sizes measure — "Length", "Gauge". Empty when unsized. */
+  sizeLabel: string;
+  sizes: ProductSizeInput[];
 };

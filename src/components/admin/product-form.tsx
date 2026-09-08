@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import type { AdminProduct, AdminCategory } from "@/lib/queries/admin";
 import { JEWELRY_TYPES, NON_JEWELRY_TYPE_VALUES, type ProductFormData } from "@/lib/admin/options";
+import { DEFAULT_SIZE_LABEL, SIZES_MAX } from "@/lib/admin/sizes";
 import { ProductThumb, btnSolid, btnOutline, ICONS } from "@/components/admin/shared";
 
 const fieldClass =
@@ -13,6 +14,9 @@ const labelClass =
   "block font-sans text-[11px] font-bold tracking-[0.12em] uppercase text-ink-faint mb-1.5";
 const numClass =
   fieldClass + " [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
+
+/** A size row while it is being edited — numbers stay strings until submit. */
+type SizeField = { id: string | null; value: string; quantity: string; additionalPrice: string };
 
 type FormState = {
   name: string;
@@ -29,6 +33,8 @@ type FormState = {
   imageUrl: string;
   featured: boolean;
   active: boolean;
+  sizeLabel: string;
+  sizes: SizeField[];
 };
 
 function initialState(p: AdminProduct | null): FormState {
@@ -47,6 +53,13 @@ function initialState(p: AdminProduct | null): FormState {
     imageUrl: p?.img ?? "",
     featured: p?.featured ?? false,
     active: p?.active ?? true,
+    sizeLabel: p?.sizeLabel ?? "",
+    sizes: (p?.sizes ?? []).map((v) => ({
+      id: v.id,
+      value: v.value,
+      quantity: String(v.quantity),
+      additionalPrice: v.additionalPrice != null ? String(v.additionalPrice) : "",
+    })),
   };
 }
 
@@ -70,6 +83,39 @@ export function ProductForm({
   const fileRef = useRef<HTMLInputElement>(null);
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setF((prev) => ({ ...prev, [key]: value }));
+
+  // --- Sizes -----------------------------------------------------------
+
+  const filledSizes = f.sizes.filter((r) => r.value.trim() !== "");
+  const hasSizes = filledSizes.length > 0;
+  // Mirrors stockFromSizes() on the server, so the number shown here is the
+  // number that will be saved. A row mid-edit counts as 0 rather than NaN.
+  const sizeTotal = filledSizes.reduce((sum, r) => {
+    const q = parseInt(r.quantity, 10);
+    return sum + (Number.isFinite(q) && q > 0 ? q : 0);
+  }, 0);
+
+  const addSize = () =>
+    setF((prev) =>
+      prev.sizes.length >= SIZES_MAX
+        ? prev
+        : {
+            ...prev,
+            // Naming the axis on the first row saves the admin a step; they
+            // can still change it.
+            sizeLabel: prev.sizeLabel || DEFAULT_SIZE_LABEL,
+            sizes: [...prev.sizes, { id: null, value: "", quantity: "0", additionalPrice: "" }],
+          },
+    );
+
+  const removeSize = (i: number) =>
+    setF((prev) => ({ ...prev, sizes: prev.sizes.filter((_, n) => n !== i) }));
+
+  const setSize = (i: number, key: keyof SizeField, value: string) =>
+    setF((prev) => ({
+      ...prev,
+      sizes: prev.sizes.map((r, n) => (n === i ? { ...r, [key]: value } : r)),
+    }));
 
   const handleFile = async (file: File | undefined) => {
     if (!file) return;
@@ -104,7 +150,23 @@ export function ProductForm({
     if (!Number.isFinite(price) || price < 0) return setError("Enter a valid price.");
     if (compare !== null && (!Number.isFinite(compare) || compare < 0))
       return setError("Compare-at price must be a valid number.");
-    if (!Number.isInteger(stock) || stock < 0) return setError("Stock must be a whole number ≥ 0.");
+    if (!hasSizes && (!Number.isInteger(stock) || stock < 0))
+      return setError("Stock must be a whole number ≥ 0.");
+
+    const seen = new Set<string>();
+    for (const r of filledSizes) {
+      const key = r.value.trim().toLowerCase();
+      if (seen.has(key)) return setError(`“${r.value.trim()}” is listed twice.`);
+      seen.add(key);
+      const q = parseInt(r.quantity, 10);
+      if (!Number.isInteger(q) || q < 0)
+        return setError(`The quantity for “${r.value.trim()}” must be a whole number ≥ 0.`);
+      if (r.additionalPrice.trim() !== "") {
+        const extra = parseFloat(r.additionalPrice);
+        if (!Number.isFinite(extra) || extra < 0)
+          return setError(`The extra price for “${r.value.trim()}” must be 0 or more.`);
+      }
+    }
     if (!Number.isInteger(reorder) || reorder < 0)
       return setError("Reorder threshold must be a whole number ≥ 0.");
     if (!f.categoryId) return setError("Please choose a category.");
@@ -126,6 +188,14 @@ export function ProductForm({
       featured: f.featured,
       active: f.active,
       imageUrl: f.imageUrl.trim(),
+      sizeLabel: hasSizes ? f.sizeLabel.trim() || DEFAULT_SIZE_LABEL : "",
+      sizes: filledSizes.map((r) => ({
+        id: r.id,
+        value: r.value.trim(),
+        quantity: parseInt(r.quantity, 10),
+        additionalPrice:
+          r.additionalPrice.trim() === "" ? null : parseFloat(r.additionalPrice),
+      })),
     });
   };
 
@@ -205,7 +275,18 @@ export function ProductForm({
             </div>
             <div>
               <label className={labelClass}>Stock</label>
-              <input type="number" min={0} step="1" className={numClass} value={f.stock} onChange={(e) => set("stock", e.target.value)} />
+              {/* Derived once sizes exist — editing it would just be overwritten
+                  by their sum on save, so it is shown rather than offered. */}
+              <input
+                type="number"
+                min={0}
+                step="1"
+                className={numClass + (hasSizes ? " opacity-60 cursor-not-allowed" : "")}
+                value={hasSizes ? String(sizeTotal) : f.stock}
+                readOnly={hasSizes}
+                title={hasSizes ? "Total of the sizes below" : undefined}
+                onChange={(e) => set("stock", e.target.value)}
+              />
             </div>
             <div>
               <label className={labelClass}>Reorder ≤</label>
@@ -247,6 +328,107 @@ export function ProductForm({
                   : "Shown on the Jewelry page as well as its category."}
               </p>
             </div>
+          </div>
+
+          {/* --- Sizes --- */}
+          <div className="rounded-xl border border-white/10 p-4 flex flex-col gap-3.5 light:border-[rgba(26,13,18,0.1)]">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <span className={labelClass + " mb-0"}>Sizes &amp; stock</span>
+                <p className="font-sans text-[11px] leading-[1.5] text-ink-faint mt-1">
+                  {hasSizes
+                    ? `Stock is the total of these rows — ${sizeTotal} in all.`
+                    : "Leave empty for a product sold in one size only."}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={addSize}
+                disabled={f.sizes.length >= SIZES_MAX}
+                className={btnOutline}
+              >
+                <span className="inline-flex items-center gap-2 [&_svg]:w-4 [&_svg]:h-4">
+                  {ICONS.plus} Add size
+                </span>
+              </button>
+            </div>
+
+            {f.sizes.length > 0 && (
+              <>
+                <div className="max-w-[220px]">
+                  <label className={labelClass} htmlFor="size-label">
+                    What the sizes measure
+                  </label>
+                  <input
+                    id="size-label"
+                    className={fieldClass}
+                    value={f.sizeLabel}
+                    onChange={(e) => set("sizeLabel", e.target.value)}
+                    placeholder={DEFAULT_SIZE_LABEL}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2.5">
+                  {f.sizes.map((r, i) => (
+                    <div
+                      key={r.id ?? `new-${i}`}
+                      className="grid grid-cols-[1fr_92px_104px_36px] gap-2.5 items-end max-[600px]:grid-cols-[1fr_72px_36px]"
+                    >
+                      <div>
+                        {i === 0 && <span className={labelClass}>{f.sizeLabel || DEFAULT_SIZE_LABEL}</span>}
+                        <input
+                          className={fieldClass}
+                          value={r.value}
+                          onChange={(e) => setSize(i, "value", e.target.value)}
+                          placeholder="8mm"
+                          aria-label={`Size ${i + 1}`}
+                        />
+                      </div>
+                      <div>
+                        {i === 0 && <span className={labelClass}>Qty</span>}
+                        <input
+                          type="number"
+                          min={0}
+                          step="1"
+                          className={numClass}
+                          value={r.quantity}
+                          onChange={(e) => setSize(i, "quantity", e.target.value)}
+                          aria-label={`Quantity for size ${i + 1}`}
+                        />
+                      </div>
+                      <div className="max-[600px]:hidden">
+                        {i === 0 && <span className={labelClass}>+ Price</span>}
+                        <input
+                          type="number"
+                          min={0}
+                          step="0.01"
+                          className={numClass}
+                          value={r.additionalPrice}
+                          onChange={(e) => setSize(i, "additionalPrice", e.target.value)}
+                          placeholder="—"
+                          aria-label={`Extra price for size ${i + 1}`}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeSize(i)}
+                        aria-label={`Remove size ${i + 1}`}
+                        className="w-9 h-11 grid place-items-center rounded-xl border border-white/12 text-ink-faint cursor-pointer transition-colors hover:text-[#ff8d8d] hover:border-[rgba(255,141,141,0.4)] [&_svg]:w-4 [&_svg]:h-4 light:border-[rgba(26,13,18,0.12)]"
+                      >
+                        {ICONS.close}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {product && (
+                  <p className="font-sans text-[11px] leading-[1.5] text-ink-faint m-0">
+                    A size that has already been ordered can&apos;t be removed — set its
+                    quantity to 0 instead, so those orders keep a record of what was bought.
+                  </p>
+                )}
+              </>
+            )}
           </div>
 
           <div>

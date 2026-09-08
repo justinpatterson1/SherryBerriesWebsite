@@ -1,7 +1,7 @@
 # Current Feature: Jewelry lengths with per-length stock
 
 ## Status
-Not Started
+In Progress
 
 ## Goals
 - The admin **New product** / **Edit product** modal can hold a repeatable list of size rows — each a length value (e.g. `8mm`) and the quantity in stock at that length.

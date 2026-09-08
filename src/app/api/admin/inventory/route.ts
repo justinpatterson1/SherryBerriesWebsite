@@ -31,6 +31,20 @@ function stockStatus(stock: number, reorder: number): "In stock" | "Low stock" |
   return "In stock";
 }
 
+/**
+ * Products whose stock is the sum of their sizes. Their total cannot be set
+ * here — it is recomputed from the sizes on every product save, so accepting
+ * a figure would mean showing the admin a number that silently reverts.
+ */
+async function sizedProductIds(ids: string[]): Promise<Set<string>> {
+  const rows = await prisma.productVariant.findMany({
+    where: { productId: { in: ids } },
+    select: { productId: true },
+    distinct: ["productId"],
+  });
+  return new Set(rows.map((r) => r.productId));
+}
+
 export async function PATCH(request: Request) {
   const admin = await requireAdmin();
   if (!admin) {
@@ -71,6 +85,20 @@ export async function PATCH(request: Request) {
     select: { id: true, name: true, price: true, inventory: true },
   });
   const beforeById = new Map(before.map((p) => [p.id, p]));
+
+  // Price is still editable for a sized product; only its total is off limits.
+  const sized = await sizedProductIds(edits.map((e) => e.id));
+  for (const e of edits) {
+    const prev = beforeById.get(e.id);
+    if (sized.has(e.id) && prev && e.stock !== prev.inventory) {
+      return NextResponse.json(
+        {
+          error: `“${prev.name}” has sizes, so its stock is the total of them. Open the product to change a size's quantity.`,
+        },
+        { status: 409 },
+      );
+    }
+  }
 
   const ip = auditIp(request);
 

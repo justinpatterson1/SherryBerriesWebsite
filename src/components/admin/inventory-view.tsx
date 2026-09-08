@@ -230,9 +230,18 @@ export function InventoryView({
                       />
                     </span>
                     <span>
-                      <Stepper value={v.stock} onChange={(stock) => setField(p, { stock })} />
+                      {/* A sized product's stock is the sum of its sizes, so it is
+                          edited in the product modal rather than here — stepping it
+                          would be silently overwritten on the next save. */}
+                      {p.sizes.length > 0 ? (
+                        <span className="font-sans text-[13px] text-ink">{p.stock}</span>
+                      ) : (
+                        <Stepper value={v.stock} onChange={(stock) => setField(p, { stock })} />
+                      )}
                       <span className="block mt-1 font-sans text-[10px] text-ink-faint">
-                        reorder ≤ {p.reorder}
+                        {p.sizes.length > 0
+                          ? `${p.sizes.length} ${p.sizes.length === 1 ? "size" : "sizes"}`
+                          : `reorder ≤ ${p.reorder}`}
                       </span>
                     </span>
                     <span className="flex justify-end">
