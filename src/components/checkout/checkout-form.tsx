@@ -158,6 +158,39 @@ export function CheckoutForm({
               </div>
             </div>
           </div>
+
+          <OptionCard
+            selected={payment === "bank"}
+            onSelect={() => onSelectPayment("bank")}
+            icon={PAY_ICON.bank}
+            title={PAYMENT_LABEL.bank}
+            sub="Transfer from your bank, then upload your receipt"
+          />
+
+          {/* Bank transfer cannot be confirmed at checkout, so the order is
+              placed first and the details come after. Say so plainly — the
+              customer is about to see a PENDING order rather than a paid one. */}
+          <div
+            className={
+              "grid transition-[grid-template-rows,opacity] duration-300 ease-out " +
+              (payment === "bank" ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0")
+            }
+          >
+            <div className="overflow-hidden">
+              <div className="pt-1 flex items-start gap-3 p-4 rounded-[12px] border border-pink/20 bg-pink/[0.06]">
+                <span className="flex-none text-blush mt-0.5" aria-hidden="true">
+                  <LockIcon />
+                </span>
+                <p className="font-sans text-[12.5px] leading-[1.6] text-ink-dim m-0">
+                  Complete your order first and we&apos;ll give you the bank transfer
+                  details. Your items are{" "}
+                  <span className="text-ink font-semibold">temporarily reserved</span>{" "}
+                  while we wait for payment — you&apos;ll upload your receipt on the next
+                  page, and we&apos;ll confirm your order once the transfer arrives.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </SectionCard>
     </form>
@@ -265,6 +298,13 @@ const PAY_ICON: Record<PaymentKey, ReactNode> = {
       <rect x="2.5" y="5" width="19" height="14" rx="2" />
       <path d="M2.5 9.5h19" />
       <path d="M6 14.5h4" />
+    </Svg>
+  ),
+  bank: (
+    <Svg>
+      <path d="M3 10 12 4l9 6" />
+      <path d="M5 10v9h14v-9" />
+      <path d="M9 19v-5h6v5" />
     </Svg>
   ),
 };

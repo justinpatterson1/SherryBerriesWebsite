@@ -45,11 +45,30 @@ enum HealingStage {
   HEALED
 }
 
+/// Payment lifecycle, tracked separately from FulfillmentStatus because the
+/// two genuinely diverge: a Cash-on-Delivery order can be PROCESSING while
+/// still AWAITING_PAYMENT.
+///
+/// The four original values are kept rather than renamed to the bank-transfer
+/// spec's wording. PENDING in particular is load-bearing: the WiPay callback
+/// gates its idempotency on it, so a replayed callback cannot re-send a
+/// confirmation email or double-restock. Renaming it would have broken that
+/// silently. The new values are additive and used only by bank transfer.
 enum PaymentStatus {
+  /// Card/COD orders awaiting resolution. Also WiPay's replay guard.
   PENDING
   PAID
   FAILED
   REFUNDED
+  /// Bank transfer: order placed, money not yet sent.
+  AWAITING_PAYMENT
+  /// Bank transfer: the customer uploaded a receipt. NOT proof of payment —
+  /// only an admin who checked the bank account may move this to PAID.
+  PAYMENT_SUBMITTED
+  /// Bank transfer: an admin reviewed the receipt and did not accept it.
+  REJECTED
+  /// Bank transfer: the payment window closed with no receipt submitted.
+  EXPIRED
 }
 
 enum FulfillmentStatus {
@@ -292,6 +311,36 @@ model CartItem {
 // Orders
 // -----------------------------------------------------------------------------
 
+/// One uploaded proof-of-payment file. History is kept rather than
+/// overwritten: a rejected receipt is part of why an order was refused, and
+/// a customer may legitimately resubmit after getting the amount wrong.
+enum ReceiptStatus {
+  SUBMITTED
+  ACCEPTED
+  REJECTED
+}
+
+/// Proof of payment for a bank transfer order.
+///
+/// `fileKey` is the object key in the PRIVATE bucket, never a public URL —
+/// receipts are customer financial documents and are served only through a
+/// route that checks the viewer owns the order or is an admin.
+model PaymentReceipt {
+  id       String @id @default(cuid())
+  orderId  String
+  fileKey  String
+  fileType String
+  fileSize Int
+
+  status     ReceiptStatus @default(SUBMITTED)
+  uploadedAt DateTime      @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([status])
+}
+
 model Order {
   id                String            @id @default(cuid())
   userId            String
@@ -304,6 +353,16 @@ model Order {
   paymentMethod     String?
   trackingNumber    String?
   notes             String?
+
+  /// Bank transfer only. When the reservation lapses; null for every other
+  /// method. An order whose payment is PAYMENT_SUBMITTED is never expired on
+  /// this timestamp — a receipt filed before the deadline waits for review.
+  paymentExpiresAt DateTime?
+  /// Set when an admin confirms the money actually arrived.
+  paymentVerifiedAt   DateTime?
+  paymentVerifiedById String?
+  /// Why a submitted receipt was refused, shown back to the customer.
+  paymentRejectionReason String?
 
   /// Where this order actually shipped, captured at checkout.
   ///
@@ -325,6 +384,7 @@ model Order {
   user           User            @relation(fields: [userId], references: [id])
   orderItems     OrderItem[]
   returnRequests ReturnRequest[]
+  paymentReceipts PaymentReceipt[]
 
   @@index([userId])
   @@index([orderNumber])

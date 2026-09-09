@@ -13,6 +13,7 @@ import { prisma } from "@/lib/db";
 import { getWipayConfig, verifyWipayHash } from "@/lib/checkout/wipay";
 import { buildPlacedOrder } from "@/lib/checkout/order-view";
 import { sendOrderConfirmationEmail } from "@/lib/email/resend";
+import { releaseOrderStock } from "@/lib/checkout/release-stock";
 
 const ORDER_INCLUDE = {
   orderItems: {
@@ -127,15 +128,13 @@ export async function GET(request: Request) {
     return redirectTo("/cart?wipay=failed");
   }
 
-  // Mark FAILED, restock the reserved inventory, rebuild their cart from the
-  // order items, and release the promo's usage count. All in one transaction
-  // and guarded on PENDING, so it can't double-apply.
-  let promoCode: string | null = null;
-  try {
-    promoCode = (JSON.parse(order.notes ?? "{}") as { promo?: string | null }).promo ?? null;
-  } catch {
-    promoCode = null;
-  }
+  // Mark FAILED, give back the stock and the promo redemption, and rebuild
+  // their cart from the order items. All in one transaction and guarded on
+  // PENDING, so it can't double-apply.
+  //
+  // The stock and promo half is shared with bank transfer expiry — see
+  // lib/checkout/release-stock.ts. The cart rebuild stays here because it is
+  // only right when the payor is present and mid-checkout.
 
   await prisma.$transaction(async (tx) => {
     const fresh = await tx.order.findUnique({
@@ -149,20 +148,7 @@ export async function GET(request: Request) {
       data: { paymentStatus: "FAILED", fulfillmentStatus: "CANCELLED" },
     });
 
-    // Reverse the stock decrement made at order creation.
-    for (const item of order.orderItems) {
-      if (item.variantId) {
-        await tx.productVariant.update({
-          where: { id: item.variantId },
-          data: { inventory: { increment: item.quantity } },
-        });
-      } else {
-        await tx.product.update({
-          where: { id: item.productId },
-          data: { inventory: { increment: item.quantity } },
-        });
-      }
-    }
+    await releaseOrderStock(tx, order);
 
     // Rebuild the cart so the payor can try again with their bag intact.
     const cart = await tx.cart.upsert({
@@ -192,13 +178,6 @@ export async function GET(request: Request) {
       }
     }
 
-    // Release the promo redemption counted at order creation.
-    if (promoCode) {
-      await tx.discountCode.updateMany({
-        where: { code: promoCode, timesUsed: { gt: 0 } },
-        data: { timesUsed: { decrement: 1 } },
-      });
-    }
   });
 
   if (process.env.NODE_ENV !== "production") {

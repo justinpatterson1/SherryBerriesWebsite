@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/db";
+import { sweepExpiredOrders } from "@/lib/checkout/expire-orders";
 import type {
   FulfillmentStatus,
   PaymentStatus,
@@ -120,6 +121,20 @@ export type AdminSubscriber = {
   unsubscribedAt: string | null;
 };
 
+/** A bank transfer awaiting or having had review. */
+export type AdminPayment = {
+  orderId: string;
+  orderNumber: string;
+  customer: string;
+  amount: number;
+  paymentStatus: string;
+  /** ISO, or null for a method with no window. */
+  expiresAt: string | null;
+  rejectionReason: string | null;
+  placedLabel: string;
+  receipts: { id: string; status: string; uploadedLabel: string }[];
+};
+
 export type AdminAuditEntry = {
   id: string;
   actorEmail: string;
@@ -179,6 +194,8 @@ export type AdminData = {
   categories: AdminCategory[];
   promos: AdminPromo[];
   subscribers: AdminSubscriber[];
+  /** Bank transfer orders, newest first. Empty until one is placed. */
+  payments: AdminPayment[];
   returns: AdminReturn[];
   /**
    * Admin activity log. Empty for a plain ADMIN — the owner restricted this to
@@ -292,6 +309,17 @@ export async function getAdminData(
 ): Promise<AdminData> {
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 864e5);
+
+  // Settle lapsed bank transfers before reading anything. This is the one
+  // place worth doing it in bulk: the payload below already includes every
+  // bank transfer order AND the stock figures the releases change, so a stale
+  // sweep would show an admin reserved stock that is actually free. Awaited
+  // rather than fired in the background, because an un-awaited promise here
+  // can be killed when the response finishes.
+  const expired = await sweepExpiredOrders(now);
+  if (expired > 0) {
+    console.log(`[bank-transfer] expired ${expired} lapsed order(s) on admin load`);
+  }
   // First day of the month, 11 months back → start of a trailing-12-month window.
   const trendStart = new Date(now.getFullYear(), now.getMonth() - 11, 1);
 
@@ -303,6 +331,7 @@ export async function getAdminData(
     sold30Rows,
     categoryRows,
     promoRows,
+    paymentRows,
     subscriberRows,
     auditRows,
     returnRows,
@@ -400,6 +429,33 @@ export async function getAdminData(
     // Promo codes for the Promos view. Newest first: the one just created is
     // the one you want to see.
     prisma.discountCode.findMany({ orderBy: { createdAt: "desc" } }),
+    // Bank transfer orders for the Payments queue. Selected by payment status
+    // rather than by paymentMethod, because the method is a display string
+    // while these statuses are only ever reached by a bank transfer.
+    prisma.order.findMany({
+      where: {
+        paymentStatus: {
+          in: ["AWAITING_PAYMENT", "PAYMENT_SUBMITTED", "REJECTED", "EXPIRED"],
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+      select: {
+        id: true,
+        orderNumber: true,
+        total: true,
+        paymentStatus: true,
+        paymentExpiresAt: true,
+        paymentRejectionReason: true,
+        createdAt: true,
+        shipName: true,
+        user: { select: { name: true, firstName: true, lastName: true } },
+        paymentReceipts: {
+          orderBy: { uploadedAt: "desc" },
+          select: { id: true, status: true, uploadedAt: true },
+        },
+      },
+    }),
     // Newsletter list for the Subscribers view. Newest first, and unsubscribed
     // rows are included — the view has to show them so an address can be
     // resubscribed or cleared out.
@@ -706,6 +762,36 @@ export async function getAdminData(
       usageLimit: p.usageLimit,
       timesUsed: p.timesUsed,
       expiresAt: p.expiresAt ? p.expiresAt.toISOString() : null,
+    })),
+    payments: paymentRows.map((o) => ({
+      orderId: o.id,
+      orderNumber: o.orderNumber,
+      // The name the order actually shipped under, falling back to the
+      // account — an order placed for someone else shows the right person.
+      customer:
+        o.shipName ||
+        o.user?.name ||
+        [o.user?.firstName, o.user?.lastName].filter(Boolean).join(" ") ||
+        "—",
+      amount: Number(o.total),
+      paymentStatus: o.paymentStatus,
+      expiresAt: o.paymentExpiresAt ? o.paymentExpiresAt.toISOString() : null,
+      rejectionReason: o.paymentRejectionReason,
+      placedLabel: o.createdAt.toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }),
+      receipts: o.paymentReceipts.map((r) => ({
+        id: r.id,
+        status: r.status,
+        uploadedLabel: r.uploadedAt.toLocaleString("en-GB", {
+          day: "numeric",
+          month: "short",
+          hour: "numeric",
+          minute: "2-digit",
+        }),
+      })),
     })),
     subscribers: subscriberRows.map((s) => ({
       id: s.id,

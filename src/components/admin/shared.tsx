@@ -260,6 +260,13 @@ export const ICONS: Record<string, ReactNode> = {
       <path d="M12 14v6" />
     </Svg>
   ),
+  payments: (
+    <Svg>
+      <path d="M3 10 12 4l9 6" />
+      <path d="M5 10v9h14v-9" />
+      <path d="M9 19v-5h6v5" />
+    </Svg>
+  ),
   subscribers: (
     <Svg>
       <rect x="3" y="5" width="18" height="14" rx="2" />

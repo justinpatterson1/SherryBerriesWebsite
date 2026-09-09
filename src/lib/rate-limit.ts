@@ -107,3 +107,13 @@ export function tooManyRequests(reset: number): NextResponse {
     },
   );
 }
+
+/**
+ * Proof-of-payment uploads: 10 per hour per customer.
+ *
+ * Keyed by user id rather than IP, because the endpoint is authenticated and a
+ * household behind one address should not exhaust each other's budget. Generous
+ * enough for a genuine retry after a rejection, tight enough that the endpoint
+ * cannot be used to push files into storage in bulk.
+ */
+export const receiptLimiter = makeLimiter(10, "1 h", "receipt");

@@ -8,6 +8,7 @@ import {
   isShippingKey,
 } from "@/lib/checkout/shipping";
 import { getWipayConfig, requestHostedPage } from "@/lib/checkout/wipay";
+import { bankDetails, paymentDeadline } from "@/lib/checkout/bank-transfer";
 import { sendOrderConfirmationEmail } from "@/lib/email/resend";
 import type { Order } from "@/generated/prisma/client";
 
@@ -179,6 +180,19 @@ export async function POST(request: Request) {
     promo: appliedPromo?.code ?? null,
   });
 
+  // A bank transfer order is about to reserve stock and send the customer to
+  // an instructions page. Refuse up front if the account details are not
+  // configured: the alternative is a held order the customer cannot pay.
+  if (paymentKey === "bank" && !bankDetails()) {
+    return NextResponse.json(
+      {
+        error:
+          "Bank transfer is temporarily unavailable. Please use Cash on Delivery or a card.",
+      },
+      { status: 503 },
+    );
+  }
+
   // Card payments go through WiPay's hosted page. Request the hosted-page URL
   // BEFORE committing the order, so a gateway failure leaves nothing behind
   // (no order, no stock decrement) — the payor simply isn't redirected.
@@ -218,9 +232,13 @@ export async function POST(request: Request) {
         subtotal,
         shippingCost: shipFee,
         total,
-        // Both COD and card start PENDING: COD is collected on arrival, and a
-        // card order is only marked PAID once WiPay's verified callback returns.
-        paymentStatus: "PENDING",
+        // COD and card start PENDING: COD is collected on arrival, and a card
+        // order is only marked PAID once WiPay's verified callback returns.
+        // Bank transfer gets its own state and a deadline — the money has not
+        // been sent yet, and the stock this order just decremented is released
+        // if it never is.
+        paymentStatus: paymentKey === "bank" ? "AWAITING_PAYMENT" : "PENDING",
+        paymentExpiresAt: paymentKey === "bank" ? paymentDeadline(new Date()) : null,
         fulfillmentStatus: "UNFULFILLED",
         paymentMethod: paymentLabel,
         notes,
@@ -287,6 +305,16 @@ export async function POST(request: Request) {
   // callback marks it PAID (see /api/checkout/wipay/return).
   if (paymentKey === "card") {
     return NextResponse.json({ ok: true, redirect: wipayRedirect });
+  }
+
+  // Bank transfer: no Thank-You yet and no confirmation email — nothing has
+  // been paid. Send them to the instructions page to make the transfer and
+  // upload proof.
+  if (paymentKey === "bank") {
+    return NextResponse.json({
+      ok: true,
+      redirect: `/order/${encodeURIComponent(created.orderNumber)}/payment`,
+    });
   }
 
   const responseOrder = {

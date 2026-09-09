@@ -21,6 +21,9 @@ export const AUDIT_ACTIONS = {
   subscriberUpdate: "subscriber.update",
   subscriberDelete: "subscriber.delete",
   productSizesUpdate: "product.sizes_update",
+  paymentConfirmed: "payment.confirmed",
+  paymentRejected: "payment.rejected",
+  paymentExpired: "payment.expired",
 } as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];

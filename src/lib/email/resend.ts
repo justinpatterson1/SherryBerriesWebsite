@@ -379,3 +379,202 @@ function contactHtml({
   </body>
 </html>`;
 }
+
+// --- Bank transfer -----------------------------------------------------------
+//
+// Three emails, one per state change the customer needs to know about. The
+// wording is deliberately careful: only the CONFIRMED one says money was
+// received, because only that one is sent after an admin checked the account.
+// The SUBMITTED one acknowledges the receipt and says verification is pending —
+// telling a customer "payment received" on upload is the exact confusion this
+// whole feature exists to prevent.
+
+export type BankTransferEmailBase = {
+  to: string;
+  name: string | null;
+  orderNumber: string;
+  /** Pre-formatted, e.g. "$240.00 TTD". */
+  amount: string;
+};
+
+/** Sent when the customer uploads proof of payment. Acknowledges only that. */
+export async function sendReceiptSubmittedEmail({
+  to,
+  name,
+  orderNumber,
+  amount,
+}: BankTransferEmailBase): Promise<{ ok: boolean; error?: string }> {
+  const resend = getClient();
+  if (!resend) return { ok: false, error: "RESEND_API_KEY is not configured." };
+  const greeting = name ? `Hi ${name.split(" ")[0]},` : "Hi there,";
+  const order = escapeHtml(orderNumber);
+  const money = escapeHtml(amount);
+
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM,
+      to,
+      subject: `[${orderNumber}] We've got your payment receipt`,
+      html: bankTransferHtml({
+        heading: "Payment receipt received",
+        greeting,
+        body: [
+          `Thank you, Sweet Berry! We&rsquo;ve received your payment receipt for <strong style="color:#ffffff;">${order}</strong> (${money}).`,
+          "We&rsquo;ll check the transfer against our bank account and confirm your order once the payment has arrived. Nothing else is needed from you right now &mdash; we&rsquo;ll email you as soon as it&rsquo;s verified.",
+        ],
+        note: "This confirms we received your receipt, not that the payment has cleared. We verify every transfer by hand.",
+      }),
+      text:
+        `${greeting}\n\nWe've received your payment receipt for ${orderNumber} (${amount}).\n\n` +
+        `We'll check the transfer against our bank account and confirm your order once the payment has arrived. Nothing else is needed from you right now.\n\n` +
+        `This confirms we received your receipt, not that the payment has cleared — we verify every transfer by hand.`,
+    });
+    if (error) return { ok: false, error: error.message };
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Failed to send email." };
+  }
+}
+
+/** Sent after an admin verified the funds arrived. This one is the receipt. */
+export async function sendPaymentConfirmedEmail({
+  to,
+  name,
+  orderNumber,
+  amount,
+}: BankTransferEmailBase): Promise<{ ok: boolean; error?: string }> {
+  const resend = getClient();
+  if (!resend) return { ok: false, error: "RESEND_API_KEY is not configured." };
+  const greeting = name ? `Hi ${name.split(" ")[0]},` : "Hi there,";
+  const order = escapeHtml(orderNumber);
+  const money = escapeHtml(amount);
+
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM,
+      to,
+      subject: `[${orderNumber}] Payment confirmed`,
+      html: bankTransferHtml({
+        heading: "Payment confirmed",
+        greeting,
+        body: [
+          `We&rsquo;ve received your bank transfer of <strong style="color:#ffffff;">${money}</strong> for <strong style="color:#ffffff;">${order}</strong>. Thank you!`,
+          "Your order is confirmed and now being prepared. We&rsquo;ll be in touch when it ships or is ready for pickup.",
+        ],
+        note: "Keep this email as your receipt.",
+      }),
+      text:
+        `${greeting}\n\nWe've received your bank transfer of ${amount} for ${orderNumber}. Thank you!\n\n` +
+        `Your order is confirmed and now being prepared. We'll be in touch when it ships or is ready for pickup.\n\n` +
+        `Keep this email as your receipt.`,
+    });
+    if (error) return { ok: false, error: error.message };
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Failed to send email." };
+  }
+}
+
+/** Sent when an admin could not verify a submitted receipt. */
+export async function sendPaymentRejectedEmail({
+  to,
+  name,
+  orderNumber,
+  amount,
+  reason,
+  paymentUrl,
+}: BankTransferEmailBase & { reason: string; paymentUrl: string }): Promise<{
+  ok: boolean;
+  error?: string;
+}> {
+  const resend = getClient();
+  if (!resend) return { ok: false, error: "RESEND_API_KEY is not configured." };
+  const greeting = name ? `Hi ${name.split(" ")[0]},` : "Hi there,";
+  const order = escapeHtml(orderNumber);
+  const money = escapeHtml(amount);
+
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM,
+      to,
+      subject: `[${orderNumber}] We couldn't verify your payment`,
+      html: bankTransferHtml({
+        heading: "We couldn&rsquo;t verify that payment",
+        greeting,
+        body: [
+          `We looked for your transfer of <strong style="color:#ffffff;">${money}</strong> for <strong style="color:#ffffff;">${order}</strong> and couldn&rsquo;t confirm it.`,
+          `<strong style="color:#ffffff;">Reason:</strong> ${escapeHtml(reason)}`,
+          "You can upload a new receipt using the button below. If you think this is a mistake, just reply to this email and we&rsquo;ll sort it out.",
+        ],
+        note: "Your order is still being held for now — nothing has been cancelled.",
+        actionUrl: paymentUrl,
+        actionLabel: "Upload a new receipt",
+      }),
+      text:
+        `${greeting}\n\nWe looked for your transfer of ${amount} for ${orderNumber} and couldn't confirm it.\n\n` +
+        `Reason: ${reason}\n\nYou can upload a new receipt here:\n${paymentUrl}\n\n` +
+        `If you think this is a mistake, reply to this email and we'll sort it out. Your order is still being held for now — nothing has been cancelled.`,
+    });
+    if (error) return { ok: false, error: error.message };
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Failed to send email." };
+  }
+}
+
+/** One shell for all three, matching the verification and reset templates. */
+function bankTransferHtml({
+  heading,
+  greeting,
+  body,
+  note,
+  actionUrl,
+  actionLabel,
+}: {
+  heading: string;
+  greeting: string;
+  /** Paragraphs of HTML. Callers escape customer-supplied values themselves. */
+  body: string[];
+  note?: string;
+  actionUrl?: string;
+  actionLabel?: string;
+}): string {
+  const paragraphs = body
+    .map((p) => `<p style="font-size:15px;line-height:1.6;color:#cbb8c0;margin:0 0 14px;">${p}</p>`)
+    .join("");
+
+  const action =
+    actionUrl && actionLabel
+      ? `<tr><td style="padding:6px 36px 28px;">
+            <a href="${actionUrl}" style="display:inline-block;background:linear-gradient(135deg,#ff4fa3,#d6266f);color:#ffffff;text-decoration:none;font-size:13px;font-weight:bold;letter-spacing:0.14em;text-transform:uppercase;padding:16px 28px;border-radius:999px;">${actionLabel}</a>
+          </td></tr>`
+      : "";
+
+  const footer = note
+    ? `<tr><td style="padding:0 36px 36px;">
+            <p style="font-size:12px;line-height:1.6;color:#8a7780;margin:0;">${note}</p>
+          </td></tr>`
+    : "";
+
+  return `<!doctype html>
+<html>
+  <body style="margin:0;background:#0d0608;font-family:Helvetica,Arial,sans-serif;color:#f5e9ee;padding:32px 0;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      <tr><td align="center">
+        <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width:480px;background:#160a10;border:1px solid rgba(255,79,163,0.18);border-radius:20px;overflow:hidden;">
+          <tr><td style="padding:36px 36px 8px;">
+            <div style="font-size:26px;letter-spacing:0.02em;color:#ffffff;">Sherry<span style="font-style:italic;color:#ff4fa3;">Berries</span></div>
+          </td></tr>
+          <tr><td style="padding:8px 36px 0;">
+            <h1 style="font-size:24px;line-height:1.25;color:#ffffff;margin:16px 0 12px;">${heading}</h1>
+            <p style="font-size:15px;line-height:1.6;color:#cbb8c0;margin:0 0 14px;">${greeting}</p>
+            ${paragraphs}
+          </td></tr>
+          ${action}
+          ${footer}
+        </table>
+      </td></tr>
+    </table>
+  </body>
+</html>`;
+}

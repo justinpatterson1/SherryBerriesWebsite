@@ -1,6 +1,6 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 
 // Accepted image content types → file extension used for the object key.
 const CONTENT_TYPE_EXT: Record<string, string> = {
@@ -97,4 +97,53 @@ export async function uploadProductImage(bytes: Buffer, contentType: string): Pr
 
   const base = config.publicUrl.replace(/\/+$/, "");
   return `${base}/${key}`;
+}
+
+// --- Payment receipts ---------------------------------------------------------
+//
+// Receipts are customer financial documents, so unlike product images they are
+// NEVER handed out as a public URL. The object key is stored on the row and the
+// bytes are streamed back through a route that checks the viewer owns the order
+// or is an admin (see /api/orders/[orderNumber]/receipt/[receiptId]).
+//
+// The bucket does have a public base URL, and a receipt written under a
+// guessable key would be readable by anyone who guessed it — hence the random
+// filename from receiptKey(), and no helper here that builds a public URL.
+
+/** Store a receipt at `key`. Returns nothing: there is no public URL for it. */
+export async function uploadPaymentReceipt(
+  key: string,
+  bytes: Buffer,
+  contentType: string,
+): Promise<void> {
+  const config = readConfig();
+  await getClient(config).send(
+    new PutObjectCommand({
+      Bucket: config.bucket,
+      Key: key,
+      Body: bytes,
+      ContentType: contentType,
+      // Not cacheable by shared caches: the route in front of this enforces who
+      // may read it, and a CDN copy would outlive that check.
+      CacheControl: "private, no-store",
+    }),
+  );
+}
+
+/** Read a receipt's bytes back for an authorised viewer. */
+export async function fetchPaymentReceipt(
+  key: string,
+): Promise<{ bytes: Buffer; contentType: string } | null> {
+  const config = readConfig();
+  try {
+    const out = await getClient(config).send(
+      new GetObjectCommand({ Bucket: config.bucket, Key: key }),
+    );
+    if (!out.Body) return null;
+    const bytes = Buffer.from(await out.Body.transformToByteArray());
+    return { bytes, contentType: out.ContentType ?? "application/octet-stream" };
+  } catch (e) {
+    console.error("[r2] receipt fetch failed for", key, e);
+    return null;
+  }
 }

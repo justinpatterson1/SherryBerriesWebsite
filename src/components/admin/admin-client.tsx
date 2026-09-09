@@ -10,6 +10,7 @@ import type {
   AdminProduct,
   AdminPromo,
 
+  AdminPayment,
   AdminSubscriber,
   AdminReturn,
 } from "@/lib/queries/admin";
@@ -24,6 +25,7 @@ import { CategoriesView } from "@/components/admin/categories-view";
 import { AdminReturnsView } from "@/components/admin/returns-view";
 import { PromosView } from "@/components/admin/promos-view";
 import { SubscribersView } from "@/components/admin/subscribers-view";
+import { PaymentsView } from "@/components/admin/payments-view";
 import { AnalyticsView } from "@/components/admin/analytics-view";
 import { ActivityView } from "@/components/admin/activity-view";
 
@@ -36,6 +38,7 @@ type View =
   | "returns"
   | "promos"
   | "subscribers"
+  | "payments"
   | "analytics"
   | "activity";
 
@@ -48,6 +51,7 @@ const SIDEBAR: { view: View; label: string; icon: keyof typeof ICONS }[] = [
   { view: "categories", label: "Categories", icon: "categories" },
   { view: "returns", label: "Returns", icon: "returns" },
   { view: "promos", label: "Promo codes", icon: "promos" },
+  { view: "payments", label: "Payments", icon: "payments" },
   { view: "subscribers", label: "Newsletter", icon: "subscribers" },
   { view: "analytics", label: "Analytics", icon: "analytics" },
   { view: "activity", label: "Activity", icon: "activity" },
@@ -81,6 +85,7 @@ export function AdminClient({
   const [returns, setReturns] = useState<AdminReturn[]>(data.returns);
   const [promos, setPromos] = useState<AdminPromo[]>(data.promos);
   const [subscribers, setSubscribers] = useState<AdminSubscriber[]>(data.subscribers);
+  const [payments, setPayments] = useState<AdminPayment[]>(data.payments);
 
   // Toast
   const [toast, setToast] = useState<{ msg: string; id: number } | null>(null);
@@ -364,6 +369,57 @@ export function AdminClient({
     [showToast],
   );
 
+  // --- Bank transfers -------------------------------------------------------
+
+  // Both actions patch the one row rather than refetching: the response
+  // carries the new status, and the queue is otherwise unchanged.
+  const reviewPayment = useCallback(
+    async (
+      orderId: string,
+      action: "confirm" | "reject",
+      reason?: string,
+      notes?: string,
+    ): Promise<boolean> => {
+      try {
+        const res = await fetch("/api/admin/payments", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderId, action, reason, notes }),
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error);
+        const next = json.paymentStatus as string;
+        setPayments((prev) =>
+          prev.map((p) =>
+            p.orderId === orderId
+              ? {
+                  ...p,
+                  paymentStatus: next,
+                  rejectionReason: action === "reject" ? (reason ?? null) : null,
+                }
+              : p,
+          ),
+        );
+        // The order's fulfilment status moved too, so keep the Orders tab honest.
+        if (action === "confirm") {
+          setOrders((prev) =>
+            prev.map((o) =>
+              o.id === orderId ? { ...o, status: "Processing" as AdminOrder["status"] } : o,
+            ),
+          );
+        }
+        showToast(action === "confirm" ? "Payment confirmed" : "Payment rejected");
+        return true;
+      } catch (e) {
+        showToast(
+          e instanceof Error && e.message ? e.message : "Couldn't update that payment.",
+        );
+        return false;
+      }
+    },
+    [showToast],
+  );
+
   // --- Newsletter -----------------------------------------------------------
 
   const addSubscriber = useCallback(
@@ -594,6 +650,15 @@ export function AdminClient({
               onCreate={createPromo}
               onUpdate={updatePromo}
               onDelete={deletePromo}
+            />
+          )}
+          {view === "payments" && (
+            <PaymentsView
+              payments={payments}
+              onConfirm={(orderId) => reviewPayment(orderId, "confirm")}
+              onReject={(orderId, reason, notes) =>
+                reviewPayment(orderId, "reject", reason, notes)
+              }
             />
           )}
           {view === "subscribers" && (

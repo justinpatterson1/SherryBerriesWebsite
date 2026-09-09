@@ -3,7 +3,7 @@
 // and the client UI so fees/labels/ETAs never drift apart.
 
 export type ShippingKey = "pickup" | "ttpost" | "courier";
-export type PaymentKey = "cod" | "card";
+export type PaymentKey = "cod" | "card" | "bank";
 
 export type ShippingOption = {
   key: ShippingKey;
@@ -42,6 +42,7 @@ export const SHIPPING_ORDER: ShippingKey[] = ["pickup", "ttpost", "courier"];
 export const PAYMENT_LABEL: Record<PaymentKey, string> = {
   cod: "Cash on Delivery",
   card: "Credit Card (WiPay)",
+  bank: "Bank Transfer",
 };
 
 export function isShippingKey(v: unknown): v is ShippingKey {
@@ -49,5 +50,5 @@ export function isShippingKey(v: unknown): v is ShippingKey {
 }
 
 export function isPaymentKey(v: unknown): v is PaymentKey {
-  return v === "cod" || v === "card";
+  return v === "cod" || v === "card" || v === "bank";
 }

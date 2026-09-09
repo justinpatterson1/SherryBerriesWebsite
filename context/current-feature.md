@@ -1,13 +1,70 @@
-# Current Feature
+# Current Feature: Bank transfer payment with receipt verification
 
 ## Status
-Not Started
+In Progress
 
 ## Goals
-<!-- Populated by /feature load -->
+
+Spec: [context/features/bank-transfer-spec.md](features/bank-transfer-spec.md) (35 sections, 22 acceptance criteria).
+
+- Bank Transfer is selectable at checkout, and placing the order does **not** require a receipt first.
+- The order is created before payment, with its order number, at `PENDING` + `AWAITING_PAYMENT` and an expiry.
+- Inventory is **reserved** rather than consumed, and the reservation is released when an unpaid order expires.
+- `/order/{orderNumber}/payment` shows the amount due, bank details and the order reference.
+- The customer can upload proof of payment (JPG/PNG/WEBP, PDF optional), validated server-side, stored under a generated filename and **not** publicly reachable.
+- Uploading moves payment to `PAYMENT_SUBMITTED` and never to `PAID`.
+- An admin review queue lists bank transfer payments, filterable by status, and an admin can confirm (→ `PAID`, order `PROCESSING`) or reject with a reason.
+- Payment status is tracked separately from fulfillment status.
+- An order with a receipt submitted before the deadline is **never** auto-cancelled.
+- Reservation and confirmation are atomic and idempotent — no overselling, no double-deduction.
+- Receipt history is kept across resubmissions; every payment action is audit logged with the acting admin.
+- The five transactional emails fire, and admins are notified when a payment needs review.
 
 ## Notes
-<!-- Populated by /feature load -->
+
+### This is much bigger than a checkout option
+
+The spec asks for a second payment *paradigm*, not a second payment button. WiPay resolves synchronously on a callback; this one stays open for hours, holds stock, and waits on a human. Worth scoping into phases at `start` rather than attempting in one pass.
+
+### Where the spec and the codebase disagree
+
+**1. Both status enums are too small.** [schema.prisma:48](../prisma/schema.prisma#L48):
+
+```prisma
+enum PaymentStatus     { PENDING PAID FAILED REFUNDED }
+enum FulfillmentStatus { UNFULFILLED PROCESSING SHIPPED DELIVERED CANCELLED }
+```
+
+The spec wants `AWAITING_PAYMENT PAYMENT_SUBMITTED PAID REJECTED EXPIRED REFUNDED` and `PENDING PROCESSING READY_FOR_PICKUP SHIPPED COMPLETED CANCELLED`. Renaming values is a **migration touching live rows** and every `paymentStatus` read across checkout, the WiPay callback, the account pages and the admin views. Additive new values are far cheaper than a rename — decide which at `start`.
+
+**2. There is no `payments` table.** Payment state lives directly on `Order` ([schema.prisma:302](../prisma/schema.prisma#L302)). The spec's `payments`, `inventory_reservations` and `payment_receipts` tables are three new models plus a migration. A leaner first pass could put `expiresAt` / `receiptUrl` / `verifiedBy` on `Order` and add tables only where history is genuinely required (receipts).
+
+**3. Inventory is consumed at checkout, not reserved.** [checkout/route.ts:253](../src/app/api/checkout/route.ts#L253) decrements `ProductVariant.inventory` (or `Product.inventory`) inside the order transaction, guarded by `inventory: { gte: quantity }` — which already gives the atomicity §29 asks for. The WiPay failure path increments it back. Moving to a reservation table changes the meaning of every `inventory` read on the storefront, the admin Inventory view, and the per-size stock feature completed 2026-09-07. **This is the single largest piece of work in the spec.** A cheaper reading: keep decrement-on-create, and treat "released" as the existing restock-on-cancel path.
+
+**4. There is no cron.** [audit.ts:64](../src/lib/admin/audit.ts#L64) says so explicitly, and there is no `vercel.json`. §17 expiry needs one of: a Vercel cron route, an opportunistic sweep like `maybePurgeAuditLogs()`, or lazy expiry evaluated when an order is read. Lazy + opportunistic needs no new infrastructure and cannot silently stop running.
+
+**5. Receipt storage must not use the existing upload route.** [api/admin/upload](../src/app/api/admin/upload/route.ts) is `requireAdmin` and writes to the **public** R2 bucket (`R2_PUBLIC_URL`, a `pub-*.r2.dev` host). §10 and §27 require customer-authenticated upload, non-guessable URLs, and access restricted to the owning customer plus admins. That means a separate private path and a signed or proxied read route — not a reuse.
+
+**6. "Paywise" is probably WiPay.** §4.1 lists `Bank Transfer / Paywise / Cash on Delivery`; the codebase implements **WiPay** and Cash on Delivery. Confirm before building a third method.
+
+### What already exists and should be reused
+
+- **Audit logging** — `writeAuditLog` inside the change's own transaction, `AUDIT_ACTIONS`, 12-month retention. §24's events map onto it, but existing names are dot.case (`promo.create`), not the spec's `UPPER_SNAKE`. Follow the codebase.
+- **Order-number generation, address snapshotting, promo release** — all in [checkout/route.ts](../src/app/api/checkout/route.ts).
+- **The restock + cart-rebuild + promo-release routine** in [wipay/return/route.ts](../src/app/api/checkout/wipay/return/route.ts) is exactly the "release the reservation" behaviour §17 wants, already written and transaction-guarded.
+- **Rate limiting** — `checkRateLimit` + the limiters in [lib/rate-limit](../src/lib/rate-limit.ts) for §27's upload throttling.
+- **Resend senders** — four exist; the spec adds five templates.
+- **Admin view conventions** — `/api/admin/<name>/route.ts` + `*-view.tsx` + handlers in `admin-client.tsx`, and the sidebar badge §31 wants has no precedent yet.
+
+### Decisions needed at `start`
+
+1. **Phasing.** Suggested: (a) checkout option + order creation + instructions page; (b) receipt upload + private storage; (c) admin review queue + confirm/reject; (d) expiry; (e) emails + notifications.
+2. **Enum strategy** — add values, or rename and migrate every read.
+3. **Reservation table, or keep decrement-on-create.** Affects the most code by far.
+4. **Expiry mechanism** — Vercel cron, opportunistic sweep, or lazy-on-read.
+5. **Bank details** — env vars, or admin-editable rows? They appear on a customer-facing page.
+6. **Payment window** — spec recommends 6h via `BANK_TRANSFER_PAYMENT_WINDOW_HOURS`. Confirm.
+7. **Is "Paywise" WiPay?**
 
 ---
 
