@@ -163,6 +163,34 @@ export function AccountClient({ initial }: { initial: AccountData }) {
     [showToast],
   );
 
+  /**
+   * Delete the account for good.
+   *
+   * Resolves to an error message on failure and never resolves on success —
+   * the signOut() below navigates away, so there is no point returning to a
+   * form that is about to unmount. Sign-out is not optional: the JWT stays
+   * technically valid for its remaining lifetime (auth.ts maxAge 20m), so
+   * leaving the tab signed in would show a shell of an account that every
+   * request then fails to load.
+   */
+  const deleteAccount = useCallback(
+    async (data: { password?: string; confirmEmail?: string }) => {
+      const res = await fetch("/api/account/delete", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        return body.error ?? "Couldn't delete your account. Please try again.";
+      }
+      // Sign-in, not the homepage: the login page shows the confirmation notice.
+      await signOut({ callbackUrl: "/login?deleted=1" });
+      return null;
+    },
+    [],
+  );
+
   // --- Addresses -----------------------------------------------------------
   const saveAddress = useCallback(
     async (data: Record<string, unknown>, id: string | null) => {
@@ -372,7 +400,13 @@ export function AccountClient({ initial }: { initial: AccountData }) {
           {view === "profile" && (
             <ProfileView profile={profile} onSave={saveProfile} />
           )}
-          {view === "security" && <SecurityView onChangePassword={changePassword} />}
+          {view === "security" && (
+            <SecurityView
+              onChangePassword={changePassword}
+              onDeleteAccount={deleteAccount}
+              hasPassword={profile.hasPassword}
+            />
+          )}
         </section>
       </div>
 

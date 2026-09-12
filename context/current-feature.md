@@ -1,13 +1,71 @@
-# Current Feature
+# Current Feature: Delete Account Route
 
 ## Status
-Not Started
+In Progress
 
 ## Goals
-<!-- Populated by /feature load -->
+- A signed-in account holder can delete their own account from `/account` → Security, and the deletion actually happens in the database — replacing today's "Request account deletion" contact link ([security-view.tsx:83-98](../src/components/account/security-view.tsx#L83-L98)).
+- A new authenticated `DELETE /api/account/delete` route, following the conventions in [profile/route.ts](../src/app/api/account/profile/route.ts): `auth()` check → 401, JSON parse guard → 400, Prisma write, JSON response. It must act on `session.user.id` only — never on an id supplied by the client.
+- Re-authentication before the destructive step: the user confirms with their current password (or, for OAuth-only accounts, by typing their email). Session possession alone must not be enough to destroy an account.
+- Personal data is removed or anonymized; **orders survive in anonymized form**, which is what both the Privacy Policy ([privacy.ts:260](../src/lib/legal/privacy.ts#L260)) and the existing danger-zone copy already promise customers.
+- The address snapshot carried on each retained `Order` (`shipCity`, `shipLandmark`, and the rest) is scrubbed or deliberately retained — a retained order still holds the customer's name and delivery address today.
+- The session is terminated and `Session`/`Account` rows are gone, so the user is signed out and cannot act with a stale JWT.
+- The UI states plainly what is deleted and what is kept before the user confirms, and the confirmation is typed (not a single click).
+- Rate limited via [rate-limit.ts](../src/lib/rate-limit.ts), and the deletion is recorded — note that `AdminAuditLog` covers *admin* actions, so decide whether a self-service deletion belongs there or needs its own trail.
+- Unit tests for the new server logic under `src/actions/**` or `src/lib/**` per [ai-interaction.md](ai-interaction.md) — route handlers and components are not tested in this project, so any real decision logic should live in a testable `lib` function.
 
 ## Notes
-<!-- Populated by /feature load -->
+
+### DECISION (locked 2026-09-12): option 1 — anonymize in place
+
+`prisma.user.delete()` cannot be used. [schema.prisma:384](../prisma/schema.prisma#L384) declares `user User @relation(fields: [userId], references: [id])` with **no `onDelete`**, and on a required relation that defaults to `RESTRICT` — so deleting any customer who has ever ordered throws a foreign-key error. Every other user relation cascades; `Order` alone does not.
+
+**The chosen approach:** keep the `User` row, strip everything personal from it, and leave `Order.userId` pointing at a real but anonymous row. The rejected alternative — making `Order.userId` nullable with `onDelete: SetNull` — remains the honest reading of "delete my account" and is written up in git history for this file.
+
+**What this means concretely:**
+
+| Data | Action |
+|---|---|
+| `User.email` | Replaced with a unique, non-routable value (`deleted-<id>@deleted.invalid` — `.invalid` is reserved by RFC 2606 and can never resolve). The column is `@unique`, so it cannot simply be blanked. |
+| `User` PII — `firstName`, `lastName`, `name`, `phoneNumber`, `image`, `avatarUrl` | Nulled. |
+| `User.password`, `emailVerified` | Nulled — with no password and no `Account` row, the row cannot authenticate by any route. |
+| `Account`, `Session` | Deleted. Kills OAuth links and signs the user out everywhere. |
+| `Address`, `Cart`, `CartItem`, `Wishlist` | Deleted. |
+| `Review` | Deleted — reviews are already off the site (issue 6). |
+| `Order`, `OrderItem`, `ReturnRequest`, `PaymentReceipt` | **Retained.** Financial records. They survive precisely because the user row is not deleted. |
+
+### ⚠ The order PII is in two places, not one
+
+This is the part that will be missed. [checkout/route.ts:196-202](../src/app/api/checkout/route.ts#L196-L202) still writes a **full JSON copy** of the customer's details into `Order.notes`:
+
+```js
+const notes = JSON.stringify({
+  contact: { firstName, lastName, email, phone },
+  address: { line1, city, landmark },
+  ...
+});
+```
+
+Its comment — *"Order has no address columns"* — is **stale**: the `shipName`/`shipPhone`/`shipEmail`/`shipLine1`/`shipCity`/`shipLandmark` columns were added by issue 17 and the route now writes both. So scrubbing only the `ship*` columns leaves an intact second copy of the customer's name, email, phone and address in `notes`, and the account view **reads `notes` as its fallback for older orders**.
+
+Any scrub has to handle both, and the `notes` JSON must stay parseable afterwards rather than being blanked outright.
+
+**Still to decide at `start`:** whether retained orders keep their delivery snapshot at all. Keeping it contradicts "anonymized"; scrubbing it removes the record of where the goods actually went, which is the evidence in a delivery dispute. A middle option is to keep `shipCity` and clear the rest.
+
+### Second-order effects to check
+
+- **`ReturnRequest` cascades from `User`** ([schema.prisma:436](../prisma/schema.prisma#L436)) — harmless under option 1, since the row is never deleted. Worth knowing anyway: it means anyone who later reaches for a real `user.delete()` destroys return records attached to money that moved.
+- **Newsletter is a separate table.** `NewsletterSubscriber` has no `userId`. Deleting an account does not unsubscribe the address, and the Privacy Policy ([privacy.ts:184](../src/lib/legal/privacy.ts#L184)) says an opt-out record is kept deliberately. Decide whether deletion should also unsubscribe.
+- **Admin accounts.** Nothing should let the last SUPERADMIN delete themselves and lock the store out of its own admin panel.
+- **`PATCH /api/account/profile` already has a known session-staleness bug** (open-issues #19 — the JWT keeps the old email until next sign-in). Deletion must not rely on the JWT being fresh; check the DB, not the token.
+
+### A small migration is worth considering
+
+Option 1 was described as "no migration", and strictly it needs none. But an anonymized row is indistinguishable from a real customer in admin listings and analytics. A `deletedAt DateTime?` on `User` is one nullable column and makes "this account was deleted on request" a fact the system knows rather than something inferred from a `.invalid` email. Decide at `start`.
+
+### Related open issues
+
+- **#18 "Delete-account is a mock"** in [open-issues.md](open-issues.md) is this feature. It has already been *partially* mitigated: the fake toast button was replaced with a `/contact` link, so nothing currently lies to the customer. This feature closes it properly — and #18 should move to Resolved when it lands.
 
 ---
 

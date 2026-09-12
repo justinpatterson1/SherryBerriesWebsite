@@ -733,6 +733,16 @@ async function seedOrdersAndItems(
 }
 
 async function seedNewsletter() {
+  // Never top this table up outside development. Every other seeded model is
+  // inert test data, but this one is a send list: a faker address that reaches
+  // production becomes a hard bounce against the sending domain's reputation
+  // the first time a campaign goes out. 199 of these had to be purged from the
+  // production database on 2026-09-12 (open-issues.md #25).
+  if (process.env.NODE_ENV === "production") {
+    console.log("  …skipped: newsletter rows are never seeded in production.");
+    return;
+  }
+
   const existing = await prisma.newsletterSubscriber.count();
   const needed = Math.max(0, COUNTS.newsletter - existing);
   for (let i = 0; i < needed; i++) {

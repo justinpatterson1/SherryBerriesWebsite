@@ -6,11 +6,15 @@
 // Plain static data — safe to import from server or client components.
 
 import type { Block, LegalDocument, Section } from "@/lib/legal/types";
+import { CANONICAL_ORIGIN } from "@/lib/seo/site-url";
 
 /** Rendered in the hero and referenced by "Changes to These Terms". */
 export const LAST_UPDATED = "August 17, 2026";
 
-export const SITE_URL = "https://www.sherryberries.com";
+// Re-exported from the SEO module rather than retyped: this value was a
+// literal in each of the four legal files and had drifted to a domain the
+// site does not serve. One source of truth now.
+export const SITE_URL = CANONICAL_ORIGIN;
 export const TERMS_EMAIL = "sherryvanessanichols@gmail.com";
 
 // The source copy's "Agreement to These Terms" section — shown in the hero
@@ -28,7 +32,7 @@ const INTRO: Block[] = [
     kind: "p",
     text: [
       'These Terms of Service ("Terms") govern your access to and use of ',
-      { href: "http://www.sherryberries.com", text: "www.sherryberries.com" },
+      { href: CANONICAL_ORIGIN, text: "shopsherryberries.com" },
       // "leaving reviews" removed 2026-08-19: reviews were taken off the site
       // (issue 6) and the Customer Reviews section below now says we do not
       // accept them, so the intro was contradicting it.

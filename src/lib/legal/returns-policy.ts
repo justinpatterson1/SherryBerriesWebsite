@@ -21,10 +21,14 @@
 
 import { RETURN_REASONS, RETURN_WINDOW_DAYS } from "@/lib/account/returns";
 import type { Block, LegalDocument, Section } from "@/lib/legal/types";
+import { CANONICAL_ORIGIN } from "@/lib/seo/site-url";
 
 export const LAST_UPDATED = "August 17, 2026";
 
-export const SITE_URL = "https://www.sherryberries.com";
+// Re-exported from the SEO module rather than retyped: this value was a
+// literal in each of the four legal files and had drifted to a domain the
+// site does not serve. One source of truth now.
+export const SITE_URL = CANONICAL_ORIGIN;
 export const SUPPORT_EMAIL = "sherryvanessanichols@gmail.com";
 
 /**

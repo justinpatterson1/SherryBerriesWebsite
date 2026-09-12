@@ -117,3 +117,13 @@ export function tooManyRequests(reset: number): NextResponse {
  * cannot be used to push files into storage in bulk.
  */
 export const receiptLimiter = makeLimiter(10, "1 h", "receipt");
+
+/**
+ * Account deletion: 5 attempts per hour per user.
+ *
+ * The budget is spent on failed re-authentication, not on deletions — one
+ * success ends the account. Keyed by user id because the endpoint is
+ * authenticated and the thing being protected is a single account against
+ * someone guessing at its password on an unattended browser.
+ */
+export const accountDeleteLimiter = makeLimiter(5, "1 h", "account-delete");
