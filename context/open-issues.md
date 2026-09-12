@@ -103,17 +103,18 @@ By design in [rate-limit.ts](../src/lib/rate-limit.ts): no Upstash credentials, 
 
 ### 11. `NEXT_PUBLIC_SITE_URL` is absent and `CONTACT_EMAIL` is empty
 
-- `NEXT_PUBLIC_SITE_URL` — **not present in `.env` at all**. Checkout falls back to the request origin. All four legal pages now assert `https://www.sherryberries.com`.
-- `CONTACT_EMAIL` — present but **blank** (`.env:16`).
-- All four legal pages publish `sherryvanessanichols@gmail.com` as the contact address, which matches neither the blank `CONTACT_EMAIL` nor the Resend account owner that currently receives all outbound mail.
+- `NEXT_PUBLIC_SITE_URL` — **still not present in `.env`**, though this is now cosmetic locally: [site-url.ts](../src/lib/seo/site-url.ts) falls back to `CANONICAL_ORIGIN` (`https://shopsherryberries.com`). Checkout and the admin payments route still fall back to the request origin instead. Set it in Vercel.
+- `CONTACT_EMAIL` — **now set** (34 chars, verified 2026-09-12).
+- ~~All four legal pages assert `https://www.sherryberries.com`~~ — **RESOLVED 2026-09-12**: all four now import `CANONICAL_ORIGIN` from [site-url.ts](../src/lib/seo/site-url.ts) instead of holding their own literal, so the domain cannot drift out of step again.
+- **Still open:** all four legal pages publish `sherryvanessanichols@gmail.com` as the contact address, which matches neither `CONTACT_EMAIL` nor the `EMAIL_FROM` sender (`support@shopsherryberries.com`). A customer sending a privacy or returns request has three addresses to choose from and only one of them is monitored as the store's own.
 
-**Fix:** set both, and reconcile the three addresses so a privacy or returns request actually reaches a person. This is the item most likely to cause a real customer to be ignored.
+**Fix:** set `NEXT_PUBLIC_SITE_URL` in Vercel, and reconcile the contact addresses.
 
-### 12. Resend still uses the test sender
+### 12. ~~Resend still uses the test sender~~ — **RESOLVED 2026-09-12**
 
-Until a domain is verified, Resend only delivers to the account owner. Order confirmations, verification emails, and password resets will not reach customers in production.
+The owner confirmed the sending domain is verified in Resend and mail is being delivered. `EMAIL_FROM` is `SherryBerries <support@shopsherryberries.com>` — an address on the verified domain, not `onboarding@resend.dev`. The original entry was written when it was still the test sender.
 
-**Fix:** verify the sending domain and set `EMAIL_FROM` to an address on it.
+**Carried forward into #25:** the reason this mattered for the newsletter was bounce rate. A verified domain has a reputation to lose, so the 199 fake `@berrymail.test` rows are now *more* urgent to purge before a first campaign, not less.
 
 ---
 
@@ -157,13 +158,7 @@ Produces a build warning on every page that inherits it (`/privacy`, `/terms`, `
 
 ### 24. ~~The newsletter signup does nothing~~ — **RESOLVED 2026-08-18**, see Resolved section
 
-### 25. ⚠ The subscriber list contains 200 fake seeded addresses
-
-`seedNewsletter()` in [seed.ts](../prisma/seed.ts) creates **200 faker addresses** at `@berrymail.test`, and they are already in the production Neon database — that is why the newsletter migration needed a backfill step.
-
-Now that the signup writes to that same table, **the list is 200 fake rows plus any real signups**. Sending to it would blow the sender's bounce rate on a domain that is not even verified yet (issue 12).
-
-**Fix:** before the first send, delete the seeded rows — `DELETE FROM "NewsletterSubscriber" WHERE source = 'seed' OR email LIKE '%@berrymail.test'` — and stop seeding them, or gate `seedNewsletter()` to non-production.
+### 25. ~~⚠ The subscriber list contains 200 fake seeded addresses~~ — **RESOLVED 2026-09-12**, see Resolved section
 
 ### 23. ~~No legal or policy page has been verified in a browser~~ — **RESOLVED 2026-08-19**, see Resolved section
 
@@ -180,6 +175,11 @@ Found while verifying issue 23: `localStorage` held `light` while the page rende
 ---
 
 ## Resolved
+
+- **2026-09-12** — *(was issue 25)* **The 199 fake seeded addresses are out of the production newsletter table.** Purged with [scripts/newsletter-purge-seed.ts](../scripts/newsletter-purge-seed.ts), which writes every matched row to a dated JSON backup before deleting (gitignored). Verified after: **1 row remains**, the single genuine `source = 'homepage'` signup from 2026-08-20.
+  - **⚠ The DELETE this entry used to recommend would have matched on the wrong column.** It was `source = 'seed' OR email LIKE '%@berrymail.test'`, but the production rows carry **`source = null`**, not `'seed'` — they predate the column's backfill. Only the email-domain half of that condition ever matched. Anyone auditing by `source` would have concluded the table was clean.
+  - **The seed can no longer refill it:** `seedNewsletter()` in [seed.ts](../prisma/seed.ts) returns early when `NODE_ENV === "production"`. This is the one seeded model that is a *send list* rather than inert test data, which is why it gets a guard the other fifteen do not.
+  - **Timing mattered.** Issue 12 resolved the same day (the sending domain is verified), so the domain now has a reputation to lose. Sending to 199 non-existent addresses would have produced a ~99.5% hard-bounce rate on the first campaign.
 
 - **2026-09-05** — *(was security issue S3)* **Every change made through the admin panel is now recorded.** Migration `20260905030057_admin_audit_log` adds `AdminAuditLog`; nothing before this recorded who changed a price, approved a refund, or deleted a category.
   - **Owner's decisions:** strict transactions, no logging of denied attempts (non-admins are redirected anyway), **SUPERADMIN-only** viewing, **12-month** retention, and orders + returns included.

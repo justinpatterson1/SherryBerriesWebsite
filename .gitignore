@@ -47,3 +47,6 @@ next-env.d.ts
 /screenshots/
 /docs
 /.playwright-mcp/
+
+# One-off DB backups written by scripts/ (e.g. the newsletter seed purge).
+newsletter-seed-backup-*.json

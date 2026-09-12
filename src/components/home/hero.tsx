@@ -13,6 +13,16 @@ const MARQUEE_ITEMS = [
   "Sweet like you",
 ];
 
+// The three reassurances overlaid on the hero image. Each is a live promise to
+// a customer — Curepe pickup and nationwide delivery were both confirmed by the
+// owner on 2026-09-12. Check anything added here against the shipping policy
+// before shipping it, the way the marquee above should have been.
+const HERO_FEATURES = [
+  { label: "Nationwide", sub: "Delivery", Icon: TruckIcon },
+  { label: "Curepe", sub: "Pickup", Icon: PinIcon },
+  { label: "Secure", sub: "Payments", Icon: CardIcon },
+];
+
 const chipBase =
   "absolute flex items-center gap-3 py-3 pl-3 pr-[18px] rounded-full " +
   "bg-[rgba(15,12,13,0.72)] border border-white/[0.08] " +
@@ -42,37 +52,107 @@ export function Hero() {
         </span>
       </div>
 
-      <div
-        className={
-          "relative w-[75%] self-center aspect-video rounded-[28px] overflow-hidden " +
-          "shadow-[0_30px_80px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.04)_inset,0_30px_100px_rgba(255,79,163,0.18),0_60px_160px_rgba(255,79,163,0.1)] " +
-          "max-[900px]:w-[92%]"
-        }
-      >
-        <Image
-          src={heroBanner}
-          alt="SherryBerries luxury body jewelry editorial"
-          fill
-          priority
-          sizes="(max-width: 1280px) 100vw, 1280px"
-          placeholder="blur"
-          className="object-cover"
-        />
+      {/* The image and the copy overlaid on it. The wrapper exists so the copy
+          block can drop OUT of the frame below 900px: the frame itself is
+          aspect-video and `overflow-hidden`, so at phone widths (~200px tall)
+          there is no room for the copy inside it. Above 900px the block is
+          absolutely positioned over the left half; below, it goes `static` and
+          flows underneath the picture. */}
+      <div className="relative w-[75%] self-center max-[900px]:w-[92%]">
+        <div
+          className={
+            "relative aspect-video rounded-[28px] overflow-hidden " +
+            "shadow-[0_30px_80px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.04)_inset,0_30px_100px_rgba(255,79,163,0.18),0_60px_160px_rgba(255,79,163,0.1)]"
+          }
+        >
+          <Image
+            src={heroBanner}
+            alt="SherryBerries luxury body jewelry editorial"
+            fill
+            priority
+            sizes="(max-width: 1280px) 100vw, 1280px"
+            placeholder="blur"
+            className="object-cover"
+          />
 
-        <div className={`${chipBase} top-7 left-7 max-[900px]:top-3.5 max-[900px]:left-3.5`}>
-          <span className="w-9 h-9 rounded-full bg-gradient-to-br from-pink to-pink-deep inline-flex items-center justify-center text-white shrink-0 shadow-[0_6px_16px_rgba(255,79,163,0.45)] [&_svg]:w-[18px] [&_svg]:h-[18px] max-[900px]:w-7 max-[900px]:h-7 max-[900px]:[&_svg]:w-3.5 max-[900px]:[&_svg]:h-3.5">
-            <ShieldIcon />
-          </span>
-          <div>
-            <div className="font-sans text-[11px] font-semibold text-ink-faint tracking-[0.14em] uppercase leading-none mb-1 max-[900px]:text-[9px]">
-              Hypoallergenic
-            </div>
-            <div className="font-sans text-sm font-semibold text-ink leading-[1.2] max-[900px]:text-xs">
-              Skin-safe by design
+          {/* Legibility ramp under the overlaid copy. Only needed while the copy
+              is actually on the picture, so it is hidden at the same breakpoint
+              the copy leaves the frame. */}
+          <div
+            aria-hidden="true"
+            className={
+              "absolute inset-0 max-[900px]:hidden " +
+              // Explicit stops rather than from/via/to: the copy block now runs
+              // to 64% of the frame, so the ramp has to stay dark well past the
+              // midpoint that Tailwind's `via-` assumes.
+              "bg-[linear-gradient(90deg,rgba(0,0,0,0.85)_0%,rgba(0,0,0,0.7)_38%,rgba(0,0,0,0.35)_62%,rgba(0,0,0,0.08)_82%,transparent_100%)]"
+            }
+          />
+
+          <div className={`${chipBase} top-7 right-7 max-[900px]:top-3.5 max-[900px]:right-3.5`}>
+            <span className="w-9 h-9 rounded-full bg-gradient-to-br from-pink to-pink-deep inline-flex items-center justify-center text-white shrink-0 shadow-[0_6px_16px_rgba(255,79,163,0.45)] [&_svg]:w-[18px] [&_svg]:h-[18px] max-[900px]:w-7 max-[900px]:h-7 max-[900px]:[&_svg]:w-3.5 max-[900px]:[&_svg]:h-3.5">
+              <ShieldIcon />
+            </span>
+            <div>
+              <div className="font-sans text-[11px] font-semibold text-ink-faint tracking-[0.14em] uppercase leading-none mb-1 max-[900px]:text-[9px]">
+                Hypoallergenic
+              </div>
+              <div className="font-sans text-sm font-semibold text-ink leading-[1.2] max-[900px]:text-xs">
+                Skin-safe by design
+              </div>
             </div>
           </div>
         </div>
 
+        {/* Overlaid call-to-action copy. The headline is a <p>, not a heading:
+            the section's real <h1> lives below the picture, and this restates
+            it. Colours are hardcoded white while the block is on the photo,
+            then handed back to the theme tokens once it drops below it. */}
+        <div
+          className={
+            "absolute inset-y-0 left-0 w-[64%] z-[1] flex flex-col justify-center gap-6 pl-[8%] pr-6 " +
+            "max-[900px]:static max-[900px]:w-full max-[900px]:px-0 max-[900px]:pt-7 max-[900px]:gap-4"
+          }
+        >
+          <span className="font-sans text-[clamp(11px,1vw,14px)] font-semibold tracking-[0.22em] uppercase text-blush">
+            Body Jewelry &amp; Aftercare
+          </span>
+
+          {/* The line break before "on you." is deliberate, not a reflow
+              artefact — the script word is the payoff and gets its own line at
+              every width. Below 900px the block is out of the frame and the
+              full container width is available, so the break is dropped. */}
+          <p className="m-0 font-display text-[clamp(30px,4.6vw,74px)] leading-[1.04] tracking-[-0.015em] text-white max-[900px]:text-ink">
+            Piercings look better
+            <br className="max-[900px]:hidden" />{" "}
+            <span className="font-script text-pink text-[1.3em] leading-[0.9] whitespace-nowrap">
+              on you.
+              <span className="ml-2 align-middle text-[0.45em]" aria-hidden="true">
+                ♡
+              </span>
+            </span>
+          </p>
+
+          <p className="m-0 font-sans text-[clamp(14px,1.35vw,20px)] leading-[1.6] text-white/85 max-w-[34em] max-[900px]:text-ink-dim">
+            Body jewelry, piercing aftercare and accessories for your everyday you.
+            Sweet like you.
+          </p>
+
+          <ul className="flex flex-wrap items-center gap-x-8 gap-y-4 list-none p-0 m-0 mt-1.5">
+            {HERO_FEATURES.map(({ label, sub, Icon }) => (
+              <li key={label} className="flex items-center gap-3">
+                <span className="text-pink shrink-0 [&_svg]:w-[clamp(20px,1.7vw,26px)] [&_svg]:h-[clamp(20px,1.7vw,26px)]">
+                  <Icon />
+                </span>
+                <span className="font-sans text-[clamp(12px,1.05vw,16px)] font-semibold leading-[1.25] text-white max-[900px]:text-ink">
+                  {label}
+                  <br />
+                  {sub}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
 
       <div className="w-full px-[8%] max-[900px]:px-[6%]">
@@ -182,6 +262,37 @@ function ShieldIcon() {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M12 2 4 5v6c0 5 3.5 9.3 8 11 4.5-1.7 8-6 8-11V5l-8-3z" />
       <path d="m9 12 2 2 4-4" />
+    </svg>
+  );
+}
+
+function TruckIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 16V6a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v10" />
+      <path d="M15 9h3.5a1 1 0 0 1 .8.4L21.8 13a1 1 0 0 1 .2.6V16" />
+      <circle cx="7.5" cy="17.5" r="2" />
+      <circle cx="17.5" cy="17.5" r="2" />
+      <path d="M9.5 17.5h6" />
+    </svg>
+  );
+}
+
+function PinIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 21s7-5.4 7-11a7 7 0 1 0-14 0c0 5.6 7 11 7 11z" />
+      <circle cx="12" cy="10" r="2.5" />
+    </svg>
+  );
+}
+
+function CardIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="2.5" y="5" width="19" height="14" rx="2.5" />
+      <path d="M2.5 10h19" />
+      <path d="M6.5 14.5h3" />
     </svg>
   );
 }
