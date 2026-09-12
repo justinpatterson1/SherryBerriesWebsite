@@ -7,6 +7,7 @@ import { CartProvider } from "@/components/providers/cart-provider";
 import { WishlistProvider } from "@/components/providers/wishlist-provider";
 import { SearchProvider } from "@/components/search/search-provider";
 import { IdleSignOut } from "@/components/auth/idle-sign-out";
+import { siteUrl } from "@/lib/seo/site-url";
 
 const italiana = Italiana({
   variable: "--font-italiana",
@@ -34,9 +35,22 @@ const caveat = Caveat({
 });
 
 export const metadata: Metadata = {
+  // Without this, every relative OG/Twitter image and canonical URL resolves
+  // against the request host — so social previews break and the sitemap's
+  // absolute URLs disagree with the page's own canonical. Set from the same
+  // helper the sitemap uses, so the two can never drift apart.
+  metadataBase: new URL(siteUrl()),
   title: "SherryBerries",
   description: "Luxury body jewelry and aftercare from Trinidad and Tobago.",
 };
+
+// Deliberately NOT set here:
+//   - a `title.template`: the pages already end their own titles with
+//     "| SherryBerries" (e.g. "Jewelry | SherryBerries"), so a template would
+//     render "Jewelry | SherryBerries | SherryBerries".
+//   - `alternates.canonical`: metadata is inherited, so a canonical on the root
+//     layout would point every page that does not override it at the homepage.
+//     Canonicals belong on the individual pages.
 
 // Must be its own export — Next ignores `viewport` inside `metadata` and warns
 // on every page that inherits this layout.
