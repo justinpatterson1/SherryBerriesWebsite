@@ -1,14 +1,44 @@
-# Current Feature
+# Current Feature: Dynamic Sitemap and Robots Configuration
 
 ## Status
-Not Started
+In Progress
 
 ## Goals
-<!-- Populated by /feature load -->
+- `src/app/sitemap.ts` exists and Next.js serves valid XML at `/sitemap.xml`.
+- `src/app/robots.ts` exists and Next.js serves valid robots.txt at `/robots.txt`, referencing the sitemap.
+- Base URL resolves to `https://shopsherryberries.com` in production, reusing `NEXT_PUBLIC_SITE_URL` rather than adding a new env var, normalized so no URL has a doubled `/`.
+- Real public routes only — every static entry verified to exist in `src/app/`, none invented from the PRD's example list.
+- Active product pages generated from Prisma at the canonical `/products/[slug]`, using the real active field and `updatedAt` for `lastModified`.
+- No `?category=` entries — `/products` is the only listing URL, since categories are filters rather than routes.
+- `metadataBase` set on the root layout to the canonical apex, so canonical and OG URLs stop resolving relative and match the sitemap.
+- Private, transactional and utility routes excluded from the sitemap and disallowed in robots: `/admin`, `/api`, `/account`, `/checkout`, `/cart`, `/order`, `/login`, `/forgot-password`, `/reset-password`, `/verify-email`, `/unsubscribe`, `/wishlist`.
+- Vercel preview deployments are not indexable, without blocking production.
+- A database failure degrades to the static entries instead of breaking the endpoint, logged through Sentry rather than swallowed.
+- No duplicate URLs; no new dependency; `npm run lint` and `npm run build` pass.
 
 ## Notes
-<!-- Populated by /feature load -->
+Spec: [context/features/sitemap-robot-spec.md](features/sitemap-robot-spec.md).
 
+This closes the "no sitemap.ts, no robots.ts" item from the pre-launch review.
+
+**PRD examples are not this codebase.** The PRD lists routes like `/shop`, `/about`, `/faq`, `/aftercare`, `/returns` and category URLs shaped `/shop/belly-rings`. This project does not use those. The real public routes are `/`, `/products`, `/bestsellers`, `/our-story`, `/contact`, `/help/shipping`, `/help/returns`, `/learn/sizing`, `/privacy`, `/terms`. The PRD says explicitly not to create URLs for routes that do not exist, so the inspection findings win over its examples.
+
+**Categories are a query string, not a path — decided 2026-09-12: list `/products` alone.** The homepage grid and navbar link to `/products?category={slug}` ([queries/home.ts](../src/lib/queries/home.ts), [layout/navbar.tsx](../src/components/layout/navbar.tsx)); there is no `/shop/belly-rings` style route. §7 asks for category pages and §8 excludes filter-query URLs, and here they are the same URLs. The sitemap therefore carries `/products` and no `?category=` entries, which also satisfies §8's "no duplicate URLs" and "no filter query URLs" — every product is already reachable through its own `/products/[slug]` entry. Revisit only if categories ever get real path-based routes.
+
+**`metadataBase` — decided 2026-09-12: set it site-wide, in this feature.** It is absent everywhere today, so the site emits no canonical tags and every OG/Twitter image URL resolves relative. Set on the root layout's `metadata` export to the canonical apex below, which satisfies §17 (sitemap URLs matching the site's canonical strategy) and closes the related pre-launch item in one pass.
+
+**Prisma fields to use (verified, do not guess):** `Product.active` (Boolean), `Product.slug`, `Product.updatedAt`; `Category.slug`. The product page itself 404s on `!product || !product.active` ([products/[slug]/page.tsx:52](../src/app/products/[slug]/page.tsx#L52)), so the sitemap filter must match that exactly.
+
+**Env caution.** `NEXT_PUBLIC_*` is inlined at build time, as [.env.example](../.env.example) already warns. Preview detection should use `VERCEL_ENV`, which is available server-side at request time.
+
+**Canonical host — decided 2026-09-12: the apex, `https://shopsherryberries.com`.** `www` 301-redirects to it in Vercel's domain settings. The sitemap, canonical tags and every generated link use this host.
+
+**⚠ Pre-existing bug found while loading this spec — `NEXT_PUBLIC_SITE_URL` must carry its scheme.** The owner's value was `www.shopsherryberries.com`, with no `https://`. The variable is concatenated, never parsed:
+
+- [checkout/route.ts:233-239](../src/app/api/checkout/route.ts#L233-L239) builds WiPay's `response_url` as `` `${baseUrl}/api/checkout/wipay/return` ``. A bare host makes that relative; WiPay requires an absolute `response_url`, so the payor is never redirected back and a real charge leaves the order `PENDING`.
+- [admin/payments/route.ts:202](../src/app/api/admin/payments/route.ts#L202) builds the link in the payment-rejected email the same way, producing a dead link.
+
+[.env.example](../.env.example) now documents the constraint and ships the correct value. **The real `.env` and the Vercel environment variable still need updating**, and because `NEXT_PUBLIC_*` is build-time inlined, Vercel needs a redeploy after the change. This is a launch blocker in its own right, independent of the sitemap.
 ---
 
 ## History
