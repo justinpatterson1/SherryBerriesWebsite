@@ -79,11 +79,15 @@ Same form, same session policy, no 2FA, no IP restriction. One reused password o
 - **Dependency scanning:** no CI at all (`.github/workflows` absent). `npm audit` could not run on 2026-09-04 (registry returned 503), so the current vulnerability state is **unknown**.
 - **Security testing:** none. (Not to be confused with issue 23, which covered *visual* verification of the legal pages and was resolved 2026-08-19 — no security testing of any kind has been done.)
 
-### S5. Rate limiting fails open, silently
+### S5. Rate limiting fails open — **no longer silently, as of 2026-09-12**
 
-By design in [rate-limit.ts](../src/lib/rate-limit.ts): no Upstash credentials, or Redis unreachable, means every request is allowed so an outage cannot lock people out of signing in. The consequence is that **if `UPSTASH_*` is unset in production there is no rate limiting anywhere and nothing reports it**. Set locally as of 2026-09-04; unverified in production.
+Failing open is by design in [rate-limit.ts](../src/lib/rate-limit.ts) and stays: no Upstash credentials, or Redis unreachable, means every request is allowed so an outage cannot lock people out of signing in. The dangerous half was the silence — **if `UPSTASH_*` were unset in production there was no rate limiting anywhere and nothing reported it**, and the site looked perfectly healthy while the login form accepted unlimited password guesses.
 
-**Fix:** confirm the production environment has both `UPSTASH_*` values, and consider logging loudly at boot when the limiter is disabled.
+**Done:** a missing-credentials deployment now logs to the deploy log at module load *and* raises a Sentry alert (`error`) on the first request, once per instance. A Redis outage reports the exception to Sentry, throttled to one per instance per 5 minutes. `isRateLimitingEnabled()` is exported so a health check can answer "is the login form protected right now?". 5 tests cover it, verified by mutation — commenting out the alert fails exactly the two tests that assert it.
+
+⚠ **Adding Sentry (S4) did not fix this on its own.** The old code's `console.error` went nowhere: there is **no `consoleIntegration` / `captureConsole`** in [sentry.server.config.ts](../sentry.server.config.ts), so `console.error` is not captured. It landed in the Vercel runtime log and died there.
+
+**Still to confirm (owner):** that Vercel's project settings carry both `UPSTASH_*` values with Production ticked. `.env` is gitignored (`.gitignore:34`) and **never reaches Vercel** — local and production are two separate sets of variables, so credentials being present locally says nothing about the deployment. The alert above now answers this by itself after the next deploy, but checking the dashboard is instant.
 
 ### S6. Smaller items
 

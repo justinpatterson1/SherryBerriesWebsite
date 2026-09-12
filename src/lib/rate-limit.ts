@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
+import * as Sentry from "@sentry/nextjs";
 
 // Shared Upstash client. Absent credentials → null, and every limiter falls
 // back to "fail open" (see checkRateLimit) so auth never breaks if Redis is
@@ -8,6 +9,55 @@ import { Redis } from "@upstash/redis";
 const url = process.env.UPSTASH_REDIS_REST_URL;
 const token = process.env.UPSTASH_REDIS_REST_TOKEN;
 const redis = url && token ? new Redis({ url, token }) : null;
+
+/** True on a Vercel deployment (production or preview); absent locally. */
+const isDeployed = Boolean(process.env.NEXT_PUBLIC_VERCEL_ENV);
+
+const DISABLED_MESSAGE =
+  "[rate-limit] DISABLED — UPSTASH_REDIS_REST_URL and/or UPSTASH_REDIS_REST_TOKEN are " +
+  "not set. Every limiter is inert: sign-in, registration, password reset, contact and " +
+  "newsletter accept unlimited requests, and brute-force protection on the login form is off.";
+
+// A line in the deploy log the moment the module loads, so a misconfigured
+// deployment is visible without waiting for traffic. `.env` is gitignored and
+// never reaches Vercel, so local credentials say nothing about production —
+// these are two separate sets of variables and only this can tell them apart.
+if (!redis) {
+  if (isDeployed) console.error(DISABLED_MESSAGE);
+  else console.warn(`${DISABLED_MESSAGE} (expected when running locally)`);
+}
+
+// Reported from the first request rather than at module load: Sentry is
+// initialised by instrumentation.ts, and a capture fired while this module is
+// still being imported can land before init and be dropped silently — which is
+// exactly the failure this alert exists to prevent.
+let disabledReported = false;
+
+function reportDisabledOnce() {
+  if (disabledReported || !isDeployed) return;
+  disabledReported = true;
+  Sentry.captureMessage(DISABLED_MESSAGE, "error");
+}
+
+// A Redis outage during a traffic spike would otherwise report once per
+// request. One report per instance every 5 minutes is enough to raise the
+// alarm without burying the dashboard.
+const OUTAGE_REPORT_INTERVAL_MS = 5 * 60 * 1000;
+let lastOutageReport = 0;
+
+function reportOutage(err: unknown) {
+  const now = Date.now();
+  if (now - lastOutageReport < OUTAGE_REPORT_INTERVAL_MS) return;
+  lastOutageReport = now;
+  Sentry.captureException(err, {
+    level: "error",
+    tags: { subsystem: "rate-limit" },
+    extra: {
+      consequence:
+        "Failing open — requests are being allowed unlimited while Redis is unreachable.",
+    },
+  });
+}
 
 type Duration = Parameters<typeof Ratelimit.slidingWindow>[1];
 
@@ -58,19 +108,37 @@ export type RateLimitResult = {
  * Run a limiter for an identifier. Fails open (allows the request) when the
  * limiter is disabled (no Upstash credentials) or Redis throws, so an outage
  * never locks users out of auth.
+ *
+ * Failing open is deliberate and stays. What changed is that it is no longer
+ * *quiet*: both paths now raise a Sentry alert on a deployment, because an
+ * unprotected site that looks completely healthy is the dangerous part.
  */
 export async function checkRateLimit(
   limiter: Ratelimit | null,
   identifier: string,
 ): Promise<RateLimitResult> {
-  if (!limiter) return { success: true, remaining: Number.POSITIVE_INFINITY, reset: 0 };
+  if (!limiter) {
+    reportDisabledOnce();
+    return { success: true, remaining: Number.POSITIVE_INFINITY, reset: 0 };
+  }
   try {
     const { success, remaining, reset } = await limiter.limit(identifier);
     return { success, remaining, reset };
   } catch (err) {
     console.error("[rate-limit] check failed — failing open:", err);
+    reportOutage(err);
     return { success: true, remaining: Number.POSITIVE_INFINITY, reset: 0 };
   }
+}
+
+/**
+ * Whether rate limiting is actually active in this process.
+ *
+ * Exported so a health check or an admin screen can answer "is the login form
+ * protected right now?" without re-reading the environment.
+ */
+export function isRateLimitingEnabled(): boolean {
+  return redis !== null;
 }
 
 /** Best-effort client IP from proxy headers (Vercel sets x-forwarded-for). */
