@@ -3,6 +3,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcrypt";
 import { prisma } from "@/lib/db";
+import type { UserRole } from "@/generated/prisma/enums";
 import { authConfig } from "@/auth.config";
 import { authLimiters, checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
@@ -57,19 +58,30 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           email: user.email,
           name: user.name,
           image: user.image,
+          role: user.role,
         };
       },
     }),
   ],
   callbacks: {
     ...authConfig.callbacks,
+    // `role` rides along purely so the navbar can decide whether to render the
+    // Dashboard link without a DB round trip on every page. It is NOT an access
+    // check: /admin is gated by proxy.ts and every admin page and API route
+    // calls requireAdmin(), which reads the role fresh from the database. A
+    // token that goes stale after a role change therefore shows or hides a link
+    // for at most one session (maxAge 20m) and grants nothing either way.
     jwt({ token, user }) {
       if (user?.id) token.id = user.id;
+      if (user?.role) token.role = user.role;
       return token;
     },
     session({ session, token }) {
       if (token?.id && session.user) {
         session.user.id = token.id as string;
+      }
+      if (token?.role && session.user) {
+        session.user.role = token.role as UserRole;
       }
       return session;
     },

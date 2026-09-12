@@ -57,7 +57,12 @@ const navRowBase =
   "light:shadow-[0_12px_40px_rgba(180,120,140,0.18),0_1px_0_rgba(255,255,255,0.6)_inset,0_0_0_1px_rgba(255,79,163,0.1)_inset]";
 
 export function Navbar() {
-  const { status } = useSession();
+  const { status, data: session } = useSession();
+  // Shows the Dashboard shortcut for staff. Cosmetic only — /admin is gated by
+  // proxy.ts and requireAdmin(), both of which check the database, so this
+  // never grants access on its own.
+  const isStaff =
+    session?.user?.role === "ADMIN" || session?.user?.role === "SUPERADMIN";
   const showWishlist = status === "authenticated";
   const { count: cartCount } = useCart();
   const { count: wishlistCount } = useWishlist();
@@ -137,6 +142,22 @@ export function Navbar() {
           <IconButton label="Search" onClick={openSearch}>
             <SearchIcon />
           </IconButton>
+
+          {isStaff && (
+            <Link
+              href="/admin"
+              className={
+                "inline-flex items-center gap-2 py-2.5 px-4 rounded-full no-underline " +
+                "border border-gold/40 bg-gold/[0.12] text-gold-soft " +
+                "font-sans text-[11px] font-bold tracking-[0.14em] uppercase " +
+                "transition-colors duration-200 hover:bg-gold/20 hover:border-gold/70 " +
+                "focus-visible:bg-gold/20"
+              }
+            >
+              <DashboardIcon />
+              Dashboard
+            </Link>
+          )}
 
           <IconLink href="/account" label="Account">
             <UserIcon />
@@ -249,6 +270,20 @@ export function Navbar() {
                 {link.label}
               </Link>
             )
+          )}
+
+          {isStaff && (
+            <Link
+              href="/admin"
+              onClick={() => setMenuOpen(false)}
+              className={
+                mobileLinkClass +
+                " flex items-center gap-2.5 mt-1 border border-gold/40 bg-gold/[0.12] text-gold-soft hover:text-gold-soft"
+              }
+            >
+              <DashboardIcon />
+              Dashboard
+            </Link>
           )}
         </nav>
 
@@ -475,6 +510,30 @@ function UserIcon() {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <circle cx="12" cy="8" r="4" />
       <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" />
+    </svg>
+  );
+}
+
+// Sized explicitly, unlike the other icons here: those sit inside IconButton /
+// IconLink which set the box, whereas this one sits inline beside a text label.
+function DashboardIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className="flex-none"
+    >
+      <rect x="3" y="3" width="7" height="9" rx="1.5" />
+      <rect x="14" y="3" width="7" height="5" rx="1.5" />
+      <rect x="14" y="12" width="7" height="9" rx="1.5" />
+      <rect x="3" y="16" width="7" height="5" rx="1.5" />
     </svg>
   );
 }
