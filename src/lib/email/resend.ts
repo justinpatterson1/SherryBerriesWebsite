@@ -1,7 +1,7 @@
 import "server-only";
 import { Resend } from "resend";
 
-const FROM = process.env.EMAIL_FROM ?? "SherryBerries <onboarding@resend.dev>";
+const FROM = process.env.EMAIL_FROM ?? "SherryBerries <support@shopsherryberries.com>";
 
 let client: Resend | null = null;
 function getClient(): Resend | null {
@@ -244,7 +244,7 @@ function orderConfirmationHtml({
           </td></tr>
           <tr><td style="padding:24px 36px 36px;">
             <p style="font-size:12px;line-height:1.6;color:#8a7780;margin:0;">Questions about your order? Just reply to this email and we'll help you out.</p>
-            <p style="font-size:13px;line-height:1.6;color:#cbb8c0;margin:14px 0 0;">With love,<br/>The SherryBerries studio</p>
+            <p style="font-size:13px;line-height:1.6;color:#cbb8c0;margin:14px 0 0;">With love,<br/>SherryBerries</p>
           </td></tr>
         </table>
       </td></tr>

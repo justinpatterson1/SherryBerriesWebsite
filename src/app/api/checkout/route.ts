@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import {
   PAYMENT_LABEL,
   SHIPPING,
+  feeForCity,
   isPaymentKey,
   isShippingKey,
 } from "@/lib/checkout/shipping";
@@ -84,6 +85,17 @@ export async function POST(request: Request) {
   const shipping = SHIPPING[b.shipping];
   const paymentKey = b.payment;
 
+  // Courier is priced from the city's rate card, never from the client. An
+  // unrecognized city has no rate, so the order is refused rather than shipped
+  // at a fee nobody agreed to.
+  const shipFee = feeForCity(b.shipping, city);
+  if (shipFee === null) {
+    return NextResponse.json(
+      { error: "We don't deliver to that city yet. Please choose one from the list." },
+      { status: 400 },
+    );
+  }
+
   // Authoritative cart read — never trust client-supplied prices/quantities.
   const cart = await prisma.cart.findUnique({
     where: { userId },
@@ -163,7 +175,6 @@ export async function POST(request: Request) {
     }
   }
 
-  const shipFee = shipping.fee;
   const total = round2(subtotal - discount + shipFee);
   const orderNumber = await uniqueOrderNumber();
   const paymentLabel = PAYMENT_LABEL[paymentKey];

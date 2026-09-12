@@ -5,7 +5,7 @@ const SHOP = [
   { label: "Nose Rings", href: "/products?category=nose-rings" },
   { label: "Cartilage", href: "/products?category=cartilage-jewelry" },
   { label: "Septum", href: "/products?category=septum-jewelry" },
-  { label: "Merchandise", href: "/products?category=merch" },
+  { label: "Berry Baby", href: "/products?category=merch" },
 ];
 
 const CARE = [

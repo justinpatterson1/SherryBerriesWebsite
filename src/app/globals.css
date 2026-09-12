@@ -98,6 +98,61 @@
   --color-pink-deep: #b81e62;
   --color-gold: #9a7b1e;
   --color-gold-soft: #c69a26;
+  color-scheme: light;
+}
+
+/* Native UI the page cannot paint itself — the <select> dropdown panel and its
+   <option> rows, scrollbars, autofill highlight, date pickers — is drawn by the
+   browser from this property alone. Without it everything native renders light
+   on our dark canvas.
+
+   It is set on `html` only, never on `body`: `[data-theme="light"]` above also
+   matches `html`, and out-specifies this, so the light theme overrides it and
+   body inherits the result. Setting it on `body` too would pin body to dark and
+   the override would never reach the form controls inside it. */
+html {
+  color-scheme: dark;
+}
+
+/* Chrome paints a <select>'s drop-down panel from the control's OWN
+   background-color, so the shared field styling — a 3% white tint meant to sit
+   on the dark canvas — composited over the panel's white base and produced a
+   white popup in dark mode. color-scheme alone cannot fix that: an explicitly
+   set background always wins over the browser's themed default.
+
+   These rules are deliberately UNLAYERED. `@import "tailwindcss"` puts every
+   utility in a cascade layer, and unlayered styles beat layered ones whatever
+   their specificity, so this one rule covers every select on the site — the
+   checkout city picker and the admin views alike — without touching each one.
+   The colours are tokens, so the light theme flips with everything else. */
+select,
+select option,
+select optgroup {
+  background-color: #161616;
+  color: #ffffff;
+}
+
+/* Chrome does not re-resolve a var() inside background-color on an existing
+   <select> when only [data-theme] flips on the root — the control keeps its old
+   colour until the element is re-created. A separate rule that starts matching
+   does force the recalc, so the two themes are written out literally here rather
+   than sharing one var()-based declaration. The values are --color-canvas-elev
+   and --color-ink from the blocks above; keep them in step. */
+[data-theme="light"] select,
+[data-theme="light"] select option,
+[data-theme="light"] select optgroup {
+  background-color: #ffffff;
+  color: #1a0d12;
+}
+
+/* Keeps the pink focus tint the other fields get, but opaque so it cannot
+   lighten the popup the way the translucent original did. */
+select:focus {
+  background-color: color-mix(in oklab, #161616 92%, var(--color-pink));
+}
+
+[data-theme="light"] select:focus {
+  background-color: color-mix(in oklab, #ffffff 92%, var(--color-pink));
 }
 
 html,

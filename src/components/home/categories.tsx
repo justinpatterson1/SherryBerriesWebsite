@@ -49,23 +49,26 @@ export async function Categories() {
                 />
               )}
             </div>
-            <span className="absolute top-[18px] left-5 z-[3] font-serif italic text-base font-semibold tracking-[0.04em] text-pink [text-shadow:0_2px_12px_rgba(0,0,0,0.6)]">
+            {/* The card's label sits on the dark photo scrim in both themes, so it
+                keeps the dark-theme palette: the light theme's ink and pink are tuned
+                for a pale page background and clash against the image. */}
+            <span className="absolute top-[18px] left-5 z-[3] font-serif italic text-base font-semibold tracking-[0.04em] text-pink light:text-[#ff4fa3] [text-shadow:0_2px_12px_rgba(0,0,0,0.6)]">
               {String(i + 1).padStart(2, "0")}
             </span>
             <div className="absolute left-[22px] right-[22px] bottom-[22px] z-[3] flex flex-col gap-1.5">
-              <h3 className="font-display text-[26px] leading-[1.1] text-ink m-0">
+              <h3 className="font-display text-[26px] leading-[1.1] text-ink light:text-white m-0">
                 {cat.name}
               </h3>
               {cat.description && (
-                <p className="font-sans text-[13px] leading-[1.45] text-ink-dim m-0">
+                <p className="font-sans text-[13px] leading-[1.45] text-ink-dim light:text-white/80 m-0">
                   {cat.description}
                 </p>
               )}
               <span
                 className={
-                  "mt-2.5 inline-flex items-center gap-2 font-sans text-[11px] font-semibold tracking-[0.16em] uppercase text-blush " +
+                  "mt-2.5 inline-flex items-center gap-2 font-sans text-[11px] font-semibold tracking-[0.16em] uppercase text-blush light:text-[#f7b6d2] " +
                   "transition-[gap,color] duration-[280ms] ease-[cubic-bezier(0.2,0.8,0.2,1)] " +
-                  "group-hover:gap-4 group-hover:text-pink"
+                  "group-hover:gap-4 group-hover:text-pink light:group-hover:text-[#ff4fa3]"
                 }
               >
                 Shop now{" "}

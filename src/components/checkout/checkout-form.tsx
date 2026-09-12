@@ -5,9 +5,11 @@ import {
   PAYMENT_LABEL,
   SHIPPING,
   SHIPPING_ORDER,
+  feeForCity,
   type PaymentKey,
   type ShippingKey,
 } from "@/lib/checkout/shipping";
+import { CITIES_BY_REGION, DELIVERY_REGIONS } from "@/lib/checkout/delivery-zones";
 import type { FormErrors, FormState } from "./checkout-client";
 import { Field, SectionCard, fieldClass, money } from "./shared";
 
@@ -77,7 +79,30 @@ export function CheckoutForm({
             {input("line1", { autoComplete: "address-line1" })}
           </Field>
           <Field label="City / Town" htmlFor="co-city" required error={errors.city}>
-            {input("city", { autoComplete: "address-level2" })}
+            <select
+              id="co-city"
+              value={form.city}
+              onChange={(e) => onField("city", e.target.value)}
+              autoComplete="address-level2"
+              className={
+                fieldClass +
+                " cursor-pointer" +
+                (errors.city
+                  ? " border-[#ff8d8d] bg-[rgba(255,141,141,0.06)] focus:border-[#ff8d8d]"
+                  : "")
+              }
+            >
+              <option value="">Select your city…</option>
+              {DELIVERY_REGIONS.map((region) => (
+                <optgroup key={region} label={region}>
+                  {CITIES_BY_REGION[region].map((c) => (
+                    <option key={c.name} value={c.name}>
+                      {c.name} — {money(c.fee)}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
           </Field>
           <Field label="Landmark" htmlFor="co-landmark" optional>
             {input("landmark", { placeholder: "Near…" })}
@@ -90,6 +115,11 @@ export function CheckoutForm({
         <div className="flex flex-col gap-3">
           {SHIPPING_ORDER.map((key) => {
             const opt = SHIPPING[key];
+            // Courier is priced from the city's rate card. Until a city is
+            // picked there is no real price, so show the cheapest as a "from".
+            const cityFee = feeForCity(key, form.city);
+            const pending = opt.variesByCity && cityFee === null;
+            const fee = cityFee ?? opt.fee;
             return (
               <OptionCard
                 key={key}
@@ -99,11 +129,16 @@ export function CheckoutForm({
                 title={opt.label}
                 sub={opt.sub}
                 right={
-                  opt.fee === 0 ? (
+                  fee === 0 ? (
                     <span className="font-sans text-[14px] font-bold text-[#5fd29a]">Free</span>
                   ) : (
                     <span className="font-serif text-[16px] font-semibold text-ink">
-                      {money(opt.fee)}
+                      {pending && (
+                        <span className="font-sans text-[11px] font-medium tracking-[0.08em] uppercase text-ink-faint mr-1">
+                          from
+                        </span>
+                      )}
+                      {money(fee)}
                     </span>
                   )
                 }

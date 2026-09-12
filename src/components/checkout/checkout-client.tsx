@@ -4,7 +4,13 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useCart } from "@/components/providers/cart-provider";
 import type { CartSnapshotLine } from "@/app/api/cart/snapshot/route";
-import { SHIPPING, type PaymentKey, type ShippingKey } from "@/lib/checkout/shipping";
+import {
+  SHIPPING,
+  feeForCity,
+  type PaymentKey,
+  type ShippingKey,
+} from "@/lib/checkout/shipping";
+import { findDeliveryCity, isDeliverableCity } from "@/lib/checkout/delivery-zones";
 import { StepIndicator } from "./shared";
 import { CheckoutForm } from "./checkout-form";
 import { CheckoutSummary, type AppliedPromo } from "./checkout-summary";
@@ -41,7 +47,10 @@ export function CheckoutClient({
     email: initial.email,
     phone: initial.phone,
     line1: initial.line1,
-    city: initial.city,
+    // A saved address holds free text. Snap it to the rate card's spelling so a
+    // known city preselects in the dropdown; anything we no longer deliver to
+    // starts blank and has to be chosen again.
+    city: findDeliveryCity(initial.city)?.name ?? "",
     landmark: "",
   });
   const [errors, setErrors] = useState<FormErrors>({});
@@ -145,10 +154,13 @@ export function CheckoutClient({
       if (promo.percentageOff != null) discount = (subtotal * promo.percentageOff) / 100;
       else if (promo.amountOff != null) discount = Math.min(subtotal, promo.amountOff);
     }
-    const shipFee = SHIPPING[shipping].fee;
+    // Courier is priced by city; before one is picked there is no rate yet, so
+    // the summary shows the cheapest until the customer chooses. The API
+    // recomputes this from the same rate card and is the authority.
+    const shipFee = feeForCity(shipping, form.city) ?? SHIPPING[shipping].fee;
     const total = Math.max(0, subtotal - discount + shipFee);
     return { subtotal, discount, shipFee, total };
-  }, [snapshot, promo, shipping]);
+  }, [snapshot, promo, shipping, form.city]);
 
   const setField = useCallback((key: keyof FormState, value: string) => {
     setForm((f) => ({ ...f, [key]: value }));
@@ -181,7 +193,10 @@ export function CheckoutClient({
     if (!EMAIL_RE.test(form.email.trim())) next.email = "Enter a valid email";
     if (form.phone.replace(/\D/g, "").length < 7) next.phone = "Enter a valid phone";
     if (!form.line1.trim()) next.line1 = "Required";
+    // A saved address predating the rate card can hold a city that is no longer
+    // selectable, so check membership rather than just non-emptiness.
     if (!form.city.trim()) next.city = "Required";
+    else if (!isDeliverableCity(form.city)) next.city = "Choose a city from the list";
     setErrors(next);
     const firstBad = Object.keys(next)[0];
     if (firstBad) {

@@ -10,6 +10,7 @@
 // updates this page automatically and the two can never disagree.
 
 import { SHIPPING, SHIPPING_ORDER } from "@/lib/checkout/shipping";
+import { MAX_DELIVERY_FEE, MIN_DELIVERY_FEE } from "@/lib/checkout/delivery-zones";
 import type { Block, LegalDocument, Section } from "@/lib/legal/types";
 
 export const LAST_UPDATED = "August 3, 2026";
@@ -38,10 +39,14 @@ const money = (n: number) => `$${n.toFixed(2)}`;
 // what a customer is actually charged.
 const RATE_ITEMS = SHIPPING_ORDER.map((key) => {
   const option = SHIPPING[key];
-  return [
-    { b: option.label },
-    ` — ${option.fee === 0 ? "Free" : money(option.fee)}. ${option.eta}.`,
-  ];
+  // Courier is priced per area, so publish the range rather than a single
+  // figure — quoting only the cheapest would understate most deliveries.
+  const price = option.variesByCity
+    ? `${money(MIN_DELIVERY_FEE)}–${money(MAX_DELIVERY_FEE)} depending on your area`
+    : option.fee === 0
+      ? "Free"
+      : money(option.fee);
+  return [{ b: option.label }, ` — ${price}. ${option.eta}.`];
 });
 
 const INTRO: Block[] = [

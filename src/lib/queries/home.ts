@@ -44,7 +44,7 @@ export const FEATURED_CATEGORY_SLUGS = [
   "elixirs",
   "merch",
   "nose-rings",
-  "tongue-ring",
+  "tongue-rings",
 ] as const;
 
 /** The homepage grid's categories, ordered by FEATURED_CATEGORY_SLUGS. */
