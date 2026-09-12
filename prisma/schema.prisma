@@ -148,6 +148,16 @@ model User {
   role          UserRole  @default(CUSTOMER)
   avatarUrl     String?
 
+  /// Set when the account holder deleted their own account.
+  ///
+  /// The row survives deletion on purpose: `Order.userId` is a required
+  /// relation with no `onDelete`, so Postgres RESTRICTs a real delete for any
+  /// customer who has ever ordered. Instead the row is stripped of everything
+  /// personal (see lib/account/delete-account.ts) and marked here, so an
+  /// anonymized row is a fact the system knows rather than something inferred
+  /// from a `@deleted.invalid` email.
+  deletedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

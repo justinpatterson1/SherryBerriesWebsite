@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { signIn } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 import {
   type FormEvent,
   type ReactNode,
@@ -9,6 +10,7 @@ import {
   useEffect,
   useRef,
   useState,
+  Suspense,
 } from "react";
 
 type Mode = "login" | "signup";
@@ -289,6 +291,13 @@ export default function LoginPage() {
             {COPY[mode].sub}
           </p>
 
+          {/* Confirmation after a self-service account deletion. Sign-in is
+              where the customer is sent afterwards, because the homepage has no
+              place to say this and landing there silently reads as a failure. */}
+          <Suspense fallback={null}>
+            <DeletedNotice />
+          </Suspense>
+
           {/* Login form */}
           <form
             onSubmit={(e) => handleSubmit(e, "login")}
@@ -540,3 +549,30 @@ function EyeOff() {
   );
 }
 
+
+/**
+ * "Your account has been deleted." — shown when /account sends the customer
+ * here after a self-service deletion.
+ *
+ * Isolated behind its own Suspense boundary because useSearchParams() opts its
+ * whole component into client-side rendering; keeping it to this one line means
+ * the rest of the sign-in page still prerenders.
+ */
+function DeletedNotice() {
+  const params = useSearchParams();
+  if (params.get("deleted") !== "1") return null;
+
+  return (
+    <div
+      role="status"
+      className="rounded-2xl border border-pink/[0.28] bg-pink/[0.06] py-3.5 px-4 -mt-1"
+    >
+      <p className="font-sans text-[14px] leading-[1.55] text-ink m-0">
+        Your account has been deleted.
+      </p>
+      <p className="font-sans text-[13px] leading-[1.55] text-ink-dim m-0 mt-1">
+        Thank you for shopping with us ♡ You can create a new account any time.
+      </p>
+    </div>
+  );
+}

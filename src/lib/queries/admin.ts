@@ -8,6 +8,7 @@ import type {
 } from "@/generated/prisma/client";
 import type { AdminOrderStatus } from "@/lib/admin/status";
 import { resolveShipTo, type OrderShipTo } from "@/lib/account/ship-to";
+import { customerName } from "@/lib/admin/customer-name";
 
 // -----------------------------------------------------------------------------
 // Public shapes (everything the admin client renders)
@@ -700,10 +701,7 @@ export async function getAdminData(
     const total = Number(o.total);
     const discount = Math.max(0, Number((subtotal + shippingFee - total).toFixed(2)));
     const status = deriveStatus(o.fulfillmentStatus, o.paymentStatus);
-    const name =
-      o.user.name ??
-      [o.user.firstName, o.user.lastName].filter(Boolean).join(" ") ??
-      o.user.email;
+    const name = customerName(o.user);
 
     return {
       id: o.id,
@@ -815,10 +813,7 @@ export async function getAdminData(
       reference: r.reference,
       status: r.status,
       orderNumber: r.order.orderNumber,
-      customerName:
-        r.user.name ??
-        [r.user.firstName, r.user.lastName].filter(Boolean).join(" ") ??
-        r.user.email,
+      customerName: customerName(r.user),
       customerEmail: r.user.email,
       itemName: r.orderItem.product.name,
       variant: r.orderItem.variant?.value ?? null,

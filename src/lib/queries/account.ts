@@ -20,6 +20,11 @@ export type AccountProfile = {
   phone: string;
   memberSince: string; // e.g. "March 2024"
   tier: string; // presentational — no backing field
+  /// Whether a password is set. Drives how account deletion re-authenticates:
+  /// a password account confirms with its password, an OAuth-only account has
+  /// none to check and confirms by typing its email instead. The hash itself
+  /// never leaves the server.
+  hasPassword: boolean;
 };
 
 export type AccountAddress = {
@@ -186,10 +191,16 @@ export async function getAccountData(userId: string): Promise<AccountData | null
       name: true,
       email: true,
       phoneNumber: true,
+      password: true,
+      deletedAt: true,
       createdAt: true,
     },
   });
-  if (!user) return null;
+  // A deleted account is anonymized in place rather than row-deleted, so the
+  // row still resolves. Sessions are JWTs with a 20-minute life (auth.ts), so a
+  // token minted before the deletion stays technically valid for a few more
+  // minutes — treat it as gone here, or /account renders an empty shell.
+  if (!user || user.deletedAt) return null;
 
   const [addressRows, orderRows, returnRows] = await Promise.all([
     prisma.address.findMany({
@@ -246,6 +257,8 @@ export async function getAccountData(userId: string): Promise<AccountData | null
     phone: user.phoneNumber ?? "",
     memberSince: monthYear.format(user.createdAt),
     tier: "Sweet Berry",
+    // Only the boolean crosses to the client — never the hash.
+    hasPassword: user.password !== null,
   };
 
   const orders: AccountOrder[] = orderRows.map((o) => {

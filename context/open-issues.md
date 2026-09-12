@@ -134,11 +134,7 @@ The owner confirmed the sending domain is verified in Resend and mail is being d
 
 ### 17. ~~Orders carry no address snapshot~~ — **RESOLVED 2026-08-19**, see Resolved section
 
-### 18. Delete-account is a mock
-
-`/account` → Security shows a danger-zone confirm modal that fires a toast and redirects home. **No deletion happens.** The Privacy Policy tells customers they may request deletion.
-
-**Fix:** implement the endpoint or replace the button with a contact route.
+### 18. ~~Delete-account is a mock~~ — **RESOLVED 2026-09-12**, see Resolved section
 
 ### 19. Changing email doesn't refresh the session
 
@@ -175,6 +171,15 @@ Found while verifying issue 23: `localStorage` held `light` while the page rende
 ---
 
 ## Resolved
+
+- **2026-09-12** — *(was issue 18)* **Account holders can delete their own account, and it actually happens.** `DELETE /api/account/delete` behind `auth()`, re-authentication, rate limiting and a typed confirmation.
+  - **Anonymized, not row-deleted, and not by choice.** `Order.userId` is a required relation declared with no `onDelete`, which Postgres treats as RESTRICT — `prisma.user.delete()` throws for any customer who has ever ordered. The row is kept and stripped instead: email replaced with `deleted-<id>@deleted.invalid` (RFC 2606, can never resolve), every personal column nulled, `password` and `emailVerified` cleared so the row cannot authenticate by any route, and `deletedAt` set. Sessions, OAuth links, addresses, wishlist, reviews and cart are deleted; orders, returns and receipts are retained as financial records.
+  - **⚠ The order PII was in two places.** `api/checkout/route.ts` writes the `ship*` columns *and* a full JSON copy of the customer into `Order.notes` — its "Order has no address columns" comment predates issue 17 adding them. Scrubbing only the columns would have left an intact second copy. `scrubOrderNotes()` empties the personal keys in place and leaves `shipping`/`payment`/`promo` alone, because the account view parses that JSON as its fallback for pre-snapshot orders. A free-text admin note is returned untouched.
+  - **`shipCity` is kept deliberately.** Clearing the whole snapshot would destroy the record of where the goods went, which is the evidence in a delivery dispute; a city alone does not identify a person once name, phone, email and street are gone.
+  - **A latent admin bug surfaced with it.** `queries/admin.ts` built its customer label as `name ?? [first, last].filter(Boolean).join(" ") ?? email` — but `[].join(" ")` returns `""`, which is not nullish, so the email fallback was unreachable and an anonymized user rendered as a blank row. Every prior user had a name, so nothing had ever exposed it. Now [lib/admin/customer-name.ts](../src/lib/admin/customer-name.ts), shared by the orders and returns screens, labelling these "Deleted account". Verified against the 6 real orders: all six went from `""` to `Deleted account`.
+  - **No audit-log row, on purpose.** `AdminAuditLog` requires `actorEmail`; writing one would permanently store the email the deletion just erased. `User.deletedAt` is the record.
+  - **Last-superadmin guard:** blocked at the route, because there is no supported way back into the admin panel afterwards.
+  - **Verified end-to-end** on two disposable accounts carrying real checkout shapes, both removed afterwards: wrong password rejected, orders scrubbed in both places, re-sign-in refused, `/account` redirects to login, and the sign-in page confirms the deletion.
 
 - **2026-09-12** — *(was issue 25)* **The 199 fake seeded addresses are out of the production newsletter table.** Purged with [scripts/newsletter-purge-seed.ts](../scripts/newsletter-purge-seed.ts), which writes every matched row to a dated JSON backup before deleting (gitignored). Verified after: **1 row remains**, the single genuine `source = 'homepage'` signup from 2026-08-20.
   - **⚠ The DELETE this entry used to recommend would have matched on the wrong column.** It was `source = 'seed' OR email LIKE '%@berrymail.test'`, but the production rows carry **`source = null`**, not `'seed'` — they predate the column's backfill. Only the email-domain half of that condition ever matched. Anyone auditing by `source` would have concluded the table was clean.
