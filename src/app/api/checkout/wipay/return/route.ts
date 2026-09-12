@@ -18,7 +18,15 @@ import { releaseOrderStock } from "@/lib/checkout/release-stock";
 const ORDER_INCLUDE = {
   orderItems: {
     include: {
-      product: { select: { id: true, name: true, material: true } },
+      product: {
+        select: {
+          id: true,
+          name: true,
+          material: true,
+          // First photo only — it becomes the thumbnail in the confirmation email.
+          images: { select: { imageUrl: true }, orderBy: { position: "asc" }, take: 1 },
+        },
+      },
       variant: { select: { id: true, value: true } },
     },
   },
@@ -84,6 +92,7 @@ export async function GET(request: Request) {
             variant: i.variant,
             qty: i.qty,
             price: i.price,
+            imageUrl: i.imageUrl,
           })),
           subtotal: placed.subtotal,
           discount: placed.discount,

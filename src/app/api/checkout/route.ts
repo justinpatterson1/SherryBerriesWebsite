@@ -102,7 +102,17 @@ export async function POST(request: Request) {
     include: {
       cartItems: {
         include: {
-          product: { select: { id: true, name: true, price: true, inventory: true, material: true } },
+          product: {
+            select: {
+              id: true,
+              name: true,
+              price: true,
+              inventory: true,
+              material: true,
+              // First photo only — it becomes the thumbnail in the confirmation email.
+              images: { select: { imageUrl: true }, orderBy: { position: "asc" }, take: 1 },
+            },
+          },
           variant: {
             select: { id: true, value: true, additionalPrice: true, inventory: true },
           },
@@ -131,6 +141,7 @@ export async function POST(request: Request) {
       quantity: it.quantity,
       unitPrice,
       available,
+      imageUrl: it.product.images[0]?.imageUrl ?? null,
     };
   });
 
@@ -341,6 +352,7 @@ export async function POST(request: Request) {
       qty: l.quantity,
       price: round2(l.unitPrice),
       lineTotal: round2(l.unitPrice * l.quantity),
+      imageUrl: l.imageUrl,
     })),
     subtotal,
     discount,
@@ -364,6 +376,7 @@ export async function POST(request: Request) {
         variant: i.variant,
         qty: i.qty,
         price: i.price,
+        imageUrl: i.imageUrl,
       })),
       subtotal,
       discount,

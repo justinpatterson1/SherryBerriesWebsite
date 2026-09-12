@@ -7,7 +7,15 @@ import { money } from "./shared";
 export type PlacedOrder = {
   orderNumber: string;
   dateLabel: string;
-  items: { name: string; variant: string | null; qty: number; price: number; lineTotal: number }[];
+  items: {
+    name: string;
+    variant: string | null;
+    qty: number;
+    price: number;
+    lineTotal: number;
+    /** Carried for the confirmation email's thumbnails; this page is text-only. */
+    imageUrl?: string | null;
+  }[];
   subtotal: number;
   discount: number;
   shipFee: number;

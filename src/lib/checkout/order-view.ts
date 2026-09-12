@@ -26,7 +26,12 @@ export type OrderForView = {
   orderItems: {
     quantity: number;
     price: DecimalLike;
-    product: { name: string; material: string | null };
+    /**
+     * `images` is the product's photos ordered by position; only the first is
+     * used. Optional so a caller that does not need the thumbnail (and so does
+     * not pay for the join) still satisfies this shape.
+     */
+    product: { name: string; material: string | null; images?: { imageUrl: string }[] };
     variant: { value: string | null } | null;
   }[];
 };
@@ -72,6 +77,7 @@ export function buildPlacedOrder(order: OrderForView): PlacedOrder {
       qty: it.quantity,
       price,
       lineTotal: round2(price * it.quantity),
+      imageUrl: it.product.images?.[0]?.imageUrl ?? null,
     };
   });
 

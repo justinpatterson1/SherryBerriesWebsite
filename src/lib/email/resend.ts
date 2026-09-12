@@ -125,6 +125,12 @@ export type OrderEmailItem = {
   variant: string | null;
   qty: number;
   price: number;
+  /**
+   * Absolute URL of the product's first photo. Optional: a product with no
+   * image, or an older code path that does not supply one, falls back to a
+   * plain initial tile rather than a broken image.
+   */
+  imageUrl?: string | null;
 };
 
 export type OrderEmailData = {
@@ -180,7 +186,8 @@ export async function sendOrderConfirmationEmail({
   }
 }
 
-function orderConfirmationHtml({
+/** Exported for tests — the receipt customers keep is worth pinning down. */
+export function orderConfirmationHtml({
   greeting,
   order,
 }: {
@@ -188,12 +195,40 @@ function orderConfirmationHtml({
   order: OrderEmailData;
 }): string {
   const money = (n: number) => `$${n.toFixed(2)}`;
+
+  // This template builds HTML by string concatenation, and some of what it
+  // interpolates is user-supplied — the shipping address and landmark come
+  // straight from the checkout form, product names from the admin. An
+  // apostrophe in "St Ann's" would already break an attribute; a tag would be
+  // worse. Escape at every interpolation of free text.
+  const escapeHtml = (v: string) =>
+    v
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  const escapeAttr = (v: string) => escapeHtml(v).replace(/"/g, "&quot;");
+  // Product thumbnail for one row. Email clients are far stricter than a
+  // browser: no flexbox, no background-image, and Outlook ignores CSS width on
+  // <img>, so the size is set with width/height ATTRIBUTES and the cell is a
+  // fixed-width <td>. Images are also blocked by default in many clients, hence
+  // the alt text and the fixed cell size that keeps the layout from collapsing.
+  //
+  // When a product has no photo, a tile with its initial stands in so the rows
+  // stay aligned instead of jumping by 56px.
+  const thumbCell = (it: OrderEmailItem) => {
+    const inner = it.imageUrl
+      ? `<img src="${escapeAttr(it.imageUrl)}" alt="${escapeAttr(it.name)}" width="56" height="56" style="display:block;width:56px;height:56px;border-radius:10px;object-fit:cover;border:1px solid rgba(255,79,163,0.18);" />`
+      : `<div style="width:56px;height:56px;border-radius:10px;border:1px solid rgba(255,79,163,0.18);background:#22121b;color:#ff4fa3;font-size:20px;line-height:56px;text-align:center;">${escapeHtml(it.name.trim().charAt(0).toUpperCase() || "✦")}</div>`;
+    return `<td width="56" style="padding:10px 12px 10px 0;border-bottom:1px solid rgba(255,79,163,0.12);width:56px;">${inner}</td>`;
+  };
+
   const itemRows = order.items
     .map(
       (it) => `
             <tr>
+              ${thumbCell(it)}
               <td style="padding:10px 0;border-bottom:1px solid rgba(255,79,163,0.12);font-size:14px;color:#f5e9ee;">
-                ${it.qty}× ${it.name}${it.variant ? `<span style="color:#8a7780;"> · ${it.variant}</span>` : ""}
+                ${it.qty}× ${escapeHtml(it.name)}${it.variant ? `<span style="color:#8a7780;"> · ${escapeHtml(it.variant)}</span>` : ""}
               </td>
               <td align="right" style="padding:10px 0;border-bottom:1px solid rgba(255,79,163,0.12);font-size:14px;color:#f5e9ee;white-space:nowrap;">${money(it.price * it.qty)}</td>
             </tr>`,
@@ -217,7 +252,7 @@ function orderConfirmationHtml({
           </td></tr>
           <tr><td style="padding:8px 36px 0;">
             <h1 style="font-size:24px;line-height:1.25;color:#ffffff;margin:16px 0 12px;">Order confirmed ✦</h1>
-            <p style="font-size:15px;line-height:1.6;color:#cbb8c0;margin:0 0 8px;">${greeting}</p>
+            <p style="font-size:15px;line-height:1.6;color:#cbb8c0;margin:0 0 8px;">${escapeHtml(greeting)}</p>
             <p style="font-size:15px;line-height:1.6;color:#cbb8c0;margin:0 0 20px;">Your order is in — we're already wrapping it in pink and gold. Here's a copy for your records.</p>
           </td></tr>
           <tr><td style="padding:0 36px 8px;">
@@ -238,7 +273,7 @@ function orderConfirmationHtml({
           <tr><td style="padding:20px 36px 0;">
             <div style="background:rgba(255,79,163,0.08);border:1px solid rgba(255,79,163,0.2);border-radius:12px;padding:16px;">
               <p style="font-size:13px;line-height:1.6;color:#f5e9ee;margin:0 0 4px;"><strong>${order.eta}.</strong></p>
-              <p style="font-size:13px;line-height:1.6;color:#cbb8c0;margin:0;">Ship to: ${order.shipTo}</p>
+              <p style="font-size:13px;line-height:1.6;color:#cbb8c0;margin:0;">Ship to: ${escapeHtml(order.shipTo)}</p>
               <p style="font-size:13px;line-height:1.6;color:#cbb8c0;margin:6px 0 0;">Payment: ${order.paymentLabel}</p>
             </div>
           </td></tr>
