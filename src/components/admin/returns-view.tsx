@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { AdminReturn } from "@/lib/queries/admin";
-import { btnOutline, btnSolid, cardClass } from "@/components/admin/shared";
+import { btnOutline, btnSolid, cardPadded } from "@/components/admin/shared";
 
 // The queue for actioning customer return requests. Without this the requests
 // would sit in a table nobody opens — the mistake the reviews feature made.
@@ -69,7 +69,7 @@ export function AdminReturnsView({
 
   return (
     <div className="flex flex-col gap-5">
-      <div className={cardClass}>
+      <div className={cardPadded}>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 className="font-display text-[26px] text-ink m-0">Returns</h2>
@@ -96,7 +96,7 @@ export function AdminReturnsView({
         </div>
       </div>
 
-      <div className={cardClass}>
+      <div className={cardPadded}>
         {shown.length === 0 ? (
           <p className="font-sans text-[14px] text-ink-dim m-0">
             {filter === "open" ? "No open requests." : "No return requests yet."}

@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import type { AdminPayment } from "@/lib/queries/admin";
 import { REJECTION_REASONS, timeRemaining } from "@/lib/checkout/bank-transfer";
-import { btnOutline, btnSolid, cardClass, ICONS } from "@/components/admin/shared";
+import { btnOutline, btnSolid, cardPadded, ICONS } from "@/components/admin/shared";
 
 // The bank transfer review queue.
 //
@@ -84,7 +84,7 @@ export function PaymentsView({
 
   return (
     <div className="flex flex-col gap-5">
-      <div className={cardClass}>
+      <div className={cardPadded}>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 className="font-display text-[26px] text-ink m-0">Bank transfers</h2>
@@ -103,7 +103,7 @@ export function PaymentsView({
         </div>
       </div>
 
-      <div className={cardClass}>
+      <div className={cardPadded}>
         <div className="flex flex-wrap gap-2">
           {FILTERS.map((f) => (
             <button
@@ -125,7 +125,7 @@ export function PaymentsView({
         </div>
       </div>
 
-      <div className={cardClass}>
+      <div className={cardPadded}>
         {shown.length === 0 ? (
           <p className="font-sans text-[14px] text-ink-dim m-0">
             {payments.length === 0

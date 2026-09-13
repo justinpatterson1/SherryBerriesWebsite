@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { AdminCategory } from "@/lib/queries/admin";
 import { slugifyCategory, type CategoryFormData } from "@/lib/admin/options";
 import { isFinalSale } from "@/lib/account/returns";
-import { ProductThumb, btnSolid, btnOutline, cardClass, ICONS } from "@/components/admin/shared";
+import { ProductThumb, btnSolid, btnOutline, cardPadded, ICONS } from "@/components/admin/shared";
 
 const fieldClass =
   "w-full h-11 px-3.5 rounded-xl border border-white/12 bg-white/[0.03] font-sans text-[14px] text-ink " +
@@ -44,7 +44,7 @@ export function CategoriesView({
 
   return (
     <div className="flex flex-col gap-5">
-      <div className={cardClass}>
+      <div className={cardPadded}>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 className="font-display text-[26px] text-ink m-0">Categories</h2>
@@ -63,7 +63,7 @@ export function CategoriesView({
         </div>
       </div>
 
-      <div className={cardClass}>
+      <div className={cardPadded}>
         {categories.length === 0 ? (
           <p className="font-sans text-[14px] text-ink-dim m-0">
             No categories yet. Add one to start filing products.

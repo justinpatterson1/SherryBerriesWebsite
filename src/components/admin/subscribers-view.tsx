@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { AdminSubscriber } from "@/lib/queries/admin";
-import { btnOutline, btnSolid, cardClass, ICONS } from "@/components/admin/shared";
+import { btnOutline, btnSolid, cardPadded, ICONS } from "@/components/admin/shared";
 
 // The newsletter list. Unsubscribing and deleting are deliberately separate:
 // unsubscribing stops the mail but keeps the record that the address opted in
@@ -89,7 +89,7 @@ export function SubscribersView({
 
   return (
     <div className="flex flex-col gap-5">
-      <div className={cardClass}>
+      <div className={cardPadded}>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 className="font-display text-[26px] text-ink m-0">Newsletter</h2>
@@ -104,7 +104,7 @@ export function SubscribersView({
       </div>
 
       {/* Add */}
-      <div className={cardClass}>
+      <div className={cardPadded}>
         <label
           htmlFor="sub-add"
           className="block font-sans text-[11px] font-bold tracking-[0.12em] uppercase text-ink-faint mb-1.5"
@@ -139,7 +139,7 @@ export function SubscribersView({
       </div>
 
       {/* Filters + search */}
-      <div className={cardClass}>
+      <div className={cardPadded}>
         <div className="flex flex-wrap items-center gap-2.5">
           <input
             type="search"
@@ -171,7 +171,7 @@ export function SubscribersView({
       </div>
 
       {/* List */}
-      <div className={cardClass}>
+      <div className={cardPadded}>
         {shown.length === 0 ? (
           <p className="font-sans text-[14px] text-ink-dim m-0">
             {subscribers.length === 0

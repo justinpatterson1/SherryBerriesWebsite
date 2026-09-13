@@ -30,6 +30,20 @@ export function ProductThumb({ src, alt = "" }: { src: string | null; alt?: stri
 export const cardClass =
   "rounded-[18px] border border-white/[0.06] bg-card light:border-[rgba(26,13,18,0.08)]";
 
+/**
+ * A card that pads its own content.
+ *
+ * `cardClass` is the bare surface — border, radius, background — and it is the
+ * right thing for `AdminCard` (which pads its header and body itself) and for
+ * the full-bleed tables in Orders and Inventory, whose rows carry their own
+ * `px-5` so hover states can reach the card edge.
+ *
+ * Everywhere else it was being used directly with nothing inside it padded, so
+ * headings, buttons, thumbnails and table rows sat flush against the border.
+ * Reach for this instead unless the content genuinely needs to touch the edge.
+ */
+export const cardPadded = `${cardClass} p-6`;
+
 export function AdminCard({
   title,
   hint,

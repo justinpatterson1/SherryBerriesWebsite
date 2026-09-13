@@ -8,7 +8,7 @@ import {
   type PromoFormData,
   type PromoState,
 } from "@/lib/admin/promo-validate";
-import { btnOutline, btnSolid, cardClass, ICONS } from "@/components/admin/shared";
+import { btnOutline, btnSolid, cardPadded, ICONS } from "@/components/admin/shared";
 
 // Promo codes a customer types into the box on the cart or checkout page. The
 // state pill is computed by promoState(), which mirrors the usability test in
@@ -74,7 +74,7 @@ export function PromosView({
 
   return (
     <div className="flex flex-col gap-5">
-      <div className={cardClass}>
+      <div className={cardPadded}>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 className="font-display text-[26px] text-ink m-0">Promo codes</h2>
@@ -92,7 +92,7 @@ export function PromosView({
         </div>
       </div>
 
-      <div className={cardClass}>
+      <div className={cardPadded}>
         {promos.length === 0 ? (
           <p className="font-sans text-[14px] text-ink-dim m-0">
             No codes yet. Create one and it can be used straight away.

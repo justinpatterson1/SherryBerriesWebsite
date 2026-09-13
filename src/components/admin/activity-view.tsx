@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { AdminAuditEntry } from "@/lib/queries/admin";
-import { btnOutline, btnSolid, cardClass } from "@/components/admin/shared";
+import { btnOutline, btnSolid, cardPadded } from "@/components/admin/shared";
 
 // SUPERADMIN-only record of every change made through the admin panel. Rows are
 // written in the same transaction as the change they describe, so this is a
@@ -64,7 +64,7 @@ export function ActivityView({ entries }: { entries: AdminAuditEntry[] }) {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className={cardClass}>
+      <div className={cardPadded}>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 className="font-display text-[26px] text-ink m-0">Activity</h2>
@@ -113,7 +113,7 @@ export function ActivityView({ entries }: { entries: AdminAuditEntry[] }) {
         )}
       </div>
 
-      <div className={cardClass}>
+      <div className={cardPadded}>
         {shown.length === 0 ? (
           <p className="font-sans text-[14px] text-ink-dim m-0">
             {entries.length === 0
