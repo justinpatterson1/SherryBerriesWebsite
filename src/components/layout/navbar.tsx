@@ -7,6 +7,7 @@ import { useCart } from "@/components/providers/cart-provider";
 import { useWishlist } from "@/components/providers/wishlist-provider";
 import { useSearch } from "@/components/search/search-provider";
 import { AuthButton } from "@/components/auth/auth-button";
+import { useTheme } from "@/components/providers/use-theme";
 
 type NavChild = { label: string; href: string };
 type NavItem = { label: string; href: string; children?: NavChild[] };
@@ -43,8 +44,6 @@ const mobileLinkClass =
   "transition-colors duration-200 hover:text-ink hover:bg-white/5 focus-visible:text-ink focus-visible:bg-white/5 " +
   "light:hover:bg-[rgba(26,13,18,0.05)] light:focus-visible:bg-[rgba(26,13,18,0.05)]";
 
-type Theme = "dark" | "light";
-
 const navRowBase =
   "pointer-events-auto w-fit max-w-[calc(100vw-2rem)] flex items-center gap-7 " +
   "max-[1400px]:gap-5 max-[1280px]:w-full max-[1280px]:justify-between max-[1280px]:gap-3 " +
@@ -68,7 +67,8 @@ export function Navbar() {
   const { count: wishlistCount } = useWishlist();
   const { open: openSearch } = useSearch();
   const [scrolled, setScrolled] = useState(false);
-  const [theme, setTheme] = useState<Theme>("dark");
+  // Persisted and shared with the /admin toggle — see providers/use-theme.
+  const { theme, toggleTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -77,10 +77,6 @@ export function Navbar() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-  }, [theme]);
 
   // While the mobile menu is open: lock body scroll and close on Escape.
   useEffect(() => {
@@ -95,8 +91,6 @@ export function Navbar() {
       document.body.style.overflow = "";
     };
   }, [menuOpen]);
-
-  const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
 
   const rowBgClass = scrolled
     ? "bg-[rgba(11,9,10,0.9)] light:bg-[rgba(253,247,244,0.94)]"

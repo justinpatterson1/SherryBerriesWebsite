@@ -56,7 +56,7 @@ This survived the 2026-08-16 review removal by the owner's explicit decision —
 
 ## P1s — Security gaps found in the 2026-09-04 pre-launch audit
 
-Audited against the owner's 28-point checklist. **Already solid, not repeated below:** SQL injection (Prisma only, zero raw queries), XSS (zero `dangerouslySetInnerHTML`), bcrypt hashing, authorization (every `/api/admin/*` route calls `requireAdmin()`, role read fresh from the DB), server-side validation, error handling that leaks nothing, secret management, and WiPay hash verification (a `success` with a bad hash leaves the order **PENDING**).
+Audited against the owner's 28-point checklist. **Already solid, not repeated below:** SQL injection (Prisma only, zero raw queries), XSS (**one** `dangerouslySetInnerHTML` as of 2026-09-12 — the pre-paint theme script in [theme-script.tsx](../src/components/providers/theme-script.tsx), whose content is built from two of our own constants and contains no user input; it was zero before that, and should stay at one), bcrypt hashing, authorization (every `/api/admin/*` route calls `requireAdmin()`, role read fresh from the DB), server-side validation, error handling that leaks nothing, secret management, and WiPay hash verification (a `success` with a bad hash leaves the order **PENDING**).
 
 ### S1. No security headers, and no Content Security Policy
 
@@ -162,19 +162,19 @@ Produces a build warning on every page that inherits it (`/privacy`, `/terms`, `
 
 ### 23. ~~No legal or policy page has been verified in a browser~~ — **RESOLVED 2026-08-19**, see Resolved section
 
-### 26. The public site's light theme resets on every navigation
-
-[navbar.tsx:66](../src/components/layout/navbar.tsx#L66) holds the theme in `useState<Theme>("dark")` and writes it to `<html data-theme>` — but it **never reads or writes `localStorage`**. So the navbar's toggle works on the page you are looking at and is forgotten the moment you navigate or reload.
-
-The admin area, by contrast, *does* persist to `localStorage["sb-theme"]` ([admin-client.tsx:32](../src/components/admin/admin-client.tsx#L32)). **Both use the same key**, so an admin who picks light in `/admin` still gets dark everywhere else — the public site ignores the stored value entirely.
-
-Found while verifying issue 23: `localStorage` held `light` while the page rendered `dark`. The `light:` Tailwind variants throughout the codebase are therefore near-unreachable in normal use, despite being carefully maintained (they render correctly when forced — see the Resolved entry).
-
-**Fix:** read `sb-theme` on mount in the navbar and write on toggle, matching the admin. Note the naive version causes a hydration mismatch — the server cannot know the stored value, so it needs the usual inline-script-before-paint or a `suppressHydrationWarning` pass.
+### 26. ~~The public site's light theme resets on every navigation~~ — **RESOLVED 2026-09-12**, see Resolved section
 
 ---
 
 ## Resolved
+
+- **2026-09-12** — *(was issue 26)* **The theme is persisted, and the storefront and admin toggles finally agree.** One implementation now: [lib/theme.ts](../src/lib/theme.ts) (storage + the `<html data-theme>` write), [theme-script.tsx](../src/components/providers/theme-script.tsx) (pre-paint restore) and [use-theme.ts](../src/components/providers/use-theme.ts) (the hook both toggles call). The navbar's `useState("dark")` and admin's private `THEME_KEY` copy are both gone.
+  - **The restore has to be a blocking inline script, not an effect.** The server cannot know a per-browser preference, so the HTML always ships `dark`; restoring it in React's first effect means the page has *already painted* dark, giving a light-mode visitor a flash on every navigation. Running it in `<head>` makes the attribute correct before anything is drawn. `<html>` carries `suppressHydrationWarning` because the script deliberately changes an attribute React rendered.
+  - **`useSyncExternalStore`, not `useState` + effect.** The theme genuinely lives outside React — in `<html>` and `localStorage`, both written before React starts — so reading it as external state avoids the hydration mismatch *and* the "setState synchronously within an effect" lint error that had forced the old admin code into a `queueMicrotask` workaround.
+  - **⚠ Discovered while fixing it: `/admin` has no layout of its own**, so the root layout's navbar renders there too and **both toggles are on screen at once**. They were independent — the navbar never read storage, admin did, both wrote `data-theme`, last effect won — so clicking one left the other showing the wrong icon. They now read the same store and cannot disagree; a custom window event syncs them, because `storage` events fire only in *other* tabs, never the one that wrote the value.
+  - **Every storage access is wrapped in try/catch:** `localStorage` *throws* in a browser set to block site data rather than returning null. A theme preference must never take the page down.
+  - **Verified in a browser:** toggle → navigate → reload all keep `light`, `data-theme` is already `light` at `DOMContentLoaded` (so no flash), body background is the light token, zero console errors. The carefully-maintained `light:` Tailwind variants are reachable in normal use for the first time.
+  - **Note:** this introduced the codebase's **first `dangerouslySetInnerHTML`** — see the amended note at the top of the security section.
 
 - **2026-09-12** — *(was issue 18)* **Account holders can delete their own account, and it actually happens.** `DELETE /api/account/delete` behind `auth()`, re-authentication, rate limiting and a typed confirmation.
   - **Anonymized, not row-deleted, and not by choice.** `Order.userId` is a required relation declared with no `onDelete`, which Postgres treats as RESTRICT — `prisma.user.delete()` throws for any customer who has ever ordered. The row is kept and stripped instead: email replaced with `deleted-<id>@deleted.invalid` (RFC 2606, can never resolve), every personal column nulled, `password` and `emailVerified` cleared so the row cannot authenticate by any route, and `deletedAt` set. Sessions, OAuth links, addresses, wishlist, reviews and cart are deleted; orders, returns and receipts are retained as financial records.

@@ -8,6 +8,7 @@ import { WishlistProvider } from "@/components/providers/wishlist-provider";
 import { SearchProvider } from "@/components/search/search-provider";
 import { IdleSignOut } from "@/components/auth/idle-sign-out";
 import { siteUrl } from "@/lib/seo/site-url";
+import { ThemeScript } from "@/components/providers/theme-script";
 
 const italiana = Italiana({
   variable: "--font-italiana",
@@ -68,8 +69,15 @@ export default function RootLayout({
     <html
       lang="en"
       data-theme="dark"
+      // ThemeScript rewrites data-theme before React hydrates, which React
+      // would otherwise report as a server/client mismatch. It is the one
+      // attribute we intend to differ.
+      suppressHydrationWarning
       className={`${italiana.variable} ${playfair.variable} ${inter.variable} ${caveat.variable} h-full antialiased`}
     >
+      <head>
+        <ThemeScript />
+      </head>
       <body className="min-h-full flex flex-col">
         <AuthSessionProvider>
           <CartProvider>

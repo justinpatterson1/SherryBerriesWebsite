@@ -28,6 +28,7 @@ import { SubscribersView } from "@/components/admin/subscribers-view";
 import { PaymentsView } from "@/components/admin/payments-view";
 import { AnalyticsView } from "@/components/admin/analytics-view";
 import { ActivityView } from "@/components/admin/activity-view";
+import { useTheme } from "@/components/providers/use-theme";
 
 type View =
   | "overview"
@@ -42,7 +43,6 @@ type View =
   | "analytics"
   | "activity";
 
-const THEME_KEY = "sb-theme";
 
 const SIDEBAR: { view: View; label: string; icon: keyof typeof ICONS }[] = [
   { view: "overview", label: "Overview", icon: "overview" },
@@ -73,7 +73,7 @@ export function AdminClient({
     : SIDEBAR.filter((i) => i.view !== "activity");
   const [view, setView] = useState<View>("overview");
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const { theme, toggleTheme } = useTheme();
   const [confirmDiscard, setConfirmDiscard] = useState<null | (() => void)>(null);
 
   // Live, editable copies so status updates + inventory edits re-render in place.
@@ -96,22 +96,9 @@ export function AdminClient({
     toastTimer.current = setTimeout(() => setToast(null), 2600);
   }, []);
 
-  // Theme: persisted to localStorage["sb-theme"], applied to <html data-theme>.
-  useEffect(() => {
-    const stored = window.localStorage.getItem(THEME_KEY);
-    if (stored === "light" || stored === "dark") {
-      queueMicrotask(() => setTheme(stored));
-    }
-  }, []);
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-  }, [theme]);
-  const toggleTheme = () =>
-    setTheme((t) => {
-      const next = t === "dark" ? "light" : "dark";
-      window.localStorage.setItem(THEME_KEY, next);
-      return next;
-    });
+  // Theme now lives in one place. The navbar renders on /admin too (there is no
+  // admin layout), so both toggles are on screen at once and have to agree —
+  // the shared hook keeps them in step and does the persisting.
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
