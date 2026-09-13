@@ -1,0 +1,46 @@
+name: Dependency audit
+
+# The first CI this repo has had (security issue S4). Deliberately narrow: it
+# scans dependencies and nothing else, so it stays fast and its failures always
+# mean the same thing.
+#
+# The weekly run is the point. A vulnerability disclosed today affects a
+# lockfile nobody is touching, so a push-only check would never see it.
+
+on:
+  push:
+    branches: [master]
+    paths: ["package.json", "package-lock.json", ".github/workflows/dependency-audit.yml", "scripts/audit-*"]
+  pull_request:
+    paths: ["package.json", "package-lock.json", ".github/workflows/dependency-audit.yml", "scripts/audit-*"]
+  schedule:
+    # Mondays, 08:00 UTC (04:00 in Trinidad) — findings are waiting at the
+    # start of the week rather than arriving mid-Friday.
+    - cron: "0 8 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # `npm ci` is skipped on purpose: `npm audit` reads package-lock.json, so
+      # a full install (native builds for bcrypt, Prisma engines) would add
+      # minutes to answer a question the lockfile already answers.
+      - name: Scan dependencies
+        run: node scripts/audit-check.mjs --level=high
+
+      # Runs even when the gate fails, so the log always carries the full
+      # picture rather than only the part that broke the build.
+      - name: Full report
+        if: always()
+        run: npm audit || true

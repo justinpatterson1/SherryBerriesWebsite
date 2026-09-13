@@ -1,0 +1,35 @@
+{
+  "$comment": [
+    "Vulnerabilities we have reviewed and accepted, so CI fails only on NEW ones.",
+    "A scanner that is permanently red is a scanner everyone learns to ignore.",
+    "",
+    "Each entry needs a real reason and an expiry date. On expiry the build fails",
+    "until someone re-reviews it — that is the point: an accepted risk should be",
+    "revisited, not buried. Delete an entry the moment the fix lands upstream.",
+    "",
+    "`id` is the npm advisory id shown by `npm audit --json` (via[].source)."
+  ],
+  "allow": [
+    {
+      "id": 1145093,
+      "package": "deepmerge-ts",
+      "title": "Stack exhaustion when merging recursive object graphs",
+      "reason": "Reached only through prisma -> @prisma/config, the CLI's config loader. It parses our own prisma.config.ts at build/CLI time and never runs in a request. npm's only fix is prisma@6.19.3 — a DOWNGRADE from 7.x that would break schema.prisma, which uses the v7-only `prisma-client` generator with a required `output` path.",
+      "expires": "2026-12-12"
+    },
+    {
+      "id": 1153173,
+      "package": "mysql2",
+      "title": "Auth plugin downgrade to mysql_clear_password leaks plaintext credentials",
+      "reason": "This project talks to Postgres through @prisma/adapter-pg. mysql2 arrives as an unused driver inside prisma's dependency tree and is never loaded, so there is no MySQL connection to downgrade. Same prisma@6 downgrade problem as above.",
+      "expires": "2026-12-12"
+    },
+    {
+      "id": 1158532,
+      "package": "mysql2",
+      "title": "Unbounded zlib inflate in compressed MySQL protocol handler (decompression bomb)",
+      "reason": "Same as 1153173 — no MySQL connection exists, so the protocol handler never runs.",
+      "expires": "2026-12-12"
+    }
+  ]
+}

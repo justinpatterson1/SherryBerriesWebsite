@@ -1,0 +1,41 @@
+version: 2
+
+# Scanning tells you a dependency is vulnerable; this is what actually moves it.
+# Security updates are raised by Dependabot regardless of the schedule below —
+# the weekly run is for ordinary drift, so the lockfile does not rot between
+# security events.
+
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: America/Port_of_Spain
+    # Low enough to stay reviewable for a solo maintainer; security updates are
+    # not counted against this limit.
+    open-pull-requests-limit: 5
+    groups:
+      # One PR for the routine patch noise instead of a dozen.
+      patch-updates:
+        patterns: ["*"]
+        update-types: ["patch"]
+      # These move together and break together; reviewing them apart wastes time.
+      prisma:
+        patterns: ["prisma", "@prisma/*"]
+      sentry:
+        patterns: ["@sentry/*"]
+    ignore:
+      # Framework majors are a deliberate migration, not a dependency bump —
+      # AGENTS.md exists precisely because this Next version differs from
+      # what's in training data. Minor and patch updates still come through.
+      - dependency-name: "next"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+    commit-message:
+      prefix: "chore(deps)"
+      prefix-development: "chore(deps-dev)"
