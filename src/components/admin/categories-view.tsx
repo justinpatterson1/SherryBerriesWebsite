@@ -260,6 +260,9 @@ function CategoryForm({
   const [imageUrl, setImageUrl] = useState(category?.imageUrl ?? "");
   const [seoTitle, setSeoTitle] = useState(category?.seoTitle ?? "");
   const [seoDescription, setSeoDescription] = useState(category?.seoDescription ?? "");
+  // New categories are jewelry by default — the common case, and it fails
+  // visible rather than hiding the products from the Jewelry page silently.
+  const [isJewelry, setIsJewelry] = useState(category?.isJewelry ?? true);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -302,6 +305,7 @@ function CategoryForm({
       imageUrl: imageUrl.trim(),
       seoTitle: seoTitle.trim(),
       seoDescription: seoDescription.trim(),
+      isJewelry,
     });
   };
 
@@ -474,6 +478,28 @@ function CategoryForm({
               </div>
             </div>
           </details>
+
+          {/* The one behaviour the old Product.jewelryType enum carried that a
+              category could not already express. Kept out of the SEO section
+              because it changes where products appear, not how they are found. */}
+          <label className="flex items-start gap-3 rounded-xl border border-white/10 p-4 cursor-pointer light:border-[rgba(26,13,18,0.1)]">
+            <input
+              type="checkbox"
+              className="mt-0.5 w-4 h-4 accent-pink cursor-pointer"
+              checked={isJewelry}
+              onChange={(e) => setIsJewelry(e.target.checked)}
+            />
+            <span>
+              <span className="block font-sans text-[13px] font-semibold text-ink">
+                Show on the Jewelry page
+              </span>
+              <span className="block mt-1 font-sans text-[11px] leading-[1.5] text-ink-faint">
+                {isJewelry
+                  ? "Products in this category appear in the main Jewelry listing as well as on their own category page."
+                  : "Products here are reachable only from this category’s own page — right for aftercare, elixirs, accessories and merch."}
+              </span>
+            </span>
+          </label>
         </div>
 
         <div className="sticky bottom-0 flex justify-end gap-3 px-7 py-5 border-t border-white/[0.06] bg-canvas-elev light:bg-card light:border-[rgba(26,13,18,0.06)]">

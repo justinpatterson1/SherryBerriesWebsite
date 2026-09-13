@@ -11,7 +11,6 @@ import {
 import { getAdminProduct } from "@/lib/queries/admin";
 import { prisma } from "@/lib/db";
 import { revalidateCatalog } from "@/lib/admin/revalidate";
-import { JEWELRY_TYPE_VALUES } from "@/lib/admin/options";
 import {
   sizesSummary,
   stockFromSizes,
@@ -19,7 +18,7 @@ import {
   variantSku,
   type SizeRow,
 } from "@/lib/admin/sizes";
-import type { JewelryType, Prisma } from "@/generated/prisma/client";
+import type { Prisma } from "@/generated/prisma/client";
 
 type Parsed = {
   name: string;
@@ -31,8 +30,8 @@ type Parsed = {
   stock: number;
   reorder: number;
   categoryId: string;
-  jewelryType: JewelryType;
   material: string;
+  careInstructions: string;
   featured: boolean;
   active: boolean;
   imageUrl: string;
@@ -85,9 +84,6 @@ function parseBody(body: unknown): { data: Parsed } | { error: string } {
   const categoryId = str(b.categoryId);
   if (!categoryId) return { error: "Please choose a category." };
 
-  const jewelryType = str(b.jewelryType);
-  if (!JEWELRY_TYPE_VALUES.includes(jewelryType)) return { error: "Please choose a valid jewelry type." };
-
   return {
     data: {
       name,
@@ -103,8 +99,8 @@ function parseBody(body: unknown): { data: Parsed } | { error: string } {
       stock: stockFromSizes(sized.sizes, stock),
       reorder,
       categoryId,
-      jewelryType: jewelryType as JewelryType,
       material: str(b.material),
+      careInstructions: str(b.careInstructions),
       featured: b.featured === true,
       active: b.active !== false,
       imageUrl: str(b.imageUrl),
@@ -264,8 +260,8 @@ export async function POST(request: Request) {
           compareAtPrice: d.compareAtPrice,
           inventory: d.stock,
           lowStockThreshold: d.reorder,
-          jewelryType: d.jewelryType,
           material: d.material || null,
+          careInstructions: d.careInstructions || null,
           featured: d.featured,
           active: d.active,
           categoryId: d.categoryId,
@@ -338,8 +334,8 @@ export async function PATCH(request: Request) {
       lowStockThreshold: true,
       shortDescription: true,
       description: true,
-      jewelryType: true,
       material: true,
+      careInstructions: true,
       featured: true,
       active: true,
       categoryId: true,
@@ -378,8 +374,8 @@ export async function PATCH(request: Request) {
     compareAtPrice: d.compareAtPrice,
     inventory: d.stock,
     lowStockThreshold: d.reorder,
-    jewelryType: d.jewelryType,
     material: d.material || null,
+    careInstructions: d.careInstructions || null,
     featured: d.featured,
     active: d.active,
     categoryId: d.categoryId,
@@ -394,8 +390,8 @@ export async function PATCH(request: Request) {
     "lowStockThreshold",
     "shortDescription",
     "description",
-    "jewelryType",
     "material",
+    "careInstructions",
     "featured",
     "active",
     "categoryId",

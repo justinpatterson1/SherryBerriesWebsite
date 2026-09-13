@@ -1,26 +1,6 @@
 // Client-safe option lists + the product-form payload shape, shared by the
 // add/edit modal and the create/update API routes (no server-only deps).
 
-export const JEWELRY_TYPES: { value: string; label: string }[] = [
-  { value: "BELLY_RING", label: "Belly Ring" },
-  { value: "NOSE_RING", label: "Nose Ring" },
-  { value: "SEPTUM", label: "Septum" },
-  { value: "CARTILAGE", label: "Cartilage" },
-  { value: "NIPPLE", label: "Nipple" },
-  { value: "EAR_LOBE", label: "Ear Lobe" },
-  { value: "INDUSTRIAL", label: "Industrial" },
-  { value: "LABRET", label: "Labret" },
-  { value: "AFTERCARE", label: "Aftercare" },
-  { value: "ELIXIR", label: "Elixir" },
-];
-
-export const JEWELRY_TYPE_VALUES = JEWELRY_TYPES.map((t) => t.value);
-
-// Types filed under these are treated as "not jewelry" by the products query,
-// so they never surface in the unfiltered Jewelry listing — only on their own
-// category page. Mirrors NON_JEWELRY_TYPES in lib/queries/product.ts; kept here
-// too so the admin form can warn before the choice hides a product.
-export const NON_JEWELRY_TYPE_VALUES = ["AFTERCARE", "ELIXIR"];
 
 /**
  * Turn a category name into a URL slug. Shared by the form (to preview the
@@ -42,6 +22,8 @@ export type CategoryFormData = {
   imageUrl: string;
   seoTitle: string;
   seoDescription: string;
+  /** Whether products here show in the unfiltered Jewelry listing. */
+  isJewelry: boolean;
 };
 
 /** One size row from the product modal. `id` is null for a row being added. */
@@ -62,8 +44,9 @@ export type ProductFormData = {
   stock: number;
   reorder: number;
   categoryId: string;
-  jewelryType: string;
   material: string;
+  /** Care & cleaning copy for this product. Blank uses the PDP house copy. */
+  careInstructions: string;
   featured: boolean;
   active: boolean;
   imageUrl: string;

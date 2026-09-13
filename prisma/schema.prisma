@@ -26,19 +26,6 @@ enum UserRole {
   SUPERADMIN
 }
 
-enum JewelryType {
-  BELLY_RING
-  NOSE_RING
-  SEPTUM
-  CARTILAGE
-  NIPPLE
-  EAR_LOBE
-  INDUSTRIAL
-  LABRET
-  AFTERCARE
-  ELIXIR
-}
-
 enum HealingStage {
   FRESH_PIERCING
   HEALING
@@ -206,6 +193,19 @@ model Category {
   seoTitle       String?
   seoDescription String?
 
+  /// Whether products here appear in the unfiltered Jewelry listing.
+  ///
+  /// Replaces the old `Product.jewelryType` enum, which did this job by
+  /// excluding AFTERCARE and ELIXIR. That enum could only be extended by a
+  /// developer running a migration, so an admin could add a category (Tongue
+  /// Rings) but not a matching type — two taxonomies for one idea, only one of
+  /// them editable. Category is now the single taxonomy, and this is the one
+  /// behaviour the enum carried that could not be derived from it.
+  ///
+  /// Defaults to true: a new category is jewelry unless said otherwise, which
+  /// is the common case and fails visible rather than silently hiding stock.
+  isJewelry Boolean @default(true)
+
   createdAt DateTime @default(now())
 
   products Product[]
@@ -225,7 +225,14 @@ model Product {
   featured          Boolean       @default(false)
   active            Boolean       @default(true)
   material          String?
-  jewelryType       JewelryType
+
+  /// Per-product care and cleaning copy, shown in the PDP accordion.
+  ///
+  /// Nullable on purpose: that section already had generic house copy, which
+  /// still shows when this is blank. A 14k gold piece and a titanium starter
+  /// need different advice, but most products do not need their own.
+  careInstructions  String?       @db.Text
+
   healingStage      HealingStage?
   seoTitle          String?
   seoDescription    String?

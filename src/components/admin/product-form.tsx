@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { AdminProduct, AdminCategory } from "@/lib/queries/admin";
-import { JEWELRY_TYPES, NON_JEWELRY_TYPE_VALUES, type ProductFormData } from "@/lib/admin/options";
+import { type ProductFormData } from "@/lib/admin/options";
 import { DEFAULT_SIZE_LABEL, SIZES_MAX } from "@/lib/admin/sizes";
 import { ProductThumb, btnSolid, btnOutline, ICONS } from "@/components/admin/shared";
 
@@ -28,8 +28,8 @@ type FormState = {
   stock: string;
   reorder: string;
   categoryId: string;
-  jewelryType: string;
   material: string;
+  careInstructions: string;
   imageUrl: string;
   featured: boolean;
   active: boolean;
@@ -48,8 +48,8 @@ function initialState(p: AdminProduct | null): FormState {
     stock: p ? String(p.stock) : "0",
     reorder: p ? String(p.reorder) : "5",
     categoryId: p?.categoryId ?? "",
-    jewelryType: p?.jewelryType ?? "",
     material: p?.material ?? "",
+    careInstructions: p?.careInstructions ?? "",
     imageUrl: p?.img ?? "",
     featured: p?.featured ?? false,
     active: p?.active ?? true,
@@ -170,7 +170,6 @@ export function ProductForm({
     if (!Number.isInteger(reorder) || reorder < 0)
       return setError("Reorder threshold must be a whole number ≥ 0.");
     if (!f.categoryId) return setError("Please choose a category.");
-    if (!f.jewelryType) return setError("Please choose a jewelry type.");
 
     setError(null);
     onSubmit({
@@ -183,8 +182,8 @@ export function ProductForm({
       stock,
       reorder,
       categoryId: f.categoryId,
-      jewelryType: f.jewelryType,
       material: f.material.trim(),
+      careInstructions: f.careInstructions.trim(),
       featured: f.featured,
       active: f.active,
       imageUrl: f.imageUrl.trim(),
@@ -264,6 +263,25 @@ export function ProductForm({
             />
           </div>
 
+          <div>
+            <label className={labelClass} htmlFor="prod-care">Care &amp; cleaning</label>
+            <textarea
+              id="prod-care"
+              value={f.careInstructions}
+              onChange={(e) => set("careInstructions", e.target.value)}
+              rows={3}
+              placeholder="How to clean and look after this piece"
+              className="w-full px-3.5 py-3 rounded-xl border border-white/12 bg-white/[0.03] font-sans text-[14px] text-ink placeholder:text-ink-faint outline-none transition-[border-color] duration-200 focus:border-pink resize-y light:bg-white light:border-[rgba(26,13,18,0.12)]"
+            />
+            {/* Optional, and says so: the PDP already has house care copy, and
+                a blank box here should not read as a missing field. */}
+            <p className="mt-1.5 font-sans text-[11px] leading-[1.5] text-ink-faint">
+              {f.careInstructions.trim()
+                ? "Shown in the Care & cleaning section on this product’s page."
+                : "Optional — leave blank to use the standard care advice."}
+            </p>
+          </div>
+
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div>
               <label className={labelClass}>Price</label>
@@ -307,23 +325,11 @@ export function ProductForm({
                   </option>
                 ))}
               </select>
-            </div>
-            <div>
-              <label className={labelClass}>Jewelry type</label>
-              <select className={fieldClass} value={f.jewelryType} onChange={(e) => set("jewelryType", e.target.value)}>
-                <option value="" disabled>
-                  Choose a type…
-                </option>
-                {JEWELRY_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
-              {/* The Jewelry listing hides these types, so the choice quietly
-                  decides whether the product is browsable. Say so. */}
+              {/* The category decides whether the product is browsable, now
+                  that it is the only taxonomy. Say so rather than letting the
+                  choice hide stock silently. */}
               <p className="mt-1.5 font-sans text-[11px] leading-[1.5] text-ink-faint">
-                {NON_JEWELRY_TYPE_VALUES.includes(f.jewelryType)
+                {categories.find((c) => c.id === f.categoryId)?.isJewelry === false
                   ? "Hidden from the main Jewelry page — reachable only from its own category."
                   : "Shown on the Jewelry page as well as its category."}
               </p>

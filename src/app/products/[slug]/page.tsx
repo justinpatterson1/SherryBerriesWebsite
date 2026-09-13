@@ -33,19 +33,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-const JEWELRY_TYPE_LABEL: Record<string, string> = {
-  BELLY_RING: "Belly rings",
-  NOSE_RING: "Nose rings",
-  SEPTUM: "Septum",
-  CARTILAGE: "Cartilage",
-  NIPPLE: "Nipple",
-  EAR_LOBE: "Ear lobe",
-  INDUSTRIAL: "Industrial",
-  LABRET: "Labret",
-  AFTERCARE: "Aftercare",
-  ELIXIR: "Elixirs",
-};
-
 export default async function ProductPage({ params }: PageProps) {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
@@ -54,13 +41,9 @@ export default async function ProductPage({ params }: PageProps) {
   const related = await getRelatedProducts({
     currentProductId: product.id,
     categoryId: product.categoryId,
-    jewelryType: product.jewelryType,
   });
 
   const isBestseller = product.tags.includes("Bestseller");
-  const jewelryLabel =
-    JEWELRY_TYPE_LABEL[product.jewelryType] ?? product.jewelryType;
-
   return (
     <main className="pt-[110px] pb-20 max-[900px]:pt-[100px]">
       <nav
@@ -81,10 +64,6 @@ export default async function ProductPage({ params }: PageProps) {
             >
               {product.category.name}
             </Link>
-          </li>
-          <li aria-hidden="true">/</li>
-          <li>
-            <span className="text-ink-dim">{jewelryLabel}</span>
           </li>
           <li aria-hidden="true">/</li>
           <li>
@@ -159,7 +138,6 @@ export default async function ProductPage({ params }: PageProps) {
                 body: (
                   <dl className="grid grid-cols-2 gap-y-2 gap-x-6 max-[520px]:grid-cols-1">
                     <SpecRow label="Material" value={product.material} />
-                    <SpecRow label="Jewelry type" value={jewelryLabel} />
                     <SpecRow label="SKU" value={product.sku} />
                     <SpecRow
                       label="In stock"
@@ -190,7 +168,13 @@ export default async function ProductPage({ params }: PageProps) {
               {
                 key: "care",
                 title: "Care & cleaning",
-                body: (
+                // The product's own advice when it has any, otherwise the house
+                // copy that was here before the field existed. A 14k gold piece
+                // and a titanium starter need different handling, but most
+                // products are covered by the general guidance.
+                body: product.careInstructions ? (
+                  <p className="m-0 whitespace-pre-line">{product.careInstructions}</p>
+                ) : (
                   <p className="m-0">
                     Rinse with saline twice daily for fresh piercings. Polish with a
                     soft microfiber cloth. Avoid harsh chemicals, chlorine, and

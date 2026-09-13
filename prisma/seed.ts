@@ -20,7 +20,6 @@ import { faker } from "@faker-js/faker";
 import bcrypt from "bcrypt";
 import {
   PrismaClient,
-  type JewelryType,
   type HealingStage,
   type FulfillmentStatus,
 } from "../src/generated/prisma/client";
@@ -103,7 +102,8 @@ const CATEGORY_BLUEPRINTS: Array<{
   slug: string;
   name: string;
   description: string;
-  jewelryType: JewelryType;
+  /** Whether products here show in the unfiltered Jewelry listing. */
+  isJewelry: boolean;
   priceMin: number;
   priceMax: number;
   productPool: string[]; // base name fragments
@@ -114,7 +114,7 @@ const CATEGORY_BLUEPRINTS: Array<{
     slug: "belly-rings",
     name: "Belly Rings",
     description: "Curved barbells, dangles & opal centerpieces.",
-    jewelryType: "BELLY_RING",
+    isJewelry: true,
     priceMin: 25,
     priceMax: 180,
     productPool: ["Berry Glow Curve", "Opal Tide Dangle", "Sunset Drop", "Pearl Veil", "Crescent Halo", "Petal Curl", "Moonstone Arc"],
@@ -125,7 +125,7 @@ const CATEGORY_BLUEPRINTS: Array<{
     slug: "nose-rings",
     name: "Nose Rings",
     description: "Studs, hoops & feather-light captives.",
-    jewelryType: "NOSE_RING",
+    isJewelry: true,
     priceMin: 25,
     priceMax: 180,
     productPool: ["Midnight Rose Stud", "Bloom Captive", "Whisper Hoop", "Petite Lotus", "Twinkle Pin", "Soft Coil"],
@@ -136,7 +136,7 @@ const CATEGORY_BLUEPRINTS: Array<{
     slug: "septum-jewelry",
     name: "Septum Jewelry",
     description: "Clickers, horseshoes & statement rings.",
-    jewelryType: "SEPTUM",
+    isJewelry: true,
     priceMin: 25,
     priceMax: 180,
     productPool: ["Sherry Heart Clicker", "Storm Horseshoe", "Lace Edge Ring", "Drop Veil Clicker", "Sunrise Halo"],
@@ -147,7 +147,7 @@ const CATEGORY_BLUEPRINTS: Array<{
     slug: "cartilage-jewelry",
     name: "Cartilage Jewelry",
     description: "Helix, tragus, daith — delicate cartilage staples.",
-    jewelryType: "CARTILAGE",
+    isJewelry: true,
     priceMin: 25,
     priceMax: 180,
     productPool: ["Halo Hoop", "Petal Press Stud", "Honey Drip Ring", "Constellation Helix", "Sherbet Cuff", "Moonbeam Daith"],
@@ -158,7 +158,7 @@ const CATEGORY_BLUEPRINTS: Array<{
     slug: "aftercare",
     name: "Aftercare",
     description: "Saline mists, oils & healing essentials.",
-    jewelryType: "AFTERCARE",
+    isJewelry: false,
     priceMin: 40,
     priceMax: 120,
     productPool: ["Soothing Saline Mist", "Healing Oil", "Salt Soak", "Calm Compress", "Aftercare Travel Kit"],
@@ -169,7 +169,7 @@ const CATEGORY_BLUEPRINTS: Array<{
     slug: "elixirs",
     name: "Elixirs",
     description: "Premium serums for sensitive, healing skin.",
-    jewelryType: "ELIXIR",
+    isJewelry: false,
     priceMin: 80,
     priceMax: 180,
     productPool: ["Rose Quartz Elixir", "Velvet Rebuild Serum", "Berry Glow Drops", "Midnight Repair Elixir"],
@@ -180,7 +180,7 @@ const CATEGORY_BLUEPRINTS: Array<{
     slug: "accessories",
     name: "Accessories",
     description: "Cases, cleaning kits & pouches.",
-    jewelryType: "AFTERCARE", // catch-all: enum doesn't have ACCESSORY yet
+    isJewelry: false,
     priceMin: 25,
     priceMax: 120,
     productPool: ["Velvet Travel Case", "Mini Cleaning Brush", "Storage Pouch", "Soft Wipes Tin"],
@@ -191,7 +191,7 @@ const CATEGORY_BLUEPRINTS: Array<{
     slug: "merch",
     name: "Merch",
     description: "Apparel from the SherryBerries world.",
-    jewelryType: "AFTERCARE", // catch-all: enum doesn't have MERCHANDISE yet
+    isJewelry: false,
     priceMin: 80,
     priceMax: 180,
     productPool: ["Sweet Berry Tee", "Studio Hoodie", "Tote Bag", "Sherry Cap"],
@@ -332,6 +332,7 @@ async function seedCategories() {
         name: cat.name,
         description: cat.description,
         imageUrl: cat.categoryImageUrl,
+        isJewelry: cat.isJewelry,
         seoTitle: `${cat.name} | SherryBerries`,
         seoDescription: cat.description,
       },
@@ -364,7 +365,7 @@ async function seedProducts(
     price: number;
     categoryId: string;
     categorySlug: string;
-    jewelryType: JewelryType;
+    isJewelry: boolean;
   }> = [];
 
   let n = 0;
@@ -419,7 +420,6 @@ async function seedProducts(
         featured: faker.datatype.boolean({ probability: 0.25 }),
         active: faker.datatype.boolean({ probability: 0.95 }),
         material: faker.helpers.arrayElement(MATERIALS),
-        jewelryType: blueprint.jewelryType,
         healingStage: faker.helpers.maybe(() => faker.helpers.arrayElement(HEALING_STAGES), {
           probability: 0.7,
         }) ?? null,
@@ -436,7 +436,7 @@ async function seedProducts(
       price: Number(product.price),
       categoryId: product.categoryId,
       categorySlug: blueprint.slug,
-      jewelryType: product.jewelryType,
+      isJewelry: blueprint.isJewelry,
     });
     n++;
   }
@@ -483,14 +483,15 @@ async function seedProductImages(
 }
 
 async function seedProductVariants(
-  products: Array<{ id: string; jewelryType: JewelryType; slug: string }>,
+  products: Array<{ id: string; isJewelry: boolean; slug: string }>,
 ) {
-  // Only physical-jewelry types get variants (gauge sizes). Aftercare/elixirs/etc don't.
-  const jewelryTypes: JewelryType[] = ["BELLY_RING", "NOSE_RING", "SEPTUM", "CARTILAGE", "NIPPLE", "EAR_LOBE", "INDUSTRIAL", "LABRET"];
+  // Only physical jewelry gets gauge variants. This used to enumerate the
+  // jewelry enum values; it is the category flag now — the same question,
+  // asked once instead of in two places that could disagree.
   const gauges = ["20G", "18G", "16G", "14G", "12G"];
 
   for (const p of products) {
-    if (!jewelryTypes.includes(p.jewelryType)) continue;
+    if (!p.isJewelry) continue;
     const existing = await prisma.productVariant.count({ where: { productId: p.id } });
     if (existing > 0) continue;
 

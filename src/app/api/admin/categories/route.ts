@@ -24,6 +24,7 @@ type Parsed = {
   imageUrl: string | null;
   seoTitle: string | null;
   seoDescription: string | null;
+  isJewelry: boolean;
 };
 
 function bad(error: string, status = 400) {
@@ -53,6 +54,9 @@ function parseBody(body: unknown): { data: Parsed } | { error: string } {
       imageUrl: nullable(b.imageUrl),
       seoTitle: nullable(b.seoTitle),
       seoDescription: nullable(b.seoDescription),
+      // Defaults to true when the client omits it, matching the column's own
+      // default: a new category is jewelry unless the admin says otherwise.
+      isJewelry: b.isJewelry !== false,
     },
   };
 }
@@ -74,6 +78,7 @@ const SELECT = {
   imageUrl: true,
   seoTitle: true,
   seoDescription: true,
+  isJewelry: true,
 } as const;
 
 // --- Create ------------------------------------------------------------------
@@ -144,6 +149,7 @@ export async function PATCH(request: Request) {
     "imageUrl",
     "seoTitle",
     "seoDescription",
+    "isJewelry",
   ]);
 
   const updated = await prisma.$transaction(async (tx) => {

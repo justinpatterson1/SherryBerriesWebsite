@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { JEWELRY_TYPE_VALUES, NON_JEWELRY_TYPE_VALUES, slugifyCategory } from "./options";
+import { slugifyCategory } from "./options";
 
 describe("slugifyCategory", () => {
   it("lowercases and hyphenates a normal name", () => {
@@ -30,17 +30,6 @@ describe("slugifyCategory", () => {
   });
 });
 
-describe("NON_JEWELRY_TYPE_VALUES", () => {
-  it("only lists real jewelry types", () => {
-    for (const v of NON_JEWELRY_TYPE_VALUES) {
-      expect(JEWELRY_TYPE_VALUES).toContain(v);
-    }
-  });
-
-  // lib/queries/product.ts imports this list rather than restating it, so this
-  // is the single definition of "not jewelry" for both the storefront and the
-  // admin form's warning.
-  it("is the aftercare/elixir pair the Jewelry listing hides", () => {
-    expect(NON_JEWELRY_TYPE_VALUES).toEqual(["AFTERCARE", "ELIXIR"]);
-  });
-});
+// The jewelry-type enum that used to live here is gone: Category is the single
+// taxonomy now, and "does this show on the Jewelry page" is Category.isJewelry.
+// Nothing to unit-test in that — it is a column, exercised by the queries.

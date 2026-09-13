@@ -1,7 +1,5 @@
 import "server-only";
 import { prisma } from "@/lib/db";
-import { NON_JEWELRY_TYPE_VALUES } from "@/lib/admin/options";
-import type { JewelryType } from "@/generated/prisma/client";
 
 export type ProductDetail = NonNullable<Awaited<ReturnType<typeof getProductBySlug>>>;
 
@@ -31,7 +29,7 @@ export async function getProductBySlug(slug: string) {
     featured: row.featured,
     active: row.active,
     material: row.material,
-    jewelryType: row.jewelryType,
+    careInstructions: row.careInstructions,
     healingStage: row.healingStage,
     seoTitle: row.seoTitle,
     seoDescription: row.seoDescription,
@@ -64,29 +62,24 @@ export type ProductListItem = {
   compareAtPrice: number | null;
   inventory: number;
   featured: boolean;
-  jewelryType: JewelryType;
   categoryName: string;
   categorySlug: string;
 };
-
-// Aftercare and elixirs — plus accessories and merch, which reuse the AFTERCARE
-// jewelry type as a catch-all — are not jewelry. The Jewelry listing excludes
-// them so they only surface on their own category pages. The list lives in
-// lib/admin/options so the admin product form can warn that picking one of
-// these hides the product from the Jewelry page.
-const NON_JEWELRY_TYPES = NON_JEWELRY_TYPE_VALUES as JewelryType[];
 
 export async function listProducts(opts: {
   categorySlug?: string;
   jewelryOnly?: boolean;
 } = {}): Promise<ProductListItem[]> {
+  // "Is this jewelry?" is a property of the category, not of the product: it
+  // used to be inferred from the Product.jewelryType enum, which an admin could
+  // not extend. Aftercare, elixirs, accessories and merch are flagged
+  // isJewelry=false so they surface only on their own category pages.
   const where: {
     active: boolean;
-    category?: { slug: string };
-    jewelryType?: { notIn: JewelryType[] };
+    category?: { slug: string } | { isJewelry: boolean };
   } = { active: true };
   if (opts.categorySlug) where.category = { slug: opts.categorySlug };
-  else if (opts.jewelryOnly) where.jewelryType = { notIn: NON_JEWELRY_TYPES };
+  else if (opts.jewelryOnly) where.category = { isJewelry: true };
 
   const rows = await prisma.product.findMany({
     where,
@@ -107,7 +100,6 @@ export async function listProducts(opts: {
       compareAtPrice: p.compareAtPrice ? Number(p.compareAtPrice) : null,
       inventory: p.inventory,
       featured: p.featured,
-      jewelryType: p.jewelryType,
       categoryName: p.category.name,
       categorySlug: p.category.slug,
     };
@@ -125,19 +117,20 @@ export type RelatedProduct = {
 export async function getRelatedProducts({
   currentProductId,
   categoryId,
-  jewelryType,
   limit = 4,
 }: {
   currentProductId: string;
   categoryId: string;
-  jewelryType: JewelryType;
   limit?: number;
 }): Promise<RelatedProduct[]> {
   const rows = await prisma.product.findMany({
     where: {
       id: { not: currentProductId },
       active: true,
-      OR: [{ categoryId }, { jewelryType }],
+      // Category alone now. This used to also match on jewelryType, which was
+      // the only way a Nose Ring could relate to a Septum piece — but that enum
+      // and Category were describing the same thing, and only one was editable.
+      categoryId,
     },
     take: limit,
     orderBy: [{ featured: "desc" }, { createdAt: "desc" }],

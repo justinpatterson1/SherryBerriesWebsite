@@ -87,7 +87,8 @@ export type AdminProduct = {
   shortDescription: string;
   description: string;
   material: string | null;
-  jewelryType: string;
+  /** Per-product care copy; null falls back to the PDP house copy. */
+  careInstructions: string | null;
   featured: boolean;
   active: boolean;
   /**
@@ -171,6 +172,8 @@ export type AdminCategory = {
   imageUrl: string | null;
   seoTitle: string | null;
   seoDescription: string | null;
+  /** Whether products here appear in the unfiltered Jewelry listing. */
+  isJewelry: boolean;
 };
 
 export type TopProduct = {
@@ -398,9 +401,9 @@ export async function getAdminData(
         active: true,
         featured: true,
         material: true,
+        careInstructions: true,
         shortDescription: true,
         description: true,
-        jewelryType: true,
         categoryId: true,
         category: { select: { name: true } },
         images: { orderBy: { position: "asc" }, take: 1, select: { imageUrl: true } },
@@ -425,6 +428,7 @@ export async function getAdminData(
         imageUrl: true,
         seoTitle: true,
         seoDescription: true,
+        isJewelry: true,
       },
     }),
     // Promo codes for the Promos view. Newest first: the one just created is
@@ -659,7 +663,7 @@ export async function getAdminData(
       shortDescription: p.shortDescription,
       description: p.description,
       material: p.material,
-      jewelryType: p.jewelryType,
+      careInstructions: p.careInstructions,
       featured: p.featured,
       active: p.active,
       sizeLabel: p.variants[0]?.name ?? null,
@@ -846,9 +850,9 @@ export async function getAdminProduct(id: string): Promise<AdminProduct | null> 
         active: true,
         featured: true,
         material: true,
+        careInstructions: true,
         shortDescription: true,
         description: true,
-        jewelryType: true,
         categoryId: true,
         category: { select: { name: true } },
         images: { orderBy: { position: "asc" }, take: 1, select: { imageUrl: true } },
@@ -885,7 +889,7 @@ export async function getAdminProduct(id: string): Promise<AdminProduct | null> 
     shortDescription: p.shortDescription,
     description: p.description,
     material: p.material,
-    jewelryType: p.jewelryType,
+    careInstructions: p.careInstructions,
     featured: p.featured,
     active: p.active,
     sizeLabel: p.variants[0]?.name ?? null,
