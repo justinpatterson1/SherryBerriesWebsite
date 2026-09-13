@@ -50,3 +50,6 @@ next-env.d.ts
 
 # One-off DB backups written by scripts/ (e.g. the newsletter seed purge).
 newsletter-seed-backup-*.json
+
+# One-off DB backups written by scripts/ (e.g. the pre-reset dump).
+db-backup-*/
