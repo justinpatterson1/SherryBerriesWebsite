@@ -13,7 +13,8 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
-    "audit:check": "node scripts/audit-check.mjs --level=high"
+    "audit:check": "node scripts/audit-check.mjs --level=high",
+    "promote:prod": "tsx scripts/promote-to-prod.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
