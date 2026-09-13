@@ -68,15 +68,26 @@ export type BankDetails = {
   bankName: string;
   accountName: string;
   accountNumber: string;
+  accountType: string;
 };
+
+/**
+ * The account type, shown so the customer picks the right one at the bank.
+ *
+ * Confirmed by the owner on 2026-09-12. Unlike the other three this is NOT
+ * required: it defaults rather than disabling bank transfer when unset, because
+ * a deployment that has not set it would otherwise lose a payment method over a
+ * label. `BANK_TRANSFER_ACCOUNT_TYPE` overrides it if the account ever changes.
+ */
+export const DEFAULT_ACCOUNT_TYPE = "Savings";
 
 /**
  * The account the customer transfers to.
  *
- * All three must be set. Returning null rather than a half-filled panel is
- * deliberate: an instructions page missing the account number would have the
- * customer believe they can pay when they cannot, and the order is already
- * holding stock by then.
+ * Bank name, account name and number must all be set. Returning null rather
+ * than a half-filled panel is deliberate: an instructions page missing the
+ * account number would have the customer believe they can pay when they cannot,
+ * and the order is already holding stock by then.
  */
 export function bankDetails(
   env: Record<string, string | undefined> = process.env,
@@ -85,7 +96,8 @@ export function bankDetails(
   const accountName = env.BANK_TRANSFER_ACCOUNT_NAME?.trim() ?? "";
   const accountNumber = env.BANK_TRANSFER_ACCOUNT_NUMBER?.trim() ?? "";
   if (!bankName || !accountName || !accountNumber) return null;
-  return { bankName, accountName, accountNumber };
+  const accountType = env.BANK_TRANSFER_ACCOUNT_TYPE?.trim() || DEFAULT_ACCOUNT_TYPE;
+  return { bankName, accountName, accountNumber, accountType };
 }
 
 /** Payment states a bank transfer order can be in. */

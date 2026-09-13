@@ -61,6 +61,7 @@ describe("bankDetails", () => {
       bankName: "Republic Bank",
       accountName: "SherryBerries Ltd",
       accountNumber: "1234567890",
+      accountType: "Savings",
     });
   });
 
@@ -69,6 +70,21 @@ describe("bankDetails", () => {
       expect(bankDetails({ ...full, [key]: "" })).toBeNull();
     }
     expect(bankDetails({})).toBeNull();
+  });
+
+  // Unlike the other three, a missing account type must not disable bank
+  // transfer — losing a payment method over a label would be a worse outcome
+  // than showing the account's actual type, which the owner confirmed.
+  it("defaults the account type to Savings", () => {
+    expect(bankDetails(full)?.accountType).toBe("Savings");
+    expect(bankDetails({ ...full, BANK_TRANSFER_ACCOUNT_TYPE: "" })?.accountType).toBe("Savings");
+    expect(bankDetails({ ...full, BANK_TRANSFER_ACCOUNT_TYPE: "   " })?.accountType).toBe("Savings");
+  });
+
+  it("lets the environment override the account type, trimmed", () => {
+    expect(bankDetails({ ...full, BANK_TRANSFER_ACCOUNT_TYPE: " Chequing " })?.accountType).toBe(
+      "Chequing",
+    );
   });
 });
 

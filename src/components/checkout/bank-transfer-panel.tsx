@@ -179,6 +179,8 @@ export function BankTransferPanel({
                   <dd className="font-sans text-[14px] text-ink m-0">{details.bankName}</dd>
                   <dt className="font-sans text-[13px] text-ink-faint">Account name</dt>
                   <dd className="font-sans text-[14px] text-ink m-0">{details.accountName}</dd>
+                  <dt className="font-sans text-[13px] text-ink-faint">Account type</dt>
+                  <dd className="font-sans text-[14px] text-ink m-0">{details.accountType}</dd>
                   <dt className="font-sans text-[13px] text-ink-faint">Account number</dt>
                   <dd className="font-mono text-[14px] text-ink m-0">{details.accountNumber}</dd>
                   <dt className="font-sans text-[13px] text-ink-faint">Reference</dt>
