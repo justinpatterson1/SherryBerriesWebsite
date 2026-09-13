@@ -83,9 +83,9 @@ export function Hero() {
             className={
               "absolute inset-0 max-[900px]:hidden " +
               // Explicit stops rather than from/via/to: the copy block now runs
-              // to 64% of the frame, so the ramp has to stay dark well past the
+              // to 72% of the frame, so the ramp has to stay dark well past the
               // midpoint that Tailwind's `via-` assumes.
-              "bg-[linear-gradient(90deg,rgba(0,0,0,0.85)_0%,rgba(0,0,0,0.7)_38%,rgba(0,0,0,0.35)_62%,rgba(0,0,0,0.08)_82%,transparent_100%)]"
+              "bg-[linear-gradient(90deg,rgba(0,0,0,0.88)_0%,rgba(0,0,0,0.78)_42%,rgba(0,0,0,0.5)_66%,rgba(0,0,0,0.15)_86%,transparent_100%)]"
             }
           />
 
@@ -110,41 +110,41 @@ export function Hero() {
             then handed back to the theme tokens once it drops below it. */}
         <div
           className={
-            "absolute inset-y-0 left-0 w-[64%] z-[1] flex flex-col justify-center gap-6 pl-[8%] pr-6 " +
+            "absolute inset-y-0 left-0 w-[72%] z-[1] flex flex-col justify-center gap-7 pl-[8%] pr-6 " +
             "max-[900px]:static max-[900px]:w-full max-[900px]:px-0 max-[900px]:pt-7 max-[900px]:gap-4"
           }
         >
-          <span className="font-sans text-[clamp(11px,1vw,14px)] font-semibold tracking-[0.22em] uppercase text-blush">
+          <span className="font-sans text-[clamp(12px,1.2vw,17px)] font-semibold tracking-[0.22em] uppercase text-blush">
             Body Jewelry &amp; Aftercare
           </span>
 
-          {/* The line break before "on you." is deliberate, not a reflow
-              artefact — the script word is the payoff and gets its own line at
+          {/* The line break before "Sweet Berry." is deliberate, not a reflow
+              artefact — the script phrase is the payoff and gets its own line at
               every width. Below 900px the block is out of the frame and the
               full container width is available, so the break is dropped. */}
-          <p className="m-0 font-display text-[clamp(30px,4.6vw,74px)] leading-[1.04] tracking-[-0.015em] text-white max-[900px]:text-ink">
-            Piercings look better
+          <p className="m-0 font-display text-[clamp(34px,5.6vw,92px)] leading-[1.02] tracking-[-0.015em] text-white max-[900px]:text-ink">
+            Welcome home
             <br className="max-[900px]:hidden" />{" "}
             <span className="font-script text-pink text-[1.3em] leading-[0.9] whitespace-nowrap">
-              on you.
+              Sweet Berry.
               <span className="ml-2 align-middle text-[0.45em]" aria-hidden="true">
                 ♡
               </span>
             </span>
           </p>
 
-          <p className="m-0 font-sans text-[clamp(14px,1.35vw,20px)] leading-[1.6] text-white/85 max-w-[34em] max-[900px]:text-ink-dim">
-            Body jewelry, piercing aftercare and accessories for your everyday you.
-            Sweet like you.
+          <p className="m-0 font-sans text-[clamp(15px,1.65vw,25px)] leading-[1.55] text-white/85 max-w-[34em] max-[900px]:text-ink-dim">
+            Body jewelry, piercing aftercare and accessories for every version of
+            you.
           </p>
 
-          <ul className="flex flex-wrap items-center gap-x-8 gap-y-4 list-none p-0 m-0 mt-1.5">
+          <ul className="flex flex-wrap items-center gap-x-10 gap-y-5 list-none p-0 m-0 mt-1.5">
             {HERO_FEATURES.map(({ label, sub, Icon }) => (
               <li key={label} className="flex items-center gap-3">
-                <span className="text-pink shrink-0 [&_svg]:w-[clamp(20px,1.7vw,26px)] [&_svg]:h-[clamp(20px,1.7vw,26px)]">
+                <span className="text-pink shrink-0 [&_svg]:w-[clamp(22px,2vw,32px)] [&_svg]:h-[clamp(22px,2vw,32px)]">
                   <Icon />
                 </span>
-                <span className="font-sans text-[clamp(12px,1.05vw,16px)] font-semibold leading-[1.25] text-white max-[900px]:text-ink">
+                <span className="font-sans text-[clamp(13px,1.25vw,19px)] font-semibold leading-[1.25] text-white max-[900px]:text-ink">
                   {label}
                   <br />
                   {sub}
