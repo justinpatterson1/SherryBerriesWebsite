@@ -85,7 +85,7 @@ export function Hero() {
               // Explicit stops rather than from/via/to: the copy block now runs
               // to 72% of the frame, so the ramp has to stay dark well past the
               // midpoint that Tailwind's `via-` assumes.
-              "bg-[linear-gradient(90deg,rgba(0,0,0,0.88)_0%,rgba(0,0,0,0.78)_42%,rgba(0,0,0,0.5)_66%,rgba(0,0,0,0.15)_86%,transparent_100%)]"
+              "bg-[linear-gradient(90deg,rgba(0,0,0,0.7)_0%,rgba(0,0,0,0.6)_42%,rgba(0,0,0,0.34)_66%,rgba(0,0,0,0.1)_86%,transparent_100%)]"
             }
           />
 
