@@ -33,6 +33,19 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
+/**
+ * Shown in "Care & cleaning" for any product without its own advice.
+ *
+ * Deliberately generic: it has to be true of every piece in the catalogue,
+ * from implant-grade titanium to 14k gold. A product that needs something
+ * different gets its own copy in `Product.careInstructions`, which replaces
+ * this entirely rather than adding to it.
+ */
+const DEFAULT_CARE_INSTRUCTIONS =
+  "Clean gently with mild soap and lukewarm water, rinse thoroughly and dry " +
+  "completely. Avoid alcohol, peroxide, acetone, harsh chemical cleaners and " +
+  "excessive heat.";
+
 export default async function ProductPage({ params }: PageProps) {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
@@ -172,13 +185,9 @@ export default async function ProductPage({ params }: PageProps) {
                 // copy that was here before the field existed. A 14k gold piece
                 // and a titanium starter need different handling, but most
                 // products are covered by the general guidance.
-                body: product.careInstructions ? (
-                  <p className="m-0 whitespace-pre-line">{product.careInstructions}</p>
-                ) : (
-                  <p className="m-0">
-                    Rinse with saline twice daily for fresh piercings. Polish with a
-                    soft microfiber cloth. Avoid harsh chemicals, chlorine, and
-                    submersion until fully healed.
+                body: (
+                  <p className="m-0 whitespace-pre-line">
+                    {product.careInstructions ?? DEFAULT_CARE_INSTRUCTIONS}
                   </p>
                 ),
               },
