@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import tallImg from "../../../assets/images/bellyring.jpg";
+import tallImg from "../../../assets/images/collagepic1.jpg";
 import sqImg from "../../../assets/images/merchandise.jpg";
 import wideImg from "../../../assets/images/aftercare.jpg";
 
