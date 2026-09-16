@@ -83,6 +83,24 @@ jobs:
             exit 1
           fi
 
+          # The endpoint is built as https://<account id>.r2.cloudflarestorage.com,
+          # so anything more than the bare id — a pasted endpoint URL, a trailing
+          # slash, the bucket name — produces a hostname that cannot resolve. The
+          # AWS CLI then reports only "Could not connect to the endpoint URL",
+          # with the offending host masked out of the log as a secret.
+          if [ "${SKIP_UPLOAD:-}" != "true" ]; then
+            case "${ACCOUNT_ID:-}" in
+              *[!0-9a-fA-F]*|"")
+                echo "::error::R2_BACKUP_ACCOUNT_ID must be the bare Cloudflare account id (32 hex characters) — not the endpoint URL, not the bucket name, no https:// and no trailing slash."
+                exit 1
+                ;;
+            esac
+            if [ "${#ACCOUNT_ID}" -ne 32 ]; then
+              echo "::error::R2_BACKUP_ACCOUNT_ID is ${#ACCOUNT_ID} characters; a Cloudflare account id is 32 hex characters."
+              exit 1
+            fi
+          fi
+
           # The value must start EXACTLY with the scheme. Anything else — a
           # wrapping quote, a leading space, the "psql '" prefix Neon's console
           # offers, a copied "DATABASE_URL=" — makes libpq treat the whole
