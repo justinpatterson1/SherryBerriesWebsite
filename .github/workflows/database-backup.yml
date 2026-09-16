@@ -1,0 +1,205 @@
+name: Database backup
+
+# Nightly pg_dump of the Neon database to a private R2 bucket (security issue
+# S6 — "Backups: nothing in the repo").
+#
+# Why this exists at all: Neon's history retention on this plan is SIX HOURS.
+# Anything noticed the next morning — a bad bulk edit, a mistaken delete, an
+# order row corrupted on Friday night — is already outside the window Neon can
+# rewind to. This job is the only thing standing between that and permanent
+# loss, so it is written to fail loudly rather than to always succeed.
+#
+# Run it by hand with `skip_upload` ticked to rehearse: it dumps and runs every
+# check, then discards the file. Nothing reaches R2, no R2 credentials are
+# needed, and the backup history is left alone — so the dump path can be tested
+# against any database, before the bucket exists, as often as you like.
+#
+# The dump goes to a bucket SEPARATE from the storefront's. That bucket has a
+# public r2.dev base URL, and this file holds every customer's name, address,
+# email, order history and password hash. It must never sit behind a hostname
+# that serves objects to anyone who guesses a key.
+
+on:
+  schedule:
+    # 08:00 UTC daily = 04:00 in Trinidad (UTC-4, no daylight saving, so this
+    # never drifts). The store is quiet and the backup is waiting by morning.
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+    inputs:
+      skip_upload:
+        description: "Rehearsal: dump and verify, then throw the file away without writing to R2"
+        type: boolean
+        default: false
+        required: false
+
+permissions:
+  contents: read
+
+# A manual run started while the nightly one is mid-dump would have both
+# writing the same key. Let the running one finish.
+concurrency:
+  group: database-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    env:
+      # R2 speaks S3, so the AWS CLI (preinstalled on the runner) is the client.
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_BACKUP_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_BACKUP_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      # R2 rejects the extra checksum headers newer AWS CLI v2 builds send by
+      # default; these two put the CLI back on the path R2 accepts.
+      AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+      AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+      BUCKET: ${{ secrets.R2_BACKUP_BUCKET }}
+      ENDPOINT: https://${{ secrets.R2_BACKUP_ACCOUNT_ID }}.r2.cloudflarestorage.com
+      # Empty on the scheduled run — only a manual dispatch can set it, so the
+      # nightly backup always uploads no matter what the last rehearsal chose.
+      SKIP_UPLOAD: ${{ inputs.skip_upload }}
+
+    steps:
+      - name: Check the secrets are all present
+        env:
+          DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+          ACCOUNT_ID: ${{ secrets.R2_BACKUP_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          missing=""
+          [ -n "${DATABASE_URL:-}" ] || missing="$missing BACKUP_DATABASE_URL"
+
+          # A rehearsal never reaches R2, so it must not demand R2 credentials:
+          # the point is being able to test the dump before the bucket exists.
+          if [ "${SKIP_UPLOAD:-}" != "true" ]; then
+            [ -n "${ACCOUNT_ID:-}" ]            || missing="$missing R2_BACKUP_ACCOUNT_ID"
+            [ -n "${AWS_ACCESS_KEY_ID:-}" ]     || missing="$missing R2_BACKUP_ACCESS_KEY_ID"
+            [ -n "${AWS_SECRET_ACCESS_KEY:-}" ] || missing="$missing R2_BACKUP_SECRET_ACCESS_KEY"
+            [ -n "${BUCKET:-}" ]                || missing="$missing R2_BACKUP_BUCKET"
+          fi
+
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secrets:$missing"
+            exit 1
+          fi
+
+          # pg_dump through Neon's connection pooler can produce a silently
+          # incomplete dump. The unpooled host is the same string without
+          # "-pooler", and getting this wrong is the easiest mistake to make.
+          case "$DATABASE_URL" in
+            *-pooler*)
+              echo "::error::BACKUP_DATABASE_URL points at the Neon POOLER endpoint. Use the unpooled host (drop '-pooler') — pg_dump through the pooler is not reliable."
+              exit 1
+              ;;
+          esac
+
+      - name: Install the PostgreSQL 17 client
+        run: |
+          set -euo pipefail
+          # The runner's bundled client can lag behind Neon's server version,
+          # and pg_dump refuses to dump a server newer than itself. PGDG always
+          # carries the current one.
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+            https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17
+          pg_dump --version
+
+      - name: Dump the database
+        env:
+          DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          echo "STAMP=$(date -u +%Y-%m-%d)" >> "$GITHUB_ENV"
+          # Custom format (-Fc): compressed, and pg_restore can pull a single
+          # table out of it rather than forcing an all-or-nothing restore.
+          pg_dump --format=custom --no-owner --no-acl --file=backup.dump "$DATABASE_URL"
+          ls -l backup.dump
+
+      # Everything below runs BEFORE the upload. A corrupt or truncated dump
+      # must fail the job, not overwrite good history with a broken file.
+      - name: Verify the dump is readable and complete
+        run: |
+          set -euo pipefail
+          size=$(stat -c%s backup.dump)
+          echo "Dump size: $size bytes"
+
+          # Guards against a truncated file, nothing more. It has to stay below
+          # a schema-only dump (this database is ~22 tables), because before
+          # launch production legitimately holds almost no rows. Catching a
+          # real shrink is the next step's job, not this one's.
+          if [ "$size" -lt 10240 ]; then
+            echo "::error::Dump is only $size bytes — almost certainly truncated or empty."
+            exit 1
+          fi
+
+          # pg_restore --list parses the whole archive. A clean exit means the
+          # file is a structurally valid dump, not a half-flushed stream.
+          pg_restore --list backup.dump > toc.txt
+          echo "Tables with data: $(grep -c 'TABLE DATA' toc.txt || true)"
+
+          # The tables holding data that cannot be recreated by reseeding.
+          for t in User Order Product NewsletterSubscriber; do
+            if ! grep -q "TABLE DATA public $t" toc.txt; then
+              echo "::error::Dump has no data section for \"$t\" — refusing to upload it."
+              exit 1
+            fi
+          done
+
+      - name: Compare against the previous backup
+        if: ${{ !inputs.skip_upload }}
+        run: |
+          set -euo pipefail
+          prev=$(aws s3api list-objects-v2 --endpoint-url "$ENDPOINT" --bucket "$BUCKET" \
+                   --prefix "daily/" --query 'sort_by(Contents,&LastModified)[-1].Size' \
+                   --output text 2>/dev/null || echo "None")
+          size=$(stat -c%s backup.dump)
+
+          if [ "$prev" = "None" ] || [ -z "$prev" ]; then
+            echo "No previous backup to compare against — first run."
+            exit 0
+          fi
+
+          echo "Previous: $prev bytes / today: $size bytes"
+          # A database that shrank by more than half overnight is either a
+          # disaster worth knowing about immediately or a bad dump. Either way
+          # a human should look before this becomes the newest backup.
+          if [ "$size" -lt $(( prev / 2 )) ]; then
+            echo "::error::Dump shrank from $prev to $size bytes (>50%). Halting — check the database before re-running."
+            exit 1
+          fi
+
+      - name: Upload to R2
+        if: ${{ !inputs.skip_upload }}
+        run: |
+          set -euo pipefail
+          aws s3 cp backup.dump "s3://$BUCKET/daily/$STAMP.dump" \
+            --endpoint-url "$ENDPOINT" --only-show-errors
+          echo "Uploaded daily/$STAMP.dump"
+
+      - name: Rehearsal — nothing uploaded
+        if: ${{ inputs.skip_upload }}
+        run: |
+          echo "skip_upload was set: the dump passed every check and was discarded."
+          echo "Nothing was written to R2, so the backup history is untouched."
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### Database backup — ${STAMP:-unknown}"
+            echo ""
+            if [ -f backup.dump ]; then
+              echo "- Size: $(stat -c%s backup.dump) bytes"
+              if [ "${SKIP_UPLOAD:-}" = "true" ]; then
+                echo "- **Rehearsal** — verified, not uploaded."
+              else
+                echo "- Key: \`daily/${STAMP:-unknown}.dump\`"
+              fi
+            else
+              echo "- No dump was produced."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

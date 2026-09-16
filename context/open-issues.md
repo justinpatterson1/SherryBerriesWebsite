@@ -96,7 +96,11 @@ Failing open is by design in [rate-limit.ts](../src/lib/rate-limit.ts) and stays
 
 - **CSRF:** NextAuth covers its own routes and SameSite=Lax blocks the obvious cases, but custom mutating routes have no Origin check.
 - **Uploads:** admin-only, 5 MB cap, random UUID names, off-origin in R2 — but [r2.ts](../src/lib/storage/r2.ts) trusts the *client-declared* content type with no magic-byte check.
-- **Backups:** nothing in the repo; depends on the Neon plan's PITR. Verify in their console.
+- **Backups:** **Neon retention confirmed 2026-09-14: SIX HOURS** (free plan) — anything noticed the next morning is already outside the window, so the plan’s PITR is not a backup strategy on its own.
+  - **Done:** [database-backup.yml](../.github/workflows/database-backup.yml) dumps the database nightly at 04:00 Trinidad to a private R2 bucket, 30 dailies retained. The dump is size-checked, parsed with `pg_restore --list`, required to carry data sections for `User`/`Order`/`Product`/`NewsletterSubscriber`, and compared against the previous backup (a >50% shrink halts the job) — all **before** the upload, so a corrupt dump can never overwrite good history. Restore procedure: [docs/restore-from-backup.md](../docs/restore-from-backup.md).
+  - **Still to do (owner):** create the private backup bucket + scoped R2 token, add the five repository secrets, set the 30-day lifecycle rule, then run the workflow once by hand. Until that is done the job fails fast on the missing secrets and **nothing is being backed up**.
+  - ⚠ `BACKUP_DATABASE_URL` must be the **unpooled** Neon host (no `-pooler`) — pg_dump through the pooler can produce a silently incomplete dump. The workflow refuses to run if the secret contains `-pooler`.
+  - The backup bucket is deliberately **separate** from the storefront’s: that one has a public `r2.dev` base URL (see the receipts note in [r2.ts](../src/lib/storage/r2.ts)), and a dump holds every customer’s address, email and password hash.
 
 ---
 

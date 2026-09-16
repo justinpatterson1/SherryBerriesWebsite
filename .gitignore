@@ -45,7 +45,10 @@ yarn-error.log*
 next-env.d.ts
 
 /screenshots/
-/docs
+# Local reference material (vendor PDFs, exports) stays out; runbooks in
+# markdown are tracked — a restore procedure nobody else can read is no use.
+/docs/*
+!/docs/*.md
 /.playwright-mcp/
 
 # One-off DB backups written by scripts/ (e.g. the newsletter seed purge).
