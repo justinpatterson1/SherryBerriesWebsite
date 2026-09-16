@@ -120,7 +120,27 @@ jobs:
             | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-17
-          pg_dump --version
+
+          # Installing it is not enough. /usr/bin/pg_dump is pg_wrapper, and on
+          # a runner that already ships postgresql-client-16 it kept resolving
+          # to 16 — which then refuses to dump Neon's 17 server. Put the
+          # versioned binaries first for every later step.
+          echo "/usr/lib/postgresql/17/bin" >> "$GITHUB_PATH"
+          export PATH="/usr/lib/postgresql/17/bin:$PATH"
+
+          # Assert rather than trust: a silent fallback to 16 is exactly the
+          # failure this step exists to prevent.
+          # "pg_dump (PostgreSQL) 17.6 (Ubuntu 17.6-1.pgdg24.04+1)" — field 3 is
+          # the version; the last field is the packaging string, which is not.
+          version=$(pg_dump --version | awk '{print $3}')
+          echo "pg_dump: $version ($(command -v pg_dump))"
+          case "$version" in
+            1[7-9].*|[2-9][0-9].*) ;;
+            *)
+              echo "::error::pg_dump resolved to $version, which cannot dump a PostgreSQL 17 server. Expected 17 or newer from /usr/lib/postgresql/17/bin."
+              exit 1
+              ;;
+          esac
 
       - name: Dump the database
         env:
