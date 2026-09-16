@@ -83,6 +83,20 @@ jobs:
             exit 1
           fi
 
+          # The value must start EXACTLY with the scheme. Anything else — a
+          # wrapping quote, a leading space, the "psql '" prefix Neon's console
+          # offers, a copied "DATABASE_URL=" — makes libpq treat the whole
+          # string as keyword=value pairs, and it then fails on the first "="
+          # in the query string with the connection string (password included)
+          # in the error text. Catch it here, where nothing gets echoed.
+          case "$DATABASE_URL" in
+            postgres://*|postgresql://*) ;;
+            *)
+              echo "::error::BACKUP_DATABASE_URL must begin with postgres:// or postgresql://. Re-paste it with no quotes, no leading space, and no 'psql ' or 'DATABASE_URL=' prefix. (The value is not printed here on purpose.)"
+              exit 1
+              ;;
+          esac
+
           # pg_dump through Neon's connection pooler can produce a silently
           # incomplete dump. The unpooled host is the same string without
           # "-pooler", and getting this wrong is the easiest mistake to make.
