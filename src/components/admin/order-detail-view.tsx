@@ -16,13 +16,16 @@ export function OrderDetailView({
   order,
   onBack,
   onUpdateStatus,
+  onMarkPaid,
 }: {
   order: AdminOrder | null;
   onBack: () => void;
   onUpdateStatus: (id: string, status: AdminOrderStatus) => Promise<boolean>;
+  onMarkPaid: (id: string) => Promise<boolean>;
 }) {
   const [selected, setSelected] = useState<AdminOrderStatus>(order?.status ?? "Pending");
   const [busy, setBusy] = useState(false);
+  const [payBusy, setPayBusy] = useState(false);
 
   // Re-sync the <select> when a different order is opened (React 19: defer the
   // setState out of the effect body — same pattern the account views use).
@@ -48,6 +51,15 @@ export function OrderDetailView({
     setBusy(true);
     await onUpdateStatus(order.id, selected);
     setBusy(false);
+  };
+
+  const handleMarkPaid = async () => {
+    // Declaring money received has no artifact behind it — unlike a bank
+    // transfer, there is no receipt to check — so make it deliberate.
+    if (!confirm(`Record ${order.orderNumber} as paid? This cannot be undone here.`)) return;
+    setPayBusy(true);
+    await onMarkPaid(order.id);
+    setPayBusy(false);
   };
 
   return (
@@ -178,6 +190,37 @@ export function OrderDetailView({
               {busy ? "Saving…" : "Update status"}
             </button>
           </AdminCard>
+
+          {/* Payment is a separate axis from fulfilment. Cash orders had no way
+              to be recorded as paid at all, which also left any download on
+              them locked forever. */}
+          {order.paymentStatus === "PENDING" && (
+            <AdminCard title="Payment">
+              <p className="font-sans text-[13px] leading-[1.6] text-ink-dim m-0 mb-3">
+                {order.hasDigital
+                  ? "This order holds a download, which stays locked until the payment is recorded."
+                  : "This order has not been paid yet."}
+              </p>
+              {order.hasDigital && (
+                <p className="inline-flex items-center gap-1.5 py-1 px-2.5 mb-3 rounded-full border border-[rgba(232,200,121,0.3)] bg-[rgba(232,200,121,0.12)] text-gold-soft font-sans text-[10px] font-bold tracking-[0.12em] uppercase">
+                  <span className="w-1.5 h-1.5 rounded-full bg-gold-soft" aria-hidden="true" />
+                  Digital item locked
+                </p>
+              )}
+              <button
+                type="button"
+                onClick={handleMarkPaid}
+                disabled={payBusy}
+                className={`${btnSolid} w-full`}
+              >
+                {payBusy ? "Recording…" : `Mark as paid — ${money(order.total)}`}
+              </button>
+              <p className="font-sans text-[11px] leading-[1.5] text-ink-faint m-0 mt-2">
+                Only do this once the money is actually in hand. It is recorded in the
+                audit log against your account.
+              </p>
+            </AdminCard>
+          )}
         </div>
       </div>
     </div>

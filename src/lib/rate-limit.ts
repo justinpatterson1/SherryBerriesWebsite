@@ -97,6 +97,12 @@ export const promoLimiter = makeLimiter(10, "1 h", "promo");
 // second.
 export const searchLimiter = makeLimiter(30, "1 h", "search");
 
+// Purchased downloads. The buyer owns the file and may fetch it whenever they
+// like, across devices and for years — so this is generous, and keyed per
+// account rather than per IP. It exists only to stop a signed-in caller
+// looping a multi-MB file as cheap bandwidth amplification.
+export const downloadLimiter = makeLimiter(60, "1 h", "download");
+
 export type RateLimitResult = {
   success: boolean;
   remaining: number;

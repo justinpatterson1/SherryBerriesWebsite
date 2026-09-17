@@ -143,7 +143,10 @@ export type OrderEmailData = {
   total: number;
   paymentLabel: string;
   eta: string;
+  /** Delivery address, or the buyer's email when there is nothing to ship. */
   shipTo: string;
+  /** Nothing in this order ships — it is downloaded from the order page. */
+  digital?: boolean;
 };
 
 export async function sendOrderConfirmationEmail({
@@ -174,7 +177,7 @@ export async function sendOrderConfirmationEmail({
       to,
       subject: `Your SherryBerries order ${order.orderNumber} is confirmed ✦`,
       html: orderConfirmationHtml({ greeting, order }),
-      text: `${greeting}\n\nYour order is in — we're already wrapping it in pink and gold.\n\nOrder ${order.orderNumber}\n${lines}\n\nSubtotal: $${order.subtotal.toFixed(2)}${order.discount > 0 ? `\nDiscount: -$${order.discount.toFixed(2)}` : ""}\nShipping (${order.shipLabel}): ${order.shipFee === 0 ? "Free" : `$${order.shipFee.toFixed(2)}`}\nTotal: $${order.total.toFixed(2)}\n\nPayment: ${order.paymentLabel}\n${order.eta}.\n\nWith love,\nSherryBerries`,
+      text: `${greeting}\n\nYour order is in — we're already wrapping it in pink and gold.\n\nOrder ${order.orderNumber}\n${lines}\n\nSubtotal: $${order.subtotal.toFixed(2)}${order.discount > 0 ? `\nDiscount: -$${order.discount.toFixed(2)}` : ""}${order.digital ? "" : `\nShipping (${order.shipLabel}): ${order.shipFee === 0 ? "Free" : `$${order.shipFee.toFixed(2)}`}`}\nTotal: $${order.total.toFixed(2)}\n\nPayment: ${order.paymentLabel}\n${order.eta}.\n\nWith love,\nSherryBerries`,
     });
     if (error) return { ok: false, error: error.message };
     return { ok: true };
@@ -266,14 +269,14 @@ export function orderConfirmationHtml({
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
               ${totalRow("Subtotal", money(order.subtotal))}
               ${order.discount > 0 ? totalRow("Discount", `-${money(order.discount)}`) : ""}
-              ${totalRow(`Shipping · ${order.shipLabel}`, order.shipFee === 0 ? "Free" : money(order.shipFee))}
+              ${order.digital ? "" : totalRow(`Shipping · ${order.shipLabel}`, order.shipFee === 0 ? "Free" : money(order.shipFee))}
               ${totalRow("Total", money(order.total), true)}
             </table>
           </td></tr>
           <tr><td style="padding:20px 36px 0;">
             <div style="background:rgba(255,79,163,0.08);border:1px solid rgba(255,79,163,0.2);border-radius:12px;padding:16px;">
               <p style="font-size:13px;line-height:1.6;color:#f5e9ee;margin:0 0 4px;"><strong>${order.eta}.</strong></p>
-              <p style="font-size:13px;line-height:1.6;color:#cbb8c0;margin:0;">Ship to: ${escapeHtml(order.shipTo)}</p>
+              <p style="font-size:13px;line-height:1.6;color:#cbb8c0;margin:0;">${order.digital ? "Delivered to" : "Ship to"}: ${escapeHtml(order.shipTo)}</p>
               <p style="font-size:13px;line-height:1.6;color:#cbb8c0;margin:6px 0 0;">Payment: ${order.paymentLabel}</p>
             </div>
           </td></tr>
@@ -502,6 +505,65 @@ export async function sendPaymentConfirmedEmail({
         `${greeting}\n\nWe've received your bank transfer of ${amount} for ${orderNumber}. Thank you!\n\n` +
         `Your order is confirmed and now being prepared. We'll be in touch when it ships or is ready for pickup.\n\n` +
         `Keep this email as your receipt.`,
+    });
+    if (error) return { ok: false, error: error.message };
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Failed to send email." };
+  }
+}
+
+/**
+ * Sent once an order holding a download is paid for.
+ *
+ * Links to the order page rather than attaching the file: the link is checked
+ * against the buyer's session every time it is opened, so it keeps working for
+ * as long as they own the order, and nothing sensitive rides in an inbox.
+ */
+export async function sendDigitalReadyEmail({
+  to,
+  name,
+  orderNumber,
+  orderUrl,
+  items,
+}: {
+  to: string;
+  name: string | null;
+  orderNumber: string;
+  orderUrl: string;
+  items: { name: string }[];
+}): Promise<{ ok: boolean; error?: string }> {
+  const resend = getClient();
+  if (!resend) return { ok: false, error: "RESEND_API_KEY is not configured." };
+  const greeting = name ? `Hi ${name.split(" ")[0]},` : "Hi there,";
+  const order = escapeHtml(orderNumber);
+  const list = items.map((i) => `<strong style="color:#ffffff;">${escapeHtml(i.name)}</strong>`);
+  const listHtml =
+    list.length === 1 ? list[0] : `${list.slice(0, -1).join(", ")} and ${list[list.length - 1]}`;
+  const listText = items.map((i) => `  • ${i.name}`).join("\n");
+  const many = items.length > 1;
+
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM,
+      to,
+      subject: `Your download${many ? "s are" : " is"} ready — ${orderNumber}`,
+      html: bankTransferHtml({
+        heading: many ? "Your downloads are ready" : "Your download is ready",
+        greeting,
+        body: [
+          `Payment for <strong style="color:#ffffff;">${order}</strong> is confirmed, so ${listHtml} ${many ? "are" : "is"} yours to download.`,
+          "It lives on your order page for good — open it as many times as you like, on any device.",
+        ],
+        actionUrl: orderUrl,
+        actionLabel: many ? "Get your downloads" : "Get your download",
+        note: "You'll need to be signed in to the account that placed the order.",
+      }),
+      text:
+        `${greeting}\n\nPayment for ${orderNumber} is confirmed, so your download${many ? "s are" : " is"} ready:\n\n${listText}\n\n` +
+        `Open your order page to download:\n${orderUrl}\n\n` +
+        `It stays there for good — download it as many times as you like. You'll need to be signed in to the account that placed the order.\n\n` +
+        `With love,\nSherryBerries`,
     });
     if (error) return { ok: false, error: error.message };
     return { ok: true };

@@ -237,6 +237,23 @@ model Product {
   seoTitle          String?
   seoDescription    String?
 
+  /// A downloadable product (a PDF), delivered from the order page rather than
+  /// shipped. Digital products hold no stock: `inventory` is meaningless for
+  /// them and is forced to 0, because a file cannot sell out.
+  isDigital         Boolean       @default(false)
+
+  /// Private R2 object key, always `digital/<uuid>.pdf` — never a URL, and
+  /// never public. The only way to read it is the per-request authorized route
+  /// at /api/orders/[orderNumber]/download/[itemId].
+  ///
+  /// Validated against that exact shape on write (`isDigitalFileKey`): an
+  /// unchecked key could be pointed at the `payments/` prefix, which would sell
+  /// other customers' uploaded bank receipts.
+  digitalFileKey    String?
+
+  /// Original upload filename, used for the download's Content-Disposition.
+  digitalFileName   String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -394,6 +411,16 @@ model Order {
   shipLine1    String?
   shipCity     String?
   shipLandmark String?
+
+  /// Claim stamp for the "your download is ready" email, so an order holding a
+  /// digital item is notified exactly once.
+  ///
+  /// The notifier runs from three payment-confirmation sites (the WiPay
+  /// callback, bank-transfer approval, and an admin marking a COD order paid)
+  /// and only one of those has a claim guard of its own, so the guard lives
+  /// here instead. It gates the *email* only — never the download, which is
+  /// re-authorized per request.
+  digitalNotifiedAt DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

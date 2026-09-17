@@ -11,6 +11,7 @@ import { btnOutline, btnSolid, cardPadded } from "@/components/admin/shared";
 const ACTION_LABEL: Record<string, string> = {
   "product.create": "Product created",
   "product.update": "Product edited",
+  "product.delete": "Product deleted",
   "inventory.update": "Price / stock",
   "category.create": "Category created",
   "category.update": "Category edited",
@@ -23,6 +24,8 @@ const ACTION_LABEL: Record<string, string> = {
 // Destructive or money-adjacent actions are tinted so they stand out in a long
 // list; everything else stays neutral.
 const ACTION_STYLE: Record<string, string> = {
+  "product.delete":
+    "text-[#ff8d8d] border-[rgba(255,141,141,0.3)] bg-[rgba(255,141,141,0.12)]",
   "category.delete":
     "text-[#ff8d8d] border-[rgba(255,141,141,0.3)] bg-[rgba(255,141,141,0.12)]",
   "order.status_change": "text-blush border-pink/40 bg-pink/[0.12]",
@@ -42,7 +45,7 @@ const FILTERS: { key: Filter; label: string; actions?: string[] }[] = [
     label: "Money",
     actions: ["order.status_change", "return.status_change", "inventory.update"],
   },
-  { key: "destructive", label: "Deletions", actions: ["category.delete"] },
+  { key: "destructive", label: "Deletions", actions: ["product.delete", "category.delete"] },
 ];
 
 export function ActivityView({ entries }: { entries: AdminAuditEntry[] }) {

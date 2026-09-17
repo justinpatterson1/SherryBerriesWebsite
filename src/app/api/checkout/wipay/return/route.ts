@@ -14,6 +14,7 @@ import { getWipayConfig, verifyWipayHash } from "@/lib/checkout/wipay";
 import { buildPlacedOrder } from "@/lib/checkout/order-view";
 import { sendOrderConfirmationEmail } from "@/lib/email/resend";
 import { releaseOrderStock } from "@/lib/checkout/release-stock";
+import { unlockDigitalDownloads } from "@/lib/checkout/digital-delivery";
 
 const ORDER_INCLUDE = {
   orderItems: {
@@ -23,6 +24,10 @@ const ORDER_INCLUDE = {
           id: true,
           name: true,
           material: true,
+          // Needed by releaseOrderStock on the failure path: a download was
+          // never decremented, so it must not be incremented back.
+          isDigital: true,
+          digitalFileKey: true,
           // First photo only — it becomes the thumbnail in the confirmation email.
           images: { select: { imageUrl: true }, orderBy: { position: "asc" }, take: 1 },
         },
@@ -102,11 +107,21 @@ export async function GET(request: Request) {
           paymentLabel: placed.paymentLabel,
           eta: placed.eta,
           shipTo: placed.shipTo,
+          digital: placed.digital,
         },
       });
+
+      // Anything downloadable in this order is now unlocked; tell the buyer.
+      // Runs after the claim above has committed, and is idempotent in its own
+      // right, so a replayed callback cannot send a second one.
+      const unlocked = await unlockDigitalDownloads(order.id, { baseUrl: url.origin });
+
       if (process.env.NODE_ENV !== "production") {
         console.log(
-          `[wipay] order ${orderNumber} PAID (txn ${transactionId}); email → ${placed.contact.email}: ${emailResult.ok ? "sent" : `skipped (${emailResult.error})`}`,
+          `[wipay] order ${orderNumber} PAID (txn ${transactionId}); email → ${placed.contact.email}: ${emailResult.ok ? "sent" : `skipped (${emailResult.error})`}` +
+            (unlocked.digitalItems > 0
+              ? `; ${unlocked.digitalItems} download(s) ${unlocked.emailed ? "notified" : "not notified"}`
+              : ""),
         );
       }
     }

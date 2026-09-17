@@ -59,9 +59,17 @@ export type AdminOrder = {
   needsAction: boolean;
   /** Where the order ships, snapshotted at checkout. Null for legacy orders. */
   shipTo: OrderShipTo | null;
+  /**
+   * The raw payment state, which `status` does not carry: that collapses into a
+   * six-value fulfilment vocabulary where PENDING and PAID look identical.
+   * Needed to offer "Mark as paid" and to show whether a download is unlocked.
+   */
+  paymentStatus: PaymentStatus;
+  /** The order holds at least one downloadable item. */
+  hasDigital: boolean;
 };
 
-export type StockStatus = "In stock" | "Low stock" | "Out of stock";
+export type StockStatus = "In stock" | "Low stock" | "Out of stock" | "Digital";
 
 /** One ProductVariant, as the admin screens see it. */
 export type AdminSize = {
@@ -91,6 +99,11 @@ export type AdminProduct = {
   careInstructions: string | null;
   featured: boolean;
   active: boolean;
+  /** A downloadable product: no stock, nothing to ship. */
+  isDigital: boolean;
+  /** Private R2 key for the file. Null unless isDigital. */
+  digitalFileKey: string | null;
+  digitalFileName: string | null;
   /**
    * The axis these sizes measure — all of a product's variants share it.
    * Null when the product has no sizes.
@@ -361,6 +374,7 @@ export async function getAdminData(
               select: {
                 name: true,
                 slug: true,
+                isDigital: true,
                 images: { orderBy: { position: "asc" }, take: 1, select: { imageUrl: true } },
               },
             },
@@ -402,6 +416,9 @@ export async function getAdminData(
         featured: true,
         material: true,
         careInstructions: true,
+        isDigital: true,
+        digitalFileKey: true,
+        digitalFileName: true,
         shortDescription: true,
         description: true,
         categoryId: true,
@@ -642,8 +659,15 @@ export async function getAdminData(
     const stock = p.inventory;
     const reorder = p.lowStockThreshold;
     const price = Number(p.price);
-    const status: StockStatus =
-      stock <= 0 ? "Out of stock" : stock <= reorder ? "Low stock" : "In stock";
+    // A download has no stock to run out of, so the usual thresholds would
+    // brand it "Out of stock" forever.
+    const status: StockStatus = p.isDigital
+      ? "Digital"
+      : stock <= 0
+        ? "Out of stock"
+        : stock <= reorder
+          ? "Low stock"
+          : "In stock";
     inventoryValueCost += stock * price * COST_RATIO;
     if (p.active) activeSkus += 1;
 
@@ -666,6 +690,9 @@ export async function getAdminData(
       careInstructions: p.careInstructions,
       featured: p.featured,
       active: p.active,
+      isDigital: p.isDigital,
+      digitalFileKey: p.digitalFileKey,
+      digitalFileName: p.digitalFileName,
       sizeLabel: p.variants[0]?.name ?? null,
       sizes: toSizes(p.variants),
     };
@@ -721,6 +748,8 @@ export async function getAdminData(
       discount,
       total,
       needsAction: status === "Pending" || status === "Processing",
+      paymentStatus: o.paymentStatus,
+      hasDigital: o.orderItems.some((it) => it.product.isDigital),
       items: o.orderItems.map((it) => {
         const price = Number(it.price);
         return {
@@ -851,6 +880,9 @@ export async function getAdminProduct(id: string): Promise<AdminProduct | null> 
         featured: true,
         material: true,
         careInstructions: true,
+        isDigital: true,
+        digitalFileKey: true,
+        digitalFileName: true,
         shortDescription: true,
         description: true,
         categoryId: true,
@@ -869,7 +901,9 @@ export async function getAdminProduct(id: string): Promise<AdminProduct | null> 
   const stock = p.inventory;
   const reorder = p.lowStockThreshold;
   let status: StockStatus;
-  if (stock <= 0) status = "Out of stock";
+  // A download has no stock to run out of.
+  if (p.isDigital) status = "Digital";
+  else if (stock <= 0) status = "Out of stock";
   else if (stock <= reorder) status = "Low stock";
   else status = "In stock";
 
@@ -892,6 +926,9 @@ export async function getAdminProduct(id: string): Promise<AdminProduct | null> 
     careInstructions: p.careInstructions,
     featured: p.featured,
     active: p.active,
+    isDigital: p.isDigital,
+    digitalFileKey: p.digitalFileKey,
+    digitalFileName: p.digitalFileName,
     sizeLabel: p.variants[0]?.name ?? null,
     sizes: toSizes(p.variants),
   };

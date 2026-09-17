@@ -2,12 +2,15 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import {
+  DIGITAL_SHIPPING_KEY,
   PAYMENT_LABEL,
   SHIPPING,
   feeForCity,
   isPaymentKey,
   isShippingKey,
+  type ShippingKey,
 } from "@/lib/checkout/shipping";
+import { cartNeedsShipping } from "@/lib/checkout/digital";
 import { getWipayConfig, requestHostedPage } from "@/lib/checkout/wipay";
 import { bankDetails, paymentDeadline } from "@/lib/checkout/bank-transfer";
 import { sendOrderConfirmationEmail } from "@/lib/email/resend";
@@ -73,28 +76,13 @@ export async function POST(request: Request) {
   if (phone.replace(/\D/g, "").length < 7) {
     return NextResponse.json({ error: "A valid phone number is required." }, { status: 400 });
   }
-  if (!line1 || !city) {
-    return NextResponse.json({ error: "A shipping address is required." }, { status: 400 });
-  }
-  if (!isShippingKey(b.shipping)) {
-    return NextResponse.json({ error: "Choose a shipping method." }, { status: 400 });
-  }
   if (!isPaymentKey(b.payment)) {
     return NextResponse.json({ error: "Choose a payment method." }, { status: 400 });
   }
-  const shipping = SHIPPING[b.shipping];
   const paymentKey = b.payment;
 
-  // Courier is priced from the city's rate card, never from the client. An
-  // unrecognized city has no rate, so the order is refused rather than shipped
-  // at a fee nobody agreed to.
-  const shipFee = feeForCity(b.shipping, city);
-  if (shipFee === null) {
-    return NextResponse.json(
-      { error: "We don't deliver to that city yet. Please choose one from the list." },
-      { status: 400 },
-    );
-  }
+  // Shipping is validated after the cart is read, not here: whether this order
+  // ships at all depends on what is in it, and that is a database fact.
 
   // Authoritative cart read — never trust client-supplied prices/quantities.
   const cart = await prisma.cart.findUnique({
@@ -109,6 +97,7 @@ export async function POST(request: Request) {
               price: true,
               inventory: true,
               material: true,
+              isDigital: true,
               // First photo only — it becomes the thumbnail in the confirmation email.
               images: { select: { imageUrl: true }, orderBy: { position: "asc" }, take: 1 },
             },
@@ -141,14 +130,52 @@ export async function POST(request: Request) {
       quantity: it.quantity,
       unitPrice,
       available,
+      isDigital: it.product.isDigital,
       imageUrl: it.product.images[0]?.imageUrl ?? null,
     };
   });
 
+  // Now that the cart is known, settle how (and whether) this order ships.
+  //
+  // A cart of nothing but downloads has no address to collect and no fee to
+  // charge. Anything physical in it — including one item alongside a download —
+  // and the usual rules apply in full.
+  const needsShipping = cartNeedsShipping(lines);
+
+  let shipKey: ShippingKey;
+  let shipFee: number;
+  if (needsShipping) {
+    if (!line1 || !city) {
+      return NextResponse.json({ error: "A shipping address is required." }, { status: 400 });
+    }
+    if (!isShippingKey(b.shipping)) {
+      return NextResponse.json({ error: "Choose a shipping method." }, { status: 400 });
+    }
+    // Courier is priced from the city's rate card, never from the client. An
+    // unrecognized city has no rate, so the order is refused rather than
+    // shipped at a fee nobody agreed to.
+    const fee = feeForCity(b.shipping, city);
+    if (fee === null) {
+      return NextResponse.json(
+        { error: "We don't deliver to that city yet. Please choose one from the list." },
+        { status: 400 },
+      );
+    }
+    shipKey = b.shipping;
+    shipFee = fee;
+  } else {
+    // Whatever the client sent is ignored rather than honoured — the cart, not
+    // the request body, decides that this order ships nothing.
+    shipKey = DIGITAL_SHIPPING_KEY;
+    shipFee = 0;
+  }
+  const shipping = SHIPPING[shipKey];
+
   // Fast, friendly pre-check for the common case. This is NOT the correctness
   // gate — the authoritative guard is the atomic conditional decrement inside
   // the transaction below (this read can go stale under concurrent orders).
-  const oversold = lines.find((l) => l.quantity > l.available);
+  // Downloads are skipped: a file cannot sell out.
+  const oversold = lines.filter((l) => !l.isDigital).find((l) => l.quantity > l.available);
   if (oversold) {
     return NextResponse.json(
       {
@@ -189,14 +216,17 @@ export async function POST(request: Request) {
   const total = round2(subtotal - discount + shipFee);
   const orderNumber = await uniqueOrderNumber();
   const paymentLabel = PAYMENT_LABEL[paymentKey];
-  const shipToText = [`${firstName} ${lastName}`, line1, city, landmark && `Landmark: ${landmark}`]
-    .filter(Boolean)
-    .join(", ");
+  // Where this order goes. For a download that is an inbox, not an address.
+  const shipToText = needsShipping
+    ? [`${firstName} ${lastName}`, line1, city, landmark && `Landmark: ${landmark}`]
+        .filter(Boolean)
+        .join(", ")
+    : email;
 
   // Snapshot the contact + shipping details into notes (Order has no address columns).
   const notes = JSON.stringify({
     contact: { firstName, lastName, email, phone },
-    address: { line1, city, landmark: landmark || null },
+    address: needsShipping ? { line1, city, landmark: landmark || null } : null,
     shipping: shipping.key,
     payment: paymentKey,
     promo: appliedPromo?.code ?? null,
@@ -266,12 +296,14 @@ export async function POST(request: Request) {
         notes,
         // Where this order is actually going, frozen at purchase. The customer
         // can edit or delete the Address row this came from and these stay put.
+        // A download has no destination, so the address columns stay null —
+        // the contact ones still identify who bought it.
         shipName: `${firstName} ${lastName}`.trim(),
         shipPhone: phone,
         shipEmail: email,
-        shipLine1: line1,
-        shipCity: city,
-        shipLandmark: landmark || null,
+        shipLine1: needsShipping ? line1 : null,
+        shipCity: needsShipping ? city : null,
+        shipLandmark: needsShipping ? landmark || null : null,
         orderItems: {
           create: lines.map((l) => ({
             productId: l.productId,
@@ -287,7 +319,13 @@ export async function POST(request: Request) {
     // (variant if chosen, else product). The `inventory >= quantity` filter +
     // decrement is a single statement, so concurrent orders for the last unit
     // can't both succeed — `count === 0` means it sold out under us; roll back.
+    //
+    // Downloads hold no stock and are skipped. releaseOrderStock() skips them
+    // on the way back too: decrementing nothing but incrementing on a failed
+    // payment would inflate a digital product's inventory on every abandoned
+    // order.
     for (const l of lines) {
+      if (l.isDigital) continue;
       const res = l.variantId
         ? await tx.productVariant.updateMany({
             where: { id: l.variantId, inventory: { gte: l.quantity } },
@@ -363,6 +401,7 @@ export async function POST(request: Request) {
     eta: shipping.eta,
     contact: { firstName, lastName, email, phone },
     shipTo: shipToText,
+    digital: !needsShipping,
   };
 
   // Best-effort confirmation email — never fail a placed order on email trouble.

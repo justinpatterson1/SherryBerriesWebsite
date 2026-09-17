@@ -13,6 +13,7 @@ import { SHIPPING, SHIPPING_ORDER } from "@/lib/checkout/shipping";
 import { MAX_DELIVERY_FEE, MIN_DELIVERY_FEE } from "@/lib/checkout/delivery-zones";
 import type { Block, LegalDocument, Section } from "@/lib/legal/types";
 import { CANONICAL_ORIGIN } from "@/lib/seo/site-url";
+import { LEGAL_CONTACT_EMAIL } from "@/lib/legal/contact";
 
 export const LAST_UPDATED = "August 3, 2026";
 
@@ -20,7 +21,7 @@ export const LAST_UPDATED = "August 3, 2026";
 // literal in each of the four legal files and had drifted to a domain the
 // site does not serve. One source of truth now.
 export const SITE_URL = CANONICAL_ORIGIN;
-export const SUPPORT_EMAIL = "sherryvanessanichols@gmail.com";
+
 
 /**
  * Owner-confirmed on 2026-08-15. Nothing in the codebase pins these down, so
@@ -264,7 +265,7 @@ export const SHIPPING_POLICY_DOC: LegalDocument = {
     kicker: "Get in touch",
     intro:
       "If you have a question about shipping, or an order that has not arrived when you expected it, please contact us and we will help.",
-    email: SUPPORT_EMAIL,
+    email: LEGAL_CONTACT_EMAIL,
     website: SITE_URL,
   },
 };

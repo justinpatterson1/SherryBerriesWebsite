@@ -3,16 +3,17 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { AccountOrder, AccountReturn } from "@/lib/queries/account";
-import { allowedReasonsFor, RETURN_WINDOW_DAYS } from "@/lib/account/returns";
+import { allowedReasons, RETURN_WINDOW_DAYS } from "@/lib/account/returns";
 import { cardClass } from "./shared";
 
 // Return requests are now backed by the ReturnRequest model (open-issues #16).
 // Before this they lived in sessionStorage, reached nobody, and vanished with
 // the tab; between then and now the view could only point at /contact.
 //
-// The reason list is narrowed per item by allowedReasonsFor(): jewelry and
-// aftercare are final sale, so "Changed Mind" is not offered on them. The API
-// re-checks the same rule — the select is a convenience, not the gate.
+// The reason list comes from allowedReasons(). Since the owner dropped
+// change-of-mind returns on 2026-09-16 it is the same list for every category —
+// every reason describes a fault on our side. The API re-checks it either way:
+// the select is a convenience, not the gate.
 
 const STATUS_STYLE: Record<AccountReturn["status"], string> = {
   REQUESTED: "text-gold border-gold/40 bg-gold/[0.12]",
@@ -38,8 +39,6 @@ const labelClass =
 type ItemOption = {
   orderItemId: string;
   label: string;
-  categorySlug: string;
-  finalSale: boolean;
 };
 
 export function ReturnsView({
@@ -77,15 +76,13 @@ export function ReturnsView({
           .map((it) => ({
             orderItemId: it.id,
             label: `${o.orderNumber} — ${it.name}${it.variant ? ` (${it.variant})` : ""}`,
-            categorySlug: it.categorySlug,
-            finalSale: it.finalSale,
           })),
       ),
     [eligibleOrders, openItemLabels],
   );
 
   const selected = options.find((o) => o.orderItemId === orderItemId) ?? null;
-  const reasons = selected ? allowedReasonsFor(selected.categorySlug) : [];
+  const reasons = selected ? allowedReasons() : [];
 
   const submit = async () => {
     if (!orderItemId) return setError("Please choose the item you want to return.");
@@ -127,9 +124,10 @@ export function ReturnsView({
       <div className={cardClass}>
         <h3 className="font-display text-[22px] text-ink m-0 mb-3">Request a return</h3>
         <p className="font-sans text-[13px] leading-[1.6] text-ink-dim m-0 mb-5 max-w-[560px]">
-          Jewelry and aftercare are final sale, so those can only be returned if
-          something arrived <span className="text-ink">damaged, defective, or wrong</span>.
-          Merchandise and accessories can be returned unused within {RETURN_WINDOW_DAYS} days.{" "}
+          Returns are for our mistakes: an item can come back if it arrived{" "}
+          <span className="text-ink">damaged, defective, or wrong</span>. We don&apos;t
+          accept change-of-mind returns on anything. Please report a problem within{" "}
+          {RETURN_WINDOW_DAYS} days of delivery.{" "}
           <Link href="/help/returns" className="text-blush underline">
             Read the policy
           </Link>
@@ -191,11 +189,6 @@ export function ReturnsView({
                   </option>
                 ))}
               </select>
-              {selected?.finalSale && (
-                <p className="mt-1.5 font-sans text-[11px] leading-[1.5] text-ink-faint">
-                  This is a final sale item, so &ldquo;Changed Mind&rdquo; is not available.
-                </p>
-              )}
             </div>
 
             <div>

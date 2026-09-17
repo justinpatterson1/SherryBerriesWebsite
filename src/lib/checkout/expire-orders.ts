@@ -37,7 +37,14 @@ const RELEASE_SELECT = {
   paymentStatus: true,
   paymentExpiresAt: true,
   orderItems: {
-    select: { productId: true, variantId: true, quantity: true },
+    select: {
+      productId: true,
+      variantId: true,
+      quantity: true,
+      // A download holds no stock, so releaseOrderStock must skip it rather
+      // than increment a counter checkout never decremented.
+      product: { select: { isDigital: true } },
+    },
   },
 } as const;
 
@@ -46,7 +53,12 @@ type ReleasableOrder = {
   orderNumber: string;
   notes: string | null;
   paymentStatus: string;
-  orderItems: { productId: string; variantId: string | null; quantity: number }[];
+  orderItems: {
+    productId: string;
+    variantId: string | null;
+    quantity: number;
+    product: { isDigital: boolean };
+  }[];
 };
 
 /**

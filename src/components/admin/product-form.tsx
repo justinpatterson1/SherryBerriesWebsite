@@ -35,6 +35,9 @@ type FormState = {
   active: boolean;
   sizeLabel: string;
   sizes: SizeField[];
+  isDigital: boolean;
+  digitalFileKey: string;
+  digitalFileName: string;
 };
 
 function initialState(p: AdminProduct | null): FormState {
@@ -53,6 +56,9 @@ function initialState(p: AdminProduct | null): FormState {
     imageUrl: p?.img ?? "",
     featured: p?.featured ?? false,
     active: p?.active ?? true,
+    isDigital: p?.isDigital ?? false,
+    digitalFileKey: p?.digitalFileKey ?? "",
+    digitalFileName: p?.digitalFileName ?? "",
     sizeLabel: p?.sizeLabel ?? "",
     sizes: (p?.sizes ?? []).map((v) => ({
       id: v.id,
@@ -81,6 +87,9 @@ export function ProductForm({
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [uploadingDigital, setUploadingDigital] = useState(false);
+  const [digitalError, setDigitalError] = useState<string | null>(null);
+  const digitalRef = useRef<HTMLInputElement>(null);
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setF((prev) => ({ ...prev, [key]: value }));
 
@@ -137,11 +146,35 @@ export function ProductForm({
     }
   };
 
+  const handleDigitalFile = async (file: File | undefined) => {
+    if (!file) return;
+    setDigitalError(null);
+    setUploadingDigital(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/admin/upload/digital", { method: "POST", body: fd });
+      const json = await res.json();
+      if (!res.ok || !json.key) throw new Error(json.error || "Upload failed.");
+      setF((prev) => ({
+        ...prev,
+        digitalFileKey: json.key as string,
+        digitalFileName: (json.fileName as string) || prev.digitalFileName,
+      }));
+    } catch (e) {
+      setDigitalError(e instanceof Error ? e.message : "Upload failed. Please try again.");
+    } finally {
+      setUploadingDigital(false);
+      if (digitalRef.current) digitalRef.current.value = "";
+    }
+  };
+
   const handleSubmit = () => {
     const price = parseFloat(f.price);
     const compare = f.compareAtPrice.trim() === "" ? null : parseFloat(f.compareAtPrice);
-    const stock = parseInt(f.stock, 10);
-    const reorder = parseInt(f.reorder, 10);
+    // A download has no stock and no reorder point; the server pins both to 0.
+    const stock = f.isDigital ? 0 : parseInt(f.stock, 10);
+    const reorder = f.isDigital ? 0 : parseInt(f.reorder, 10);
 
     if (!f.name.trim()) return setError("Name is required.");
     if (!f.sku.trim()) return setError("SKU is required.");
@@ -150,7 +183,10 @@ export function ProductForm({
     if (!Number.isFinite(price) || price < 0) return setError("Enter a valid price.");
     if (compare !== null && (!Number.isFinite(compare) || compare < 0))
       return setError("Compare-at price must be a valid number.");
-    if (!hasSizes && (!Number.isInteger(stock) || stock < 0))
+    if (f.isDigital && !f.digitalFileKey.trim())
+      return setError("Upload the PDF before saving a digital product.");
+    if (f.isDigital && hasSizes) return setError("A digital product can't have sizes.");
+    if (!f.isDigital && !hasSizes && (!Number.isInteger(stock) || stock < 0))
       return setError("Stock must be a whole number ≥ 0.");
 
     const seen = new Set<string>();
@@ -167,7 +203,7 @@ export function ProductForm({
           return setError(`The extra price for “${r.value.trim()}” must be 0 or more.`);
       }
     }
-    if (!Number.isInteger(reorder) || reorder < 0)
+    if (!f.isDigital && (!Number.isInteger(reorder) || reorder < 0))
       return setError("Reorder threshold must be a whole number ≥ 0.");
     if (!f.categoryId) return setError("Please choose a category.");
 
@@ -187,6 +223,9 @@ export function ProductForm({
       featured: f.featured,
       active: f.active,
       imageUrl: f.imageUrl.trim(),
+      isDigital: f.isDigital,
+      digitalFileKey: f.isDigital ? f.digitalFileKey.trim() : "",
+      digitalFileName: f.isDigital ? f.digitalFileName.trim() : "",
       sizeLabel: hasSizes ? f.sizeLabel.trim() || DEFAULT_SIZE_LABEL : "",
       sizes: filledSizes.map((r) => ({
         id: r.id,
@@ -282,7 +321,7 @@ export function ProductForm({
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className={"grid gap-4 " + (f.isDigital ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-4")}>
             <div>
               <label className={labelClass}>Price</label>
               <input type="number" min={0} step="0.01" className={numClass} value={f.price} onChange={(e) => set("price", e.target.value)} placeholder="0.00" />
@@ -291,25 +330,94 @@ export function ProductForm({
               <label className={labelClass}>Compare-at</label>
               <input type="number" min={0} step="0.01" className={numClass} value={f.compareAtPrice} onChange={(e) => set("compareAtPrice", e.target.value)} placeholder="—" />
             </div>
-            <div>
-              <label className={labelClass}>Stock</label>
-              {/* Derived once sizes exist — editing it would just be overwritten
-                  by their sum on save, so it is shown rather than offered. */}
+            {/* A download cannot run out, so it has no stock or reorder point. */}
+            {!f.isDigital && (
+              <>
+                <div>
+                  <label className={labelClass}>Stock</label>
+                  {/* Derived once sizes exist — editing it would just be overwritten
+                      by their sum on save, so it is shown rather than offered. */}
+                  <input
+                    type="number"
+                    min={0}
+                    step="1"
+                    className={numClass + (hasSizes ? " opacity-60 cursor-not-allowed" : "")}
+                    value={hasSizes ? String(sizeTotal) : f.stock}
+                    readOnly={hasSizes}
+                    title={hasSizes ? "Total of the sizes below" : undefined}
+                    onChange={(e) => set("stock", e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>Reorder ≤</label>
+                  <input type="number" min={0} step="1" className={numClass} value={f.reorder} onChange={(e) => set("reorder", e.target.value)} />
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* --- Digital product ------------------------------------------- */}
+          <div className="rounded-xl border border-white/12 bg-white/[0.02] p-4 light:bg-white light:border-[rgba(26,13,18,0.12)]">
+            <div className="flex items-start gap-2.5">
               <input
-                type="number"
-                min={0}
-                step="1"
-                className={numClass + (hasSizes ? " opacity-60 cursor-not-allowed" : "")}
-                value={hasSizes ? String(sizeTotal) : f.stock}
-                readOnly={hasSizes}
-                title={hasSizes ? "Total of the sizes below" : undefined}
-                onChange={(e) => set("stock", e.target.value)}
+                id="prod-digital"
+                type="checkbox"
+                className="mt-0.5 accent-pink cursor-pointer"
+                checked={f.isDigital}
+                onChange={(e) => set("isDigital", e.target.checked)}
               />
+              <label htmlFor="prod-digital" className="cursor-pointer">
+                <span className="font-sans text-[14px] text-ink">Digital product (PDF download)</span>
+                <span className="block mt-0.5 font-sans text-[11px] leading-[1.5] text-ink-faint">
+                  Delivered from the buyer’s order page instead of shipped. No stock, no sizes,
+                  and no delivery address at checkout.
+                </span>
+              </label>
             </div>
-            <div>
-              <label className={labelClass}>Reorder ≤</label>
-              <input type="number" min={0} step="1" className={numClass} value={f.reorder} onChange={(e) => set("reorder", e.target.value)} />
-            </div>
+
+            {f.isDigital && (
+              <div className="mt-3.5 pt-3.5 border-t border-white/[0.08] light:border-[rgba(26,13,18,0.08)]">
+                <span className={labelClass + " block"}>PDF file</span>
+                {f.digitalFileKey ? (
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <span className="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full border border-[rgba(95,210,154,0.3)] bg-[rgba(95,210,154,0.12)] font-sans text-[11px] font-semibold text-[#5fd29a]">
+                      ✓ {f.digitalFileName || "PDF uploaded"}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => digitalRef.current?.click()}
+                      disabled={uploadingDigital}
+                      className="font-sans text-[11px] font-medium tracking-[0.1em] uppercase text-ink-faint hover:text-blush transition-colors bg-transparent border-0 cursor-pointer disabled:opacity-50"
+                    >
+                      {uploadingDigital ? "Uploading…" : "Replace"}
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => digitalRef.current?.click()}
+                    disabled={uploadingDigital}
+                    className="py-2.5 px-4 rounded-xl border border-white/12 bg-white/[0.03] font-sans text-[13px] text-ink cursor-pointer hover:border-pink transition-colors disabled:opacity-50 light:bg-white light:border-[rgba(26,13,18,0.12)]"
+                  >
+                    {uploadingDigital ? "Uploading…" : "Choose a PDF…"}
+                  </button>
+                )}
+                <input
+                  ref={digitalRef}
+                  type="file"
+                  accept="application/pdf"
+                  hidden
+                  onChange={(e) => handleDigitalFile(e.target.files?.[0])}
+                />
+                <p className="mt-1.5 font-sans text-[11px] leading-[1.5] text-ink-faint">
+                  PDF only, up to 5 MB. Stored privately — buyers reach it through their order
+                  page, never a public link.
+                </p>
+                {digitalError && (
+                  <p className="mt-1.5 font-sans text-[11px] text-[#ff8d8d]">{digitalError}</p>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -336,7 +444,8 @@ export function ProductForm({
             </div>
           </div>
 
-          {/* --- Sizes --- */}
+          {/* --- Sizes --- (a download has none) */}
+          {!f.isDigital && (
           <div className="rounded-xl border border-white/10 p-4 flex flex-col gap-3.5 light:border-[rgba(26,13,18,0.1)]">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
@@ -436,6 +545,7 @@ export function ProductForm({
               </>
             )}
           </div>
+          )}
 
           <div>
             <label className={labelClass}>Product image</label>

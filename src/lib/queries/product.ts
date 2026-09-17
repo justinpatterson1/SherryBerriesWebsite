@@ -26,6 +26,7 @@ export async function getProductBySlug(slug: string) {
     compareAtPrice: row.compareAtPrice ? Number(row.compareAtPrice) : null,
     inventory: row.inventory,
     lowStockThreshold: row.lowStockThreshold,
+    isDigital: row.isDigital,
     featured: row.featured,
     active: row.active,
     material: row.material,

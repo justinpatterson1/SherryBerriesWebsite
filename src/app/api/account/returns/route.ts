@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
-import { isFinalSale, isReasonAllowed } from "@/lib/account/returns";
+import { isReasonAllowed } from "@/lib/account/returns";
 
 // Opening a return request. Until this existed the account view could only
 // point the customer at /contact, so a return was an email thread with no
@@ -68,15 +68,11 @@ export async function POST(request: Request) {
     return bad("Returns can only be opened once an order has been delivered.");
   }
 
-  const categorySlug = item.product.category.slug;
-  if (!isReasonAllowed(categorySlug, reason)) {
-    // Either the reason is not on the published list at all, or it is
-    // change-of-mind against a final-sale item, which the policy refuses.
-    return isFinalSale(categorySlug)
-      ? bad(
-          `${item.product.name} is a final sale item, so it can only be returned if it arrived damaged, defective, or was not what you ordered.`,
-        )
-      : bad("Please choose a reason from the list.");
+  if (!isReasonAllowed(reason)) {
+    // The reason list no longer varies by category — change-of-mind is gone
+    // from it entirely — so the only way to land here is a reason that is not
+    // on the published list at all.
+    return bad("Please choose a reason from the list.");
   }
 
   const existing = await prisma.returnRequest.findFirst({

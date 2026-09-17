@@ -19,6 +19,7 @@ export function ProductBuyBox({
   variants,
   inventory,
   lowStockThreshold,
+  isDigital = false,
 }: {
   productId: string;
   productName: string;
@@ -27,6 +28,8 @@ export function ProductBuyBox({
   variants: Variant[];
   inventory: number;
   lowStockThreshold: number;
+  /** A download. Holds no stock, so it can never be out of it. */
+  isDigital?: boolean;
 }) {
   const { addItem } = useCart();
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(
@@ -46,8 +49,11 @@ export function ProductBuyBox({
 
   const finalUnit = basePrice + (selectedVariant?.additionalPrice ?? 0);
   const effectiveInventory = selectedVariant ? selectedVariant.inventory : inventory;
-  const outOfStock = effectiveInventory <= 0;
-  const lowStock = !outOfStock && effectiveInventory <= lowStockThreshold;
+  // A download is pinned to 0 inventory by design, so the stock rules have to
+  // skip it — otherwise the only digital product on the site is permanently
+  // "Out of stock" and cannot be bought at all.
+  const outOfStock = !isDigital && effectiveInventory <= 0;
+  const lowStock = !isDigital && !outOfStock && effectiveInventory <= lowStockThreshold;
 
   useEffect(() => {
     if (!ctaRef.current) return;
@@ -133,6 +139,8 @@ export function ProductBuyBox({
             ? "Out of stock"
             : lowStock
             ? `Low stock — only ${effectiveInventory} left`
+            : isDigital
+            ? "Instant download"
             : "In stock"}
         </span>
       </div>
@@ -177,18 +185,22 @@ export function ProductBuyBox({
         </div>
       )}
 
-      <div className="flex flex-col gap-2.5">
-        <span className="font-sans text-[11px] font-medium tracking-[0.22em] uppercase text-ink-faint">
-          Quantity
-        </span>
-        <div className="inline-flex items-center self-start rounded-full border border-white/12 bg-white/[0.03] overflow-hidden">
-          <QtyButton label="Decrease quantity" onClick={decQty} disabled={qty <= 1}>−</QtyButton>
-          <span aria-live="polite" className="px-5 py-2.5 font-sans text-sm font-semibold text-ink min-w-[44px] text-center">
-            {qty}
+      {/* No quantity picker for a download — a second copy of the same file
+          is the same file, and charging twice for it would be wrong. */}
+      {!isDigital && (
+        <div className="flex flex-col gap-2.5">
+          <span className="font-sans text-[11px] font-medium tracking-[0.22em] uppercase text-ink-faint">
+            Quantity
           </span>
-          <QtyButton label="Increase quantity" onClick={incQty} disabled={qty >= 10 || outOfStock}>+</QtyButton>
+          <div className="inline-flex items-center self-start rounded-full border border-white/12 bg-white/[0.03] overflow-hidden">
+            <QtyButton label="Decrease quantity" onClick={decQty} disabled={qty <= 1}>−</QtyButton>
+            <span aria-live="polite" className="px-5 py-2.5 font-sans text-sm font-semibold text-ink min-w-[44px] text-center">
+              {qty}
+            </span>
+            <QtyButton label="Increase quantity" onClick={incQty} disabled={qty >= 10 || outOfStock}>+</QtyButton>
+          </div>
         </div>
-      </div>
+      )}
 
       <button
         ref={ctaRef}

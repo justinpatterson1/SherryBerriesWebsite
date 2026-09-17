@@ -5,10 +5,11 @@
 // derivation instead of duplicating it.
 
 import {
+  DIGITAL_SHIPPING_KEY,
   PAYMENT_LABEL,
   SHIPPING,
   isPaymentKey,
-  isShippingKey,
+  isStoredShippingKey,
   type PaymentKey,
 } from "./shipping";
 import type { PlacedOrder } from "@/components/checkout/thank-you";
@@ -58,7 +59,11 @@ function parseNotes(raw: string | null): OrderNotes {
 
 export function buildPlacedOrder(order: OrderForView): PlacedOrder {
   const notes = parseNotes(order.notes);
-  const ship = SHIPPING[isShippingKey(notes.shipping) ? notes.shipping : "pickup"];
+  // isStoredShippingKey, not isShippingKey: "digital" is a key the server
+  // assigns and persists, but deliberately refuses to accept from a client.
+  const shipKey = isStoredShippingKey(notes.shipping) ? notes.shipping : "pickup";
+  const digital = shipKey === DIGITAL_SHIPPING_KEY;
+  const ship = SHIPPING[shipKey];
   const paymentKey: PaymentKey = isPaymentKey(notes.payment) ? notes.payment : "card";
 
   const subtotal = round2(num(order.subtotal));
@@ -85,14 +90,18 @@ export function buildPlacedOrder(order: OrderForView): PlacedOrder {
   const firstName = c.firstName ?? "";
   const lastName = c.lastName ?? "";
   const a = notes.address ?? {};
-  const shipTo = [
-    `${firstName} ${lastName}`.trim(),
-    a.line1,
-    a.city,
-    a.landmark ? `Landmark: ${a.landmark}` : null,
-  ]
-    .filter(Boolean)
-    .join(", ");
+  // A download has no destination — where it "went" is the buyer's inbox and
+  // their order page.
+  const shipTo = digital
+    ? (c.email ?? "")
+    : [
+        `${firstName} ${lastName}`.trim(),
+        a.line1,
+        a.city,
+        a.landmark ? `Landmark: ${a.landmark}` : null,
+      ]
+        .filter(Boolean)
+        .join(", ");
 
   return {
     orderNumber: order.orderNumber,
@@ -111,5 +120,6 @@ export function buildPlacedOrder(order: OrderForView): PlacedOrder {
     eta: ship.eta,
     contact: { firstName, lastName, email: c.email ?? "", phone: c.phone ?? "" },
     shipTo,
+    digital,
   };
 }

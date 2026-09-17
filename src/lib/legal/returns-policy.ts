@@ -10,8 +10,13 @@
 //
 // ⚠ Owner's rule, 2026-08-17: jewelry and aftercare are FINAL SALE once they
 // leave the business. The previous version of this policy offered a 14-day
-// window on sealed jewelry; that is gone. The window now applies only to
-// merchandise and accessories — the categories isFinalSale() allows.
+// window on sealed jewelry; that is gone.
+//
+// ⚠ Owner's rule, 2026-09-16: returns are now for OUR mistakes only. The
+// change-of-mind window that merchandise and accessories still had is gone
+// too, and "Changed Mind" was removed from RETURN_REASONS — so this document
+// must not offer a return for preference on anything. The 14-day window is now
+// the period in which a problem must be reported, not a cooling-off period.
 //
 // The one thing this policy must never disclaim is our own mistake: an item
 // that arrives damaged, defective, or is not what was ordered is always put
@@ -22,26 +27,25 @@
 import { RETURN_REASONS, RETURN_WINDOW_DAYS } from "@/lib/account/returns";
 import type { Block, LegalDocument, Section } from "@/lib/legal/types";
 import { CANONICAL_ORIGIN } from "@/lib/seo/site-url";
+import { LEGAL_CONTACT_EMAIL } from "@/lib/legal/contact";
 
-export const LAST_UPDATED = "August 17, 2026";
+export const LAST_UPDATED = "September 16, 2026";
 
 // Re-exported from the SEO module rather than retyped: this value was a
 // literal in each of the four legal files and had drifted to a domain the
 // site does not serve. One source of truth now.
 export const SITE_URL = CANONICAL_ORIGIN;
-export const SUPPORT_EMAIL = "sherryvanessanichols@gmail.com";
+
 
 /**
  * Owner-confirmed on 2026-08-15. Nothing in the codebase pins these down, so
  * they live here; each is used exactly once below, so editing here is enough.
  */
 const OWNER_DECISIONS = {
-  /** Days after delivery in which a return may be opened — merch/accessories only. */
+  /** Days after delivery in which a problem must be reported. */
   windowDays: RETURN_WINDOW_DAYS,
   /** How long a refund takes once the returned item has been inspected. */
   refundTime: "5 to 10 business days",
-  /** Who pays return postage when the customer simply changed their mind. */
-  changeOfMindShipping: "the customer",
   /** Whether a restocking fee applies. */
   restockingFee: "No restocking fee applies.",
 } as const;
@@ -49,7 +53,7 @@ const OWNER_DECISIONS = {
 const INTRO: Block[] = [
   {
     kind: "p",
-    text: "Body jewelry is worn in a healing or healed piercing, so returns work differently here than for most products. Jewelry and aftercare are sold as final sale: once an order has left us, those items cannot be returned or exchanged.",
+    text: "Body jewelry is worn in a healing or healed piercing, so returns work differently here than for most products. We do not accept returns because an item was not wanted after all — nothing in the shop comes back for a change of mind. Jewelry and aftercare go further still: once an order has left us, those items cannot be returned or exchanged for any reason other than a fault.",
   },
   {
     kind: "p",
@@ -112,18 +116,24 @@ const SECTIONS: Section[] = [
     chip: "Eligible",
     kicker: "Accepted",
     blocks: [
-      { kind: "p", text: "We accept returns on:" },
+      { kind: "p", text: "We accept returns where something has gone wrong on our side:" },
       {
         kind: "list",
         items: [
           "Items that arrive damaged or defective — any item, always.",
           "Items that are not what you ordered — any item, always.",
-          `Merchandise and accessories in unused, resalable condition, within ${OWNER_DECISIONS.windowDays} days of delivery.`,
         ],
       },
       {
         kind: "p",
-        text: `Merchandise and accessories — apparel, cases, pouches, and similar non-jewelry items — carry no hygiene risk, so they keep a ${OWNER_DECISIONS.windowDays}-day window. Requests after that period cannot be accepted, except where an item is faulty and the fault could not reasonably have been discovered sooner.`,
+        text: [
+          { b: "We do not accept returns for a change of mind." },
+          ` That applies to every category, merchandise and accessories included. If an item simply turned out not to be what you wanted, we cannot take it back — please ask us anything you are unsure of before ordering.`,
+        ],
+      },
+      {
+        kind: "p",
+        text: `Report a problem within ${OWNER_DECISIONS.windowDays} days of delivery. After that we can still help where an item is faulty and the fault could not reasonably have been discovered sooner.`,
       },
       {
         kind: "p",
@@ -153,7 +163,7 @@ const SECTIONS: Section[] = [
       },
       {
         kind: "p",
-        text: "Because jewelry and aftercare are final sale, a request on those items can only be about something arriving damaged, defective, or incorrect.",
+        text: "Every reason on that list describes something going wrong on our side, because that is the only ground on which we accept a return. There is no change-of-mind option, on any item.",
       },
       {
         kind: "p",
@@ -200,7 +210,7 @@ const SECTIONS: Section[] = [
       },
       {
         kind: "p",
-        text: `Where a merchandise or accessory return is because you changed your mind, return postage is paid by ${OWNER_DECISIONS.changeOfMindShipping}, and the original delivery fee is not refunded. Jewelry and aftercare cannot be returned for a change of mind at all.`,
+        text: "That is the only case in which anything is returned, so return postage is never something you have to cover. We do not accept change-of-mind returns, so the question of who pays for one does not arise.",
       },
       { kind: "p", text: OWNER_DECISIONS.restockingFee },
     ],
@@ -233,7 +243,7 @@ const SECTIONS: Section[] = [
     blocks: [
       {
         kind: "p",
-        text: "Because jewelry and aftercare are final sale, we do not offer exchanges on them — including exchanges for a different size, gauge, or style.",
+        text: "We do not offer exchanges for a change of mind on anything we sell — including exchanges for a different size, gauge, style, or colour. For jewelry and aftercare this is absolute, for the hygiene reasons set out above.",
       },
       {
         kind: "p",
@@ -302,7 +312,7 @@ export const RETURNS_POLICY_DOC: LegalDocument = {
     kicker: "Get in touch",
     intro:
       "If something has arrived damaged or incorrect, or you are not sure whether your item can be returned, please contact us and we will sort it out.",
-    email: SUPPORT_EMAIL,
+    email: LEGAL_CONTACT_EMAIL,
     website: SITE_URL,
   },
 };

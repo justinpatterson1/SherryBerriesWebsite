@@ -20,7 +20,18 @@ import type { Prisma } from "@/generated/prisma/client";
 export type ReleasableItems = {
   /** The order's `notes` JSON, which carries the promo code applied at checkout. */
   notes: string | null;
-  orderItems: { productId: string; variantId: string | null; quantity: number }[];
+  orderItems: {
+    productId: string;
+    variantId: string | null;
+    quantity: number;
+    /**
+     * Digital lines never decremented anything at checkout, so they must not
+     * be incremented here. Both callers select it; optional only so a caller
+     * that has not been updated fails loudly in review rather than silently
+     * inflating stock.
+     */
+    product?: { isDigital: boolean };
+  }[];
 };
 
 /** The promo code recorded on the order at checkout, if any. */
@@ -44,6 +55,11 @@ export async function releaseOrderStock(
   order: ReleasableItems,
 ): Promise<void> {
   for (const item of order.orderItems) {
+    // A download was never taken out of stock, so there is nothing to give
+    // back. Incrementing here would add phantom inventory to a digital product
+    // on every failed payment and every expired bank transfer.
+    if (item.product?.isDigital) continue;
+
     // Variant stock when the line chose one, product stock otherwise — the same
     // split the checkout decrement uses.
     if (item.variantId) {

@@ -24,7 +24,10 @@ export type PlacedOrder = {
   total: number;
   eta: string;
   contact: { firstName: string; lastName: string; email: string; phone: string };
+  /** The delivery address, or the buyer's email when there is nothing to ship. */
   shipTo: string;
+  /** Nothing in this order ships: it is downloaded from the order page. */
+  digital?: boolean;
 };
 
 export function ThankYou({ order }: { order: PlacedOrder }) {
@@ -85,7 +88,7 @@ export function ThankYou({ order }: { order: PlacedOrder }) {
 
           <OrderRow label="Date" value={order.dateLabel} />
           <OrderRow label="Items" value={`${itemCount} item${itemCount === 1 ? "" : "s"}`} />
-          <OrderRow label="Ship to" value={order.shipTo} />
+          <OrderRow label={order.digital ? "Delivered to" : "Ship to"} value={order.shipTo} />
           <OrderRow label="Method" value={order.shipLabel} />
           <OrderRow label="Payment" value={order.paymentLabel} />
           {order.discount > 0 && (
@@ -104,17 +107,35 @@ export function ThankYou({ order }: { order: PlacedOrder }) {
         {/* Next steps */}
         <div className="mt-4 flex items-start gap-3 text-left p-4 rounded-[14px] border border-pink/20 bg-pink/[0.07]">
           <span className="flex-none text-blush mt-0.5" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-              <path d="M3 6h11v9H3z" />
-              <path d="M14 9h4l3 3v3h-7z" />
-              <circle cx="7" cy="18" r="1.6" />
-              <circle cx="17" cy="18" r="1.6" />
-            </svg>
+            {order.digital ? (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                <path d="M12 3v12" />
+                <path d="m7 10 5 5 5-5" />
+                <path d="M5 21h14" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                <path d="M3 6h11v9H3z" />
+                <path d="M14 9h4l3 3v3h-7z" />
+                <circle cx="7" cy="18" r="1.6" />
+                <circle cx="17" cy="18" r="1.6" />
+              </svg>
+            )}
           </span>
           <p className="font-sans text-[13px] leading-[1.6] text-ink-dim m-0">
-            {order.eta}. We&apos;ll text{" "}
-            <span className="text-ink">{order.contact.phone}</span> with updates
-            {isCod ? " — please have payment ready on arrival." : "."}
+            {order.digital ? (
+              <>
+                {order.eta}. It stays on your order page for good — download it
+                as often as you like.
+                {isCod && " Payment is collected before your download unlocks."}
+              </>
+            ) : (
+              <>
+                {order.eta}. We&apos;ll text{" "}
+                <span className="text-ink">{order.contact.phone}</span> with updates
+                {isCod ? " — please have payment ready on arrival." : "."}
+              </>
+            )}
           </p>
         </div>
 

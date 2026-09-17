@@ -10,6 +10,7 @@ import {
   type PaymentKey,
   type ShippingKey,
 } from "@/lib/checkout/shipping";
+import { cartNeedsShipping } from "@/lib/checkout/digital";
 import { findDeliveryCity, isDeliverableCity } from "@/lib/checkout/delivery-zones";
 import { StepIndicator } from "./shared";
 import { CheckoutForm } from "./checkout-form";
@@ -147,6 +148,11 @@ export function CheckoutClient({
     window.history.replaceState(null, "", window.location.pathname);
   }, [showToast]);
 
+  // A bag of nothing but downloads has no address to collect and no fee to
+  // charge. The checkout API decides this again from the database — this copy
+  // only shapes the form.
+  const needsShipping = useMemo(() => cartNeedsShipping(snapshot), [snapshot]);
+
   const totals = useMemo(() => {
     const subtotal = snapshot.reduce((s, l) => s + l.unitPrice * l.quantity, 0);
     let discount = 0;
@@ -157,10 +163,12 @@ export function CheckoutClient({
     // Courier is priced by city; before one is picked there is no rate yet, so
     // the summary shows the cheapest until the customer chooses. The API
     // recomputes this from the same rate card and is the authority.
-    const shipFee = feeForCity(shipping, form.city) ?? SHIPPING[shipping].fee;
+    const shipFee = needsShipping
+      ? feeForCity(shipping, form.city) ?? SHIPPING[shipping].fee
+      : 0;
     const total = Math.max(0, subtotal - discount + shipFee);
     return { subtotal, discount, shipFee, total };
-  }, [snapshot, promo, shipping, form.city]);
+  }, [snapshot, promo, shipping, form.city, needsShipping]);
 
   const setField = useCallback((key: keyof FormState, value: string) => {
     setForm((f) => ({ ...f, [key]: value }));
@@ -192,11 +200,13 @@ export function CheckoutClient({
     if (!form.lastName.trim()) next.lastName = "Required";
     if (!EMAIL_RE.test(form.email.trim())) next.email = "Enter a valid email";
     if (form.phone.replace(/\D/g, "").length < 7) next.phone = "Enter a valid phone";
-    if (!form.line1.trim()) next.line1 = "Required";
-    // A saved address predating the rate card can hold a city that is no longer
-    // selectable, so check membership rather than just non-emptiness.
-    if (!form.city.trim()) next.city = "Required";
-    else if (!isDeliverableCity(form.city)) next.city = "Choose a city from the list";
+    if (needsShipping) {
+      if (!form.line1.trim()) next.line1 = "Required";
+      // A saved address predating the rate card can hold a city that is no
+      // longer selectable, so check membership rather than just non-emptiness.
+      if (!form.city.trim()) next.city = "Required";
+      else if (!isDeliverableCity(form.city)) next.city = "Choose a city from the list";
+    }
     setErrors(next);
     const firstBad = Object.keys(next)[0];
     if (firstBad) {
@@ -221,8 +231,14 @@ export function CheckoutClient({
             email: form.email.trim(),
             phone: form.phone.trim(),
           },
-          address: { line1: form.line1.trim(), city: form.city.trim(), landmark: form.landmark.trim() },
-          shipping,
+          address: needsShipping
+            ? {
+                line1: form.line1.trim(),
+                city: form.city.trim(),
+                landmark: form.landmark.trim(),
+              }
+            : null,
+          shipping: needsShipping ? shipping : null,
           payment,
           promoCode: promo?.code ?? null,
         }),
@@ -296,11 +312,14 @@ export function CheckoutClient({
                 onSelectShipping={setShipping}
                 payment={payment}
                 onSelectPayment={setPayment}
+                needsShipping={needsShipping}
               />
               <CheckoutSummary
                 items={snapshot}
                 totals={totals}
-                shippingLabel={SHIPPING[shipping].label}
+                shippingLabel={
+                  needsShipping ? SHIPPING[shipping].label : SHIPPING.digital.label
+                }
                 promo={promo}
                 placing={placing}
                 onApplyPromo={applyPromo}

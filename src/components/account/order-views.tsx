@@ -266,8 +266,15 @@ export function OrderDetailView({
           <Row label="Status" value={order.status} last />
         </div>
         <div className={cardClass}>
-          <CardTitle>Shipping</CardTitle>
-          {order.shipTo ? (
+          <CardTitle>{order.digitalOnly ? "Delivery" : "Shipping"}</CardTitle>
+          {order.digitalOnly ? (
+            // Not "no address recorded" — there was never one to record, and
+            // that message reads like a bug on an order that ships nothing.
+            <p className="font-sans text-[13px] leading-[1.6] text-ink-dim m-0">
+              Nothing to ship — this order is a download. It stays on this page
+              for good, so you can get it again whenever you need to.
+            </p>
+          ) : order.shipTo ? (
             <>
               <Row label="Recipient" value={order.shipTo.name ?? "—"} />
               <Row
@@ -325,6 +332,27 @@ export function OrderDetailView({
                 <p className="font-sans text-[12px] text-ink-dim m-0 mt-0.5">
                   Qty: {it.qty} · {money(it.price)} each
                 </p>
+                {/* A plain anchor, not a fetch: the route replies with a
+                    Content-Disposition the browser needs to act on. */}
+                {it.isDigital && it.downloadReady && it.downloadUrl && (
+                  <a
+                    href={it.downloadUrl}
+                    download
+                    className="inline-flex items-center gap-1.5 mt-2 py-2 px-3.5 rounded-full bg-gradient-to-br from-pink to-pink-deep text-white font-sans text-[11px] font-bold tracking-[0.1em] uppercase no-underline transition-transform duration-200 hover:-translate-y-px"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5" aria-hidden="true">
+                      <path d="M12 3v12" />
+                      <path d="m7 10 5 5 5-5" />
+                      <path d="M5 21h14" />
+                    </svg>
+                    Download PDF
+                  </a>
+                )}
+                {it.isDigital && !it.downloadReady && (
+                  <p className="font-sans text-[12px] text-ink-faint m-0 mt-2">
+                    Unlocks once your payment is confirmed.
+                  </p>
+                )}
               </div>
               <span className="font-serif text-[16px] font-semibold text-ink">
                 {money(it.lineTotal)}
@@ -353,8 +381,8 @@ export function OrderDetailView({
         </div>
       </div>
 
-      {/* Tracking timeline (skip when cancelled) */}
-      {order.stageIndex >= 0 && (
+      {/* Tracking timeline (skip when cancelled, or when nothing ships) */}
+      {order.stageIndex >= 0 && !order.digitalOnly && (
         <div className={cardClass + " mb-4"}>
           <CardTitle>Tracking</CardTitle>
           {order.trackingNumber && (

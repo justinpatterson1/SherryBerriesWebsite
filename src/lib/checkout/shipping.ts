@@ -4,8 +4,15 @@
 
 import { deliveryFeeFor, MIN_DELIVERY_FEE } from "./delivery-zones";
 
-export type ShippingKey = "pickup" | "ttpost" | "courier";
+export type ShippingKey = "pickup" | "ttpost" | "courier" | "digital";
 export type PaymentKey = "cod" | "card" | "bank";
+
+/**
+ * Assigned by the server to an order with nothing to ship. Never selectable:
+ * it is absent from SHIPPING_ORDER (so no radio renders) and rejected by
+ * isShippingKey (so it cannot arrive in a request body).
+ */
+export const DIGITAL_SHIPPING_KEY: ShippingKey = "digital";
 
 export type ShippingOption = {
   key: ShippingKey;
@@ -45,8 +52,19 @@ export const SHIPPING: Record<ShippingKey, ShippingOption> = {
     eta: "Arrives in 1–2 business days",
     variesByCity: true,
   },
+  digital: {
+    key: "digital",
+    label: "Digital delivery",
+    sub: "Download from your order page",
+    fee: 0,
+    eta: "Available to download as soon as your payment is confirmed",
+  },
 };
 
+/**
+ * The methods the customer picks between. "digital" is deliberately absent —
+ * it is not a choice, it is what an order with nothing to ship gets.
+ */
 export const SHIPPING_ORDER: ShippingKey[] = ["pickup", "ttpost", "courier"];
 
 export const PAYMENT_LABEL: Record<PaymentKey, string> = {
@@ -67,8 +85,26 @@ export function feeForCity(key: ShippingKey, city: string): number | null {
   return deliveryFeeFor(city);
 }
 
+/**
+ * Guard for a CLIENT-SUPPLIED shipping key.
+ *
+ * "digital" is excluded on purpose and must stay excluded: it carries a $0 fee,
+ * so accepting it here would let anyone check out a cart full of jewelry with
+ * `shipping: "digital"` and pay no delivery charge. The server assigns that key
+ * itself, from the cart's contents — see DIGITAL_SHIPPING_KEY.
+ */
 export function isShippingKey(v: unknown): v is ShippingKey {
   return v === "pickup" || v === "ttpost" || v === "courier";
+}
+
+/**
+ * Guard for a key read back out of storage, where "digital" is legitimate.
+ *
+ * Kept separate from isShippingKey so the narrower client guard can never be
+ * widened by accident: this one is for `Order.notes`, which the server wrote.
+ */
+export function isStoredShippingKey(v: unknown): v is ShippingKey {
+  return isShippingKey(v) || v === DIGITAL_SHIPPING_KEY;
 }
 
 export function isPaymentKey(v: unknown): v is PaymentKey {

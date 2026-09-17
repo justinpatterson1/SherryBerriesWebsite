@@ -56,6 +56,12 @@ export type AccountOrderItem = {
   categorySlug: string;
   /** True where the item is final sale — no change-of-mind return once shipped. */
   finalSale: boolean;
+  /** A download rather than something that ships. */
+  isDigital: boolean;
+  /** The order is paid and the file is servable, so the button is live. */
+  downloadReady: boolean;
+  /** Where to fetch it. Null when the line is not a download. */
+  downloadUrl: string | null;
 };
 
 export type AccountOrder = {
@@ -79,6 +85,8 @@ export type AccountOrder = {
    * bug this replaced.
    */
   shipTo: OrderShipTo | null;
+  /** Nothing in this order ships, so the delivery card and tracking are moot. */
+  digitalOnly: boolean;
   items: AccountOrderItem[];
 };
 
@@ -217,6 +225,8 @@ export async function getAccountData(userId: string): Promise<AccountData | null
               select: {
                 name: true,
                 slug: true,
+                isDigital: true,
+                digitalFileKey: true,
                 category: { select: { slug: true } },
                 images: {
                   orderBy: { position: "asc" },
@@ -283,8 +293,11 @@ export async function getAccountData(userId: string): Promise<AccountData | null
       stageIndex: stageIndexFor(o.fulfillmentStatus),
       returnEligible: o.fulfillmentStatus === "DELIVERED",
       shipTo: resolveShipTo(o),
+      digitalOnly:
+        o.orderItems.length > 0 && o.orderItems.every((it) => it.product.isDigital),
       items: o.orderItems.map((it) => {
         const price = Number(it.price);
+        const isDigital = it.product.isDigital;
         return {
           id: it.id,
           productId: it.productId,
@@ -296,7 +309,14 @@ export async function getAccountData(userId: string): Promise<AccountData | null
           lineTotal: Number((price * it.quantity).toFixed(2)),
           img: it.product.images[0]?.imageUrl ?? null,
           categorySlug: it.product.category.slug,
-          finalSale: isFinalSale(it.product.category.slug),
+          // A downloaded file cannot come back, whatever its category.
+          finalSale: isDigital || isFinalSale(it.product.category.slug),
+          isDigital,
+          downloadReady:
+            isDigital && !!it.product.digitalFileKey && o.paymentStatus === "PAID",
+          downloadUrl: isDigital
+            ? `/api/orders/${encodeURIComponent(o.orderNumber)}/download/${it.id}`
+            : null,
         };
       }),
     };

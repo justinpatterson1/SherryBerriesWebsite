@@ -11,6 +11,8 @@ import {
 import { getAdminProduct } from "@/lib/queries/admin";
 import { prisma } from "@/lib/db";
 import { revalidateCatalog } from "@/lib/admin/revalidate";
+import { deleteProductImages } from "@/lib/storage/r2";
+import { validateDigitalProduct } from "@/lib/admin/options";
 import {
   sizesSummary,
   stockFromSizes,
@@ -38,6 +40,9 @@ type Parsed = {
   /** Null when the product has no sizes. */
   sizeLabel: string | null;
   sizes: SizeRow[];
+  isDigital: boolean;
+  digitalFileKey: string | null;
+  digitalFileName: string | null;
 };
 
 function bad(error: string, status = 400) {
@@ -70,16 +75,28 @@ function parseBody(body: unknown): { data: Parsed } | { error: string } {
   const sized = validateSizes(b.sizeLabel, b.sizes);
   if (!sized.ok) return { error: sized.error };
 
+  const isDigital = b.isDigital === true;
+
   // Only meaningful with no sizes — otherwise the total comes from them, and
   // rejecting a figure the client never uses produces a baffling error about
-  // a field the modal shows as read-only.
+  // a field the modal shows as read-only. A download has no stock at all, so
+  // neither figure is required of it.
   const stock = typeof b.stock === "number" ? b.stock : NaN;
-  if (sized.sizes.length === 0 && (!Number.isInteger(stock) || stock < 0)) {
+  if (!isDigital && sized.sizes.length === 0 && (!Number.isInteger(stock) || stock < 0)) {
     return { error: "Stock must be a non-negative whole number." };
   }
   const reorder = typeof b.reorder === "number" ? b.reorder : NaN;
-  if (!Number.isInteger(reorder) || reorder < 0)
+  if (!isDigital && (!Number.isInteger(reorder) || reorder < 0))
     return { error: "Reorder threshold must be a non-negative whole number." };
+
+  const digital = validateDigitalProduct({
+    isDigital,
+    digitalFileKey: str(b.digitalFileKey),
+    sizeCount: sized.sizes.length,
+    stock: stockFromSizes(sized.sizes, stock),
+    reorder,
+  });
+  if (!digital.ok) return { error: digital.error };
 
   const categoryId = str(b.categoryId);
   if (!categoryId) return { error: "Please choose a category." };
@@ -95,9 +112,10 @@ function parseBody(body: unknown): { data: Parsed } | { error: string } {
       // A product with sizes carries the sum of them: both numbers are live
       // in checkout (an order line with a variantId decrements the variant,
       // one without decrements the product), so letting them drift is how a
-      // shop oversells. The typed-in figure only survives with no sizes.
-      stock: stockFromSizes(sized.sizes, stock),
-      reorder,
+      // shop oversells. The typed-in figure only survives with no sizes, and
+      // a download is pinned to 0 — a file cannot run out.
+      stock: digital.stock,
+      reorder: digital.reorder,
       categoryId,
       material: str(b.material),
       careInstructions: str(b.careInstructions),
@@ -106,6 +124,9 @@ function parseBody(body: unknown): { data: Parsed } | { error: string } {
       imageUrl: str(b.imageUrl),
       sizeLabel: sized.label,
       sizes: sized.sizes,
+      isDigital,
+      digitalFileKey: digital.digitalFileKey,
+      digitalFileName: isDigital ? str(b.digitalFileName) || null : null,
     },
   };
 }
@@ -264,6 +285,9 @@ export async function POST(request: Request) {
           careInstructions: d.careInstructions || null,
           featured: d.featured,
           active: d.active,
+          isDigital: d.isDigital,
+          digitalFileKey: d.digitalFileKey,
+          digitalFileName: d.digitalFileName,
           categoryId: d.categoryId,
           images: d.imageUrl ? { create: [{ imageUrl: d.imageUrl, position: 0 }] } : undefined,
         },
@@ -338,6 +362,8 @@ export async function PATCH(request: Request) {
       careInstructions: true,
       featured: true,
       active: true,
+      isDigital: true,
+      digitalFileKey: true,
       categoryId: true,
     },
   });
@@ -378,6 +404,11 @@ export async function PATCH(request: Request) {
     careInstructions: d.careInstructions || null,
     featured: d.featured,
     active: d.active,
+    isDigital: d.isDigital,
+    // Keep the existing file when the form did not send a new one, so editing
+    // a digital product's price cannot silently detach its PDF.
+    digitalFileKey: d.isDigital ? d.digitalFileKey ?? existing.digitalFileKey : null,
+    digitalFileName: d.digitalFileName,
     categoryId: d.categoryId,
   };
 
@@ -394,6 +425,8 @@ export async function PATCH(request: Request) {
     "careInstructions",
     "featured",
     "active",
+    "isDigital",
+    "digitalFileKey",
     "categoryId",
   ]);
 
@@ -462,4 +495,81 @@ export async function PATCH(request: Request) {
 
   const product = await getAdminProduct(id);
   return NextResponse.json({ ok: true, product });
+}
+
+// --- Delete ------------------------------------------------------------------
+
+export async function DELETE(request: Request) {
+  const admin = await requireAdmin();
+  if (!admin) return bad("Admins only.", 403);
+
+  const id = new URL(request.url).searchParams.get("id") ?? "";
+  if (!id) return bad("Product id is required.");
+
+  const existing = await prisma.product.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      name: true,
+      sku: true,
+      active: true,
+      images: { select: { imageUrl: true } },
+      _count: { select: { orderItems: true, variants: true } },
+    },
+  });
+  if (!existing) return bad("Product not found.", 404);
+
+  // OrderItem.productId is required with no onDelete rule, so Postgres would
+  // RESTRICT this anyway. Refusing here turns a 500 into a message worth
+  // reading — and the right answer is almost always to deactivate instead,
+  // which hides the product from the storefront while past orders keep saying
+  // what was bought.
+  const ordered = existing._count.orderItems;
+  if (ordered > 0) {
+    return bad(
+      `“${existing.name}” appears on ${ordered} order line${ordered === 1 ? "" : "s"}. ` +
+        "Untick Active in the product instead — deleting it would erase what those customers bought.",
+      409,
+    );
+  }
+
+  const imageUrls = existing.images.map((i) => i.imageUrl);
+
+  await prisma.$transaction(async (tx) => {
+    // Images, sizes, reviews and wishlist entries cascade. Cart lines do not
+    // (CartItem.productId is required and declares no rule), so they go first:
+    // a line pointing at a product nobody can buy is dead weight, and leaving
+    // it would block the delete outright.
+    await tx.cartItem.deleteMany({ where: { productId: id } });
+    await tx.product.delete({ where: { id } });
+
+    // Deletion leaves nothing to inspect afterwards, so the log keeps the name
+    // and SKU — otherwise the row would point at an id that resolves to
+    // nothing.
+    await writeAuditLog(tx, {
+      actor: admin,
+      action: AUDIT_ACTIONS.productDelete,
+      entityType: "Product",
+      entityId: id,
+      summary:
+        `Deleted “${existing.name}” (${existing.sku})` +
+        (imageUrls.length > 0
+          ? ` — ${imageUrls.length} image${imageUrls.length === 1 ? "" : "s"}`
+          : "") +
+        (existing._count.variants > 0
+          ? `, ${existing._count.variants} size${existing._count.variants === 1 ? "" : "s"}`
+          : ""),
+      changes: { name: { from: existing.name, to: null }, sku: { from: existing.sku, to: null } },
+      ip: auditIp(request),
+    });
+  });
+  maybePurgeAuditLogs();
+  revalidateCatalog();
+
+  // After the row is gone, and never fatal: the product is already deleted, so
+  // a storage hiccup must not be reported as a failed delete. Only images this
+  // bucket actually owns are touched — a pasted external URL is left alone.
+  await deleteProductImages(imageUrls);
+
+  return NextResponse.json({ ok: true, id });
 }

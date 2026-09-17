@@ -5,15 +5,11 @@ import { isFinalSale, RETURN_WINDOW_DAYS } from "@/lib/account/returns";
 // would be wrong on one of them, so it is chosen per product.
 export function ProductTrustBadges({ categorySlug }: { categorySlug: string }) {
   const finalSale = isFinalSale(categorySlug);
-  const BADGES = [
-    HYPOALLERGENIC_BADGE,
-    finalSale ? FINAL_SALE_BADGE : RETURNABLE_BADGE,
-  ];
+  const BADGES = [finalSale ? FINAL_SALE_BADGE : RETURNABLE_BADGE];
 
   return (
-    // auto-fit rather than a fixed 3 columns: the buy-box column is only ~340px
-    // between 900–1250px, and "HYPOALLERGENIC" (one unbreakable word at 0.14em
-    // tracking) needs ~120px of text width, so rigid thirds overflow the card.
+    // auto-fit rather than fixed columns: the buy-box column is only ~340px
+    // between 900–1250px, so rigid fractions overflow the card.
     <ul className="grid grid-cols-[repeat(auto-fit,minmax(170px,1fr))] gap-2">
       {BADGES.map((b) => (
         <li
@@ -45,17 +41,6 @@ const RETURN_ICON = (
   </svg>
 );
 
-const HYPOALLERGENIC_BADGE = {
-  title: "Hypoallergenic",
-  body: "Implant-grade titanium & 14k gold",
-  icon: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M12 3l8 4v5c0 4.5-3.4 8.5-8 9-4.6-.5-8-4.5-8-9V7z" />
-      <path d="m8.5 12 2.5 2.5L16 9.5" />
-    </svg>
-  ),
-};
-
 // Jewelry and aftercare. Says plainly that the piece will not come back, while
 // naming the one case that is always covered — the policy's own carve-out.
 const FINAL_SALE_BADGE = {
@@ -64,9 +49,11 @@ const FINAL_SALE_BADGE = {
   icon: RETURN_ICON,
 };
 
-// Merchandise and accessories, which carry no hygiene risk.
+// Merchandise and accessories. Not "easy returns" any more — since
+// change-of-mind returns were dropped, these come back only if something went
+// wrong on our side. The window is now how long you have to tell us.
 const RETURNABLE_BADGE = {
-  title: "Easy returns",
-  body: `Unused items within ${RETURN_WINDOW_DAYS} days`,
+  title: "Returns",
+  body: `Faults or wrong items · report within ${RETURN_WINDOW_DAYS} days`,
   icon: RETURN_ICON,
 };

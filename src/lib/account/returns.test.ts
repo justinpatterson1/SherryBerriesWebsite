@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  allowedReasonsFor,
-  CHANGE_OF_MIND_REASON,
+  allowedReasons,
   isFinalSale,
   isReasonAllowed,
   RETURN_REASONS,
@@ -26,7 +25,10 @@ describe("isFinalSale", () => {
     expect(isFinalSale("elixirs")).toBe(true);
   });
 
-  it("leaves merch and accessories returnable — no hygiene risk", () => {
+  // Since 2026-09-16 this only decides how a refusal is WORDED — merch is not
+  // refused on hygiene grounds — not whether an item can be returned. Nothing
+  // comes back for a change of mind either way.
+  it("does not mark merch and accessories hygiene-final-sale", () => {
     expect(isFinalSale("merch")).toBe(false);
     expect(isFinalSale("accessories")).toBe(false);
   });
@@ -37,35 +39,27 @@ describe("isFinalSale", () => {
   });
 });
 
-describe("allowedReasonsFor / isReasonAllowed", () => {
-  it("drops change-of-mind on final-sale items", () => {
-    const reasons = allowedReasonsFor("belly-rings");
-    expect(reasons).not.toContain(CHANGE_OF_MIND_REASON);
-    expect(isReasonAllowed("belly-rings", CHANGE_OF_MIND_REASON)).toBe(false);
-    expect(isReasonAllowed("aftercare", CHANGE_OF_MIND_REASON)).toBe(false);
+describe("allowedReasons / isReasonAllowed", () => {
+  // Regression guard for the owner's 2026-09-16 rule. If "Changed Mind" ever
+  // comes back into RETURN_REASONS, the published policy starts contradicting
+  // the form again — which is the exact class of bug open-issues P1 tracks.
+  it("offers no change-of-mind reason", () => {
+    expect(allowedReasons()).not.toContain("Changed Mind");
+    expect(isReasonAllowed("Changed Mind")).toBe(false);
   });
 
-  // The whole point of the carve-out: final sale never blocks a fault claim.
-  it("keeps every fault reason available on final-sale items", () => {
-    const reasons = allowedReasonsFor("belly-rings");
-    expect(reasons).toEqual(["Wrong Item Received", "Damaged Item", "Defective Item", "Other"]);
+  // Final sale never blocks a fault claim — that carve-out is what keeps the
+  // policy lawful.
+  it("keeps every fault reason available", () => {
+    expect(allowedReasons()).toEqual([...RETURN_REASONS]);
     for (const r of ["Wrong Item Received", "Damaged Item", "Defective Item"]) {
-      expect(isReasonAllowed("belly-rings", r)).toBe(true);
+      expect(isReasonAllowed(r)).toBe(true);
     }
   });
 
-  it("offers every reason on returnable categories", () => {
-    expect(allowedReasonsFor("merch")).toEqual([...RETURN_REASONS]);
-    expect(isReasonAllowed("merch", CHANGE_OF_MIND_REASON)).toBe(true);
-  });
-
   it("rejects a reason that is not on the list at all", () => {
-    expect(isReasonAllowed("merch", "Because I said so")).toBe(false);
-    expect(isReasonAllowed("belly-rings", "")).toBe(false);
-  });
-
-  it("treats an unknown category as final sale", () => {
-    expect(allowedReasonsFor("brand-new-category")).not.toContain(CHANGE_OF_MIND_REASON);
+    expect(isReasonAllowed("Because I said so")).toBe(false);
+    expect(isReasonAllowed("")).toBe(false);
   });
 });
 
@@ -109,6 +103,22 @@ describe("the published Returns Policy", () => {
   it("never claims returns are free for a change of mind", () => {
     expect(text).not.toContain("free returns");
   });
+
+  // Owner's rule, 2026-09-16. The form no longer offers change-of-mind, so the
+  // published document must not offer one either — in particular it must not
+  // still advertise the merch/accessories window it used to have.
+  it("says plainly that change-of-mind returns are refused", () => {
+    expect(text).toContain("change of mind");
+    const eligible = RETURNS_POLICY_DOC.sections.find((s) => s.id === "eligible-returns");
+    expect(JSON.stringify(eligible).toLowerCase()).toContain(
+      "do not accept returns for a change of mind",
+    );
+  });
+
+  it("no longer offers merchandise a change-of-mind window", () => {
+    expect(text).not.toContain("unused, resalable condition");
+    expect(text).not.toContain("keep a 14-day window");
+  });
 });
 
 describe("RETURN_REASONS", () => {
@@ -117,8 +127,11 @@ describe("RETURN_REASONS", () => {
       "Wrong Item Received",
       "Damaged Item",
       "Defective Item",
-      "Changed Mind",
       "Other",
     ]);
+  });
+
+  it("offers no change-of-mind reason", () => {
+    expect(RETURN_REASONS).not.toContain("Changed Mind");
   });
 });

@@ -3,10 +3,13 @@
 // only structure, headings, and styling are adapted to the design system. Keep
 // the sentences intact; edit copy here rather than in the page layout.
 //
-// Plain static data — safe to import from server or client components.
+// Static data, but SERVER-ONLY: it pulls the canonical origin and the published
+// contact address from modules marked `server-only`. Render it from a server
+// component (as /privacy does), not a client one.
 
 import type { Block, LegalDocument, Section } from "@/lib/legal/types";
 import { CANONICAL_ORIGIN } from "@/lib/seo/site-url";
+import { LEGAL_CONTACT_EMAIL } from "@/lib/legal/contact";
 
 /**
  * Rendered in the hero and referenced by "Changes to This Privacy Policy".
@@ -19,7 +22,6 @@ export const LAST_UPDATED = "August 18, 2026";
 // literal in each of the four legal files and had drifted to a domain the
 // site does not serve. One source of truth now.
 export const SITE_URL = CANONICAL_ORIGIN;
-export const PRIVACY_EMAIL = "sherryvanessanichols@gmail.com";
 
 const INTRO: Block[] = [
   {
@@ -391,7 +393,7 @@ export const PRIVACY_DOC: LegalDocument = {
     kicker: "Get in touch",
     intro:
       "If you have any questions about this Privacy Policy or wish to exercise your privacy rights, please contact us:",
-    email: PRIVACY_EMAIL,
+    email: LEGAL_CONTACT_EMAIL,
     website: SITE_URL,
   },
 };

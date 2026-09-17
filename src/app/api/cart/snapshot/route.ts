@@ -18,6 +18,8 @@ export type CartSnapshotLine = {
   productInventory: number;
   variantInventory: number | null;
   lowStockThreshold: number;
+  /** A download: holds no stock, ships nowhere. */
+  isDigital: boolean;
 };
 
 type RequestLine = { productId: string; variantId?: string | null; quantity: number };
@@ -110,6 +112,7 @@ export async function POST(request: Request) {
         productInventory: product.inventory,
         variantInventory: variant?.inventory ?? null,
         lowStockThreshold: product.lowStockThreshold,
+        isDigital: product.isDigital,
       },
     ];
   });

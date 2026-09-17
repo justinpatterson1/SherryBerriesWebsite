@@ -122,6 +122,7 @@ export default async function ProductPage({ params }: PageProps) {
             variants={product.variants}
             inventory={product.inventory}
             lowStockThreshold={product.lowStockThreshold}
+            isDigital={product.isDigital}
           />
 
           <div className="flex items-center gap-3 flex-wrap">
@@ -227,9 +228,10 @@ export default async function ProductPage({ params }: PageProps) {
                         </>
                       ) : (
                         <>
-                          Unused items can be returned within {RETURN_WINDOW_DAYS} days and are
-                          refunded to your original payment method. Anything that arrives
-                          damaged, defective, or incorrect is always covered.
+                          We don&apos;t accept returns for a change of mind. Anything that
+                          arrives damaged, defective, or incorrect is always put right at no
+                          cost to you — please tell us within {RETURN_WINDOW_DAYS} days of
+                          delivery.
                         </>
                       )}{" "}
                       See our{" "}

@@ -25,8 +25,10 @@ export function CartRow({
 }) {
   const inv =
     line.variantInventory != null ? line.variantInventory : line.productInventory;
-  const low = inv > 0 && inv <= line.lowStockThreshold;
-  const out = inv <= 0;
+  // A download holds no stock, so the usual thresholds would read "Out of
+  // stock" on something that can never run out.
+  const low = !line.isDigital && inv > 0 && inv <= line.lowStockThreshold;
+  const out = !line.isDigital && inv <= 0;
 
   const unit = line.unitPrice;
   const baseCompare = line.compareAtPrice;
@@ -136,6 +138,8 @@ export function CartRow({
               ? "Out of stock"
               : low
               ? `Only ${inv} left — last chance`
+              : line.isDigital
+              ? "Instant download"
               : "In stock · ships in 2 days"}
           </span>
         </div>

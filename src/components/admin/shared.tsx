@@ -1,7 +1,34 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import type { AdminOrderStatus, StockStatus, Kpi } from "@/lib/queries/admin";
+
+/**
+ * Scrim + centering for a modal. The backdrop is a real button rather than a
+ * div with a click handler, so dismissing works from the keyboard and the
+ * dialog needs no stopPropagation.
+ */
+export function ModalShell({ onClose, children }: { onClose: () => void; children: ReactNode }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div className="fixed inset-0 z-[300] grid place-items-center p-4">
+      <button
+        type="button"
+        aria-label="Close"
+        onClick={onClose}
+        className="absolute inset-0 w-full h-full cursor-default border-0 bg-black/60 backdrop-blur-[6px]"
+      />
+      {children}
+    </div>
+  );
+}
 
 export const money = (n: number) =>
   `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -161,6 +188,8 @@ const STOCK_TONE: Record<StockStatus, Tone> = {
   "In stock": "green",
   "Low stock": "gold",
   "Out of stock": "red",
+  // A download never runs out, so it is neither healthy nor a warning.
+  Digital: "pink",
 };
 
 function Badge({ tone, label }: { tone: Tone; label: string }) {
@@ -388,6 +417,14 @@ export const ICONS: Record<string, ReactNode> = {
   close: (
     <Svg>
       <path d="M18 6L6 18M6 6l12 12" />
+    </Svg>
+  ),
+  trash: (
+    <Svg>
+      <path d="M3 6h18" />
+      <path d="M8 6V4h8v2" />
+      <path d="M6 6v14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6" />
+      <path d="M10 11v6M14 11v6" />
     </Svg>
   ),
 };

@@ -4,7 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import type { AdminCategory } from "@/lib/queries/admin";
 import { slugifyCategory, type CategoryFormData } from "@/lib/admin/options";
 import { isFinalSale } from "@/lib/account/returns";
-import { ProductThumb, btnSolid, btnOutline, cardPadded, ICONS } from "@/components/admin/shared";
+import {
+  ProductThumb,
+  ModalShell,
+  btnSolid,
+  btnOutline,
+  cardPadded,
+  ICONS,
+} from "@/components/admin/shared";
 
 const fieldClass =
   "w-full h-11 px-3.5 rounded-xl border border-white/12 bg-white/[0.03] font-sans text-[14px] text-ink " +
@@ -102,7 +109,9 @@ export function CategoriesView({
                     <Pill>
                       {count} product{count === 1 ? "" : "s"}
                     </Pill>
-                    <Pill>{isFinalSale(c.slug) ? "Final sale" : "Returnable if unused"}</Pill>
+                    {/* Nothing is returnable for a change of mind any more, so
+                        the pill names why an item is refused, not whether. */}
+                    <Pill>{isFinalSale(c.slug) ? "Final sale · hygiene" : "Faults only"}</Pill>
                   </div>
                 </div>
 
@@ -200,33 +209,6 @@ export function CategoriesView({
           </div>
         </ModalShell>
       )}
-    </div>
-  );
-}
-
-/**
- * Scrim + centering for a modal. The backdrop is a real button rather than a
- * div with a click handler, so dismissing works from the keyboard and the
- * dialog needs no stopPropagation.
- */
-function ModalShell({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
-  return (
-    <div className="fixed inset-0 z-[300] grid place-items-center p-4">
-      <button
-        type="button"
-        aria-label="Close"
-        onClick={onClose}
-        className="absolute inset-0 w-full h-full cursor-default border-0 bg-black/60 backdrop-blur-[6px]"
-      />
-      {children}
     </div>
   );
 }

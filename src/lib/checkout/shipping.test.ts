@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { SHIPPING, feeForCity } from "./shipping";
+import { SHIPPING, SHIPPING_ORDER, feeForCity, isShippingKey } from "./shipping";
 
 describe("feeForCity", () => {
   it("prices courier from the city's rate card", () => {
@@ -28,5 +28,33 @@ describe("feeForCity", () => {
     expect(SHIPPING.courier.variesByCity).toBe(true);
     expect(SHIPPING.pickup.variesByCity).toBeUndefined();
     expect(SHIPPING.ttpost.variesByCity).toBeUndefined();
+  });
+
+  it("charges nothing for digital delivery, whatever the city", () => {
+    expect(feeForCity("digital", "Arima")).toBe(0);
+    expect(feeForCity("digital", "")).toBe(0);
+  });
+});
+
+describe("the digital shipping key", () => {
+  it("is free and labelled", () => {
+    expect(SHIPPING.digital.fee).toBe(0);
+    expect(SHIPPING.digital.label).toBeTruthy();
+    expect(SHIPPING.digital.eta).toBeTruthy();
+  });
+
+  it("is not offered as a choice", () => {
+    expect(SHIPPING_ORDER).toHaveLength(3);
+    expect(SHIPPING_ORDER).not.toContain("digital");
+  });
+
+  // Regression guard: free-shipping bypass. If isShippingKey ever accepts
+  // "digital", a cart full of jewelry can be checked out with a $0 delivery
+  // fee just by putting that string in the request body.
+  it("is rejected when it arrives from the client", () => {
+    expect(isShippingKey("digital")).toBe(false);
+    expect(isShippingKey("pickup")).toBe(true);
+    expect(isShippingKey("ttpost")).toBe(true);
+    expect(isShippingKey("courier")).toBe(true);
   });
 });

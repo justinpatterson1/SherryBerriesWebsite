@@ -13,6 +13,7 @@ import {
   paymentDeadline,
 } from "@/lib/checkout/bank-transfer";
 import { revalidateCatalog } from "@/lib/admin/revalidate";
+import { unlockDigitalDownloads } from "@/lib/checkout/digital-delivery";
 import {
   sendPaymentConfirmedEmail,
   sendPaymentRejectedEmail,
@@ -144,6 +145,12 @@ export async function PATCH(request: Request) {
         );
       }
     }
+
+    // The order is PAID, so anything downloadable in it is now unlocked. Runs
+    // outside the transaction above, which is what lets it see the committed
+    // status.
+    await unlockDigitalDownloads(order.id, { baseUrl: new URL(request.url).origin });
+
     return NextResponse.json({ ok: true, orderId: order.id, paymentStatus: "PAID" });
   }
 

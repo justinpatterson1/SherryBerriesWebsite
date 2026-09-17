@@ -7,6 +7,7 @@
 
 import type { Block, LegalDocument, Section } from "@/lib/legal/types";
 import { CANONICAL_ORIGIN } from "@/lib/seo/site-url";
+import { LEGAL_CONTACT_EMAIL } from "@/lib/legal/contact";
 
 /** Rendered in the hero and referenced by "Changes to These Terms". */
 export const LAST_UPDATED = "August 17, 2026";
@@ -15,7 +16,7 @@ export const LAST_UPDATED = "August 17, 2026";
 // literal in each of the four legal files and had drifted to a domain the
 // site does not serve. One source of truth now.
 export const SITE_URL = CANONICAL_ORIGIN;
-export const TERMS_EMAIL = "sherryvanessanichols@gmail.com";
+
 
 // The source copy's "Agreement to These Terms" section — shown in the hero
 // without its own heading, matching how /privacy renders its "Introduction".
@@ -435,7 +436,7 @@ export const TERMS_DOC: LegalDocument = {
     chip: "Contact",
     kicker: "Get in touch",
     intro: "If you have questions regarding these Terms of Service, please contact us.",
-    email: TERMS_EMAIL,
+    email: LEGAL_CONTACT_EMAIL,
     website: SITE_URL,
   },
 };

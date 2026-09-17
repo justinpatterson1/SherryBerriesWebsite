@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import tallImg from "../../../assets/images/collagepic1.jpg";
-import sqImg from "../../../assets/images/merchandise.jpg";
-import wideImg from "../../../assets/images/aftercare.jpg";
+import sqImg from "../../../assets/images/collagepic3.jpeg";
+import wideImg from "../../../assets/images/collagepic2.jpg";
 
 const tileClass =
   "relative rounded-[18px] overflow-hidden bg-canvas-2 " +

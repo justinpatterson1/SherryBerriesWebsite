@@ -140,6 +140,38 @@ export function AdminClient({
     [showToast],
   );
 
+  const markOrderPaid = useCallback(
+    async (id: string): Promise<boolean> => {
+      try {
+        const res = await fetch("/api/admin/orders", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderId: id, action: "markPaid" }),
+        });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(json.error || "");
+        setOrders((prev) =>
+          prev.map((o) => (o.id === id ? { ...o, paymentStatus: "PAID" as const } : o)),
+        );
+        const order = orders.find((o) => o.id === id);
+        showToast(
+          order?.hasDigital
+            ? "Payment recorded — the download is unlocked and the buyer has been emailed."
+            : "Payment recorded.",
+        );
+        return true;
+      } catch (e) {
+        showToast(
+          e instanceof Error && e.message
+            ? e.message
+            : "Couldn't record the payment. Try again.",
+        );
+        return false;
+      }
+    },
+    [showToast, orders],
+  );
+
   const saveInventory = useCallback(
     async (edits: { id: string; price: number; stock: number }[]): Promise<boolean> => {
       try {
@@ -210,6 +242,25 @@ export function AdminClient({
         return true;
       } catch (e) {
         showToast(e instanceof Error && e.message ? e.message : "Couldn't update the product.");
+        return false;
+      }
+    },
+    [showToast],
+  );
+
+  const deleteProduct = useCallback(
+    async (id: string): Promise<boolean> => {
+      try {
+        const res = await fetch(`/api/admin/products?id=${encodeURIComponent(id)}`, {
+          method: "DELETE",
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error);
+        setProducts((prev) => prev.filter((p) => p.id !== id));
+        showToast("Product deleted");
+        return true;
+      } catch (e) {
+        showToast(e instanceof Error && e.message ? e.message : "Couldn't delete the product.");
         return false;
       }
     },
@@ -607,6 +658,7 @@ export function AdminClient({
               order={selectedOrder}
               onBack={() => goto("orders")}
               onUpdateStatus={updateOrderStatus}
+              onMarkPaid={markOrderPaid}
             />
           )}
           {view === "inventory" && (
@@ -617,6 +669,7 @@ export function AdminClient({
               onConfirmDiscard={(fn) => setConfirmDiscard(() => fn)}
               onCreateProduct={createProduct}
               onUpdateProduct={updateProduct}
+              onDeleteProduct={deleteProduct}
             />
           )}
           {view === "categories" && (

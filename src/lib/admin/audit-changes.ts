@@ -7,6 +7,7 @@
 export const AUDIT_ACTIONS = {
   productCreate: "product.create",
   productUpdate: "product.update",
+  productDelete: "product.delete",
   inventoryUpdate: "inventory.update",
   categoryCreate: "category.create",
   categoryUpdate: "category.update",
@@ -24,6 +25,7 @@ export const AUDIT_ACTIONS = {
   paymentConfirmed: "payment.confirmed",
   paymentRejected: "payment.rejected",
   paymentExpired: "payment.expired",
+  paymentMarkedPaid: "payment.marked_paid",
 } as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];

@@ -8,6 +8,7 @@ import {
   StockBadge,
   Stepper,
   ProductThumb,
+  ModalShell,
   btnSolid,
   btnOutline,
   ICONS,
@@ -29,6 +30,7 @@ export function InventoryView({
   onConfirmDiscard,
   onCreateProduct,
   onUpdateProduct,
+  onDeleteProduct,
 }: {
   products: AdminProduct[];
   categories: AdminCategory[];
@@ -36,6 +38,7 @@ export function InventoryView({
   onConfirmDiscard: (fn: () => void) => void;
   onCreateProduct: (data: ProductFormData) => Promise<boolean>;
   onUpdateProduct: (id: string, data: ProductFormData) => Promise<boolean>;
+  onDeleteProduct: (id: string) => Promise<boolean>;
 }) {
   const [draft, setDraft] = useState<Draft>({});
   const [tab, setTab] = useState<"all" | "reorder">("all");
@@ -45,6 +48,9 @@ export function InventoryView({
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<AdminProduct | null>(null);
   const [formBusy, setFormBusy] = useState(false);
+  // Delete confirmation: the product awaiting a yes, or null.
+  const [confirmDelete, setConfirmDelete] = useState<AdminProduct | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const eff = (p: AdminProduct) => draft[p.id] ?? { price: p.price, stock: p.stock };
   const isDirty = (p: AdminProduct) => {
@@ -121,6 +127,16 @@ export function InventoryView({
     if (ok) setFormOpen(false);
   };
 
+  const handleDelete = async () => {
+    if (!confirmDelete) return;
+    setDeleting(true);
+    const ok = await onDeleteProduct(confirmDelete.id);
+    setDeleting(false);
+    // On a refusal the toast carries the reason (usually: it has been ordered),
+    // so the dialog stays open with the product still named.
+    if (ok) setConfirmDelete(null);
+  };
+
   return (
     <div className="flex flex-col gap-6 pb-20">
       <header className="flex flex-wrap items-end justify-between gap-3">
@@ -178,13 +194,13 @@ export function InventoryView({
       <AdminCard bodyClassName="p-0">
         <div className="overflow-x-auto">
           <div className="min-w-[860px]">
-            <div className="grid grid-cols-[2fr_1fr_1fr_1.2fr_0.9fr_64px] gap-4 px-5 py-3 border-b border-white/[0.06] font-sans text-[10px] font-bold tracking-[0.14em] uppercase text-ink-faint light:border-[rgba(26,13,18,0.06)]">
+            <div className="grid grid-cols-[2fr_1fr_1fr_1.2fr_0.9fr_108px] gap-4 px-5 py-3 border-b border-white/[0.06] font-sans text-[10px] font-bold tracking-[0.14em] uppercase text-ink-faint light:border-[rgba(26,13,18,0.06)]">
               <span>Product</span>
               <span>Category</span>
               <span>Price</span>
               <span>Stock</span>
               <span className="text-right">Status</span>
-              <span className="sr-only">Edit</span>
+              <span className="sr-only">Actions</span>
             </div>
             <ul>
               {filtered.map((p) => {
@@ -195,7 +211,7 @@ export function InventoryView({
                   <li
                     key={p.id}
                     className={
-                      "grid grid-cols-[2fr_1fr_1fr_1.2fr_0.9fr_64px] gap-4 items-center px-5 py-3.5 border-b border-white/[0.04] last:border-0 transition-colors light:border-[rgba(26,13,18,0.04)] " +
+                      "grid grid-cols-[2fr_1fr_1fr_1.2fr_0.9fr_108px] gap-4 items-center px-5 py-3.5 border-b border-white/[0.04] last:border-0 transition-colors light:border-[rgba(26,13,18,0.04)] " +
                       (dirty ? "bg-pink/[0.06] light:bg-pink/[0.05]" : "")
                     }
                   >
@@ -247,7 +263,7 @@ export function InventoryView({
                     <span className="flex justify-end">
                       <StockBadge status={status} />
                     </span>
-                    <span className="flex justify-end">
+                    <span className="flex justify-end gap-2">
                       <button
                         type="button"
                         aria-label={`Edit ${p.name}`}
@@ -255,6 +271,14 @@ export function InventoryView({
                         className="w-9 h-9 grid place-items-center rounded-lg border border-white/12 text-ink-dim cursor-pointer transition-colors duration-150 hover:text-ink hover:border-blush hover:bg-pink/[0.06] [&_svg]:w-4 [&_svg]:h-4 light:border-[rgba(26,13,18,0.12)]"
                       >
                         {ICONS.edit}
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={`Delete ${p.name}`}
+                        onClick={() => setConfirmDelete(p)}
+                        className="w-9 h-9 grid place-items-center rounded-lg border border-white/12 text-ink-faint cursor-pointer transition-colors duration-150 hover:text-[#ff8d8d] hover:border-[rgba(255,141,141,0.4)] hover:bg-[rgba(255,141,141,0.1)] [&_svg]:w-4 [&_svg]:h-4 light:border-[rgba(26,13,18,0.12)]"
+                      >
+                        {ICONS.trash}
                       </button>
                     </span>
                   </li>
@@ -286,6 +310,40 @@ export function InventoryView({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Delete confirmation */}
+      {confirmDelete && (
+        <ModalShell onClose={() => setConfirmDelete(null)}>
+          <div
+            role="dialog"
+            aria-modal="true"
+            className="relative w-full max-w-[440px] rounded-[22px] border border-line-pink bg-canvas-elev p-7 shadow-[0_30px_80px_rgba(0,0,0,0.6)] light:bg-card"
+          >
+            <h3 className="font-display text-[20px] text-ink">Delete “{confirmDelete.name}”?</h3>
+            <p className="mt-2 font-sans text-[13px] text-ink-dim leading-relaxed">
+              Its page, its sizes, its reviews and its uploaded images are all removed — the
+              images from storage too. This cannot be undone.
+            </p>
+            <p className="mt-3 font-sans text-[13px] text-ink-dim leading-relaxed">
+              To take it off the shop but keep it, untick <strong className="text-ink">Active</strong>{" "}
+              in the product instead. A product that has been ordered can only be deactivated.
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button type="button" onClick={() => setConfirmDelete(null)} className={btnOutline}>
+                Keep it
+              </button>
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={handleDelete}
+                className="py-2.5 px-4 rounded-full border-0 bg-[rgba(255,141,141,0.16)] text-[#ff8d8d] font-sans text-[11px] font-bold tracking-[0.12em] uppercase cursor-pointer transition-colors hover:bg-[rgba(255,141,141,0.26)] disabled:opacity-60"
+              >
+                {deleting ? "Deleting…" : "Delete"}
+              </button>
+            </div>
+          </div>
+        </ModalShell>
       )}
 
       {/* Add / edit product modal */}

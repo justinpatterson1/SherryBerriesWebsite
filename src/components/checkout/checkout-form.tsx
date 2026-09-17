@@ -21,6 +21,7 @@ export function CheckoutForm({
   onSelectShipping,
   payment,
   onSelectPayment,
+  needsShipping = true,
 }: {
   form: FormState;
   errors: FormErrors;
@@ -29,7 +30,12 @@ export function CheckoutForm({
   onSelectShipping: (key: ShippingKey) => void;
   payment: PaymentKey;
   onSelectPayment: (key: PaymentKey) => void;
+  /** False when the bag holds nothing but downloads — no address, no method. */
+  needsShipping?: boolean;
 }) {
+  // The address and method sections disappear for a download-only bag, so the
+  // payment card moves up rather than leaving a gap in the numbering.
+  const paymentStep = needsShipping ? 4 : 2;
   const input = (key: keyof FormState, props?: Record<string, string>) => {
     const invalid = !!errors[key];
     return (
@@ -72,7 +78,25 @@ export function CheckoutForm({
         </div>
       </SectionCard>
 
+      {!needsShipping && (
+        <div className="flex items-start gap-3 p-4 rounded-[14px] border border-pink/20 bg-pink/[0.07]">
+          <span className="flex-none text-blush mt-0.5" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+              <path d="M12 3v12" />
+              <path d="m7 10 5 5 5-5" />
+              <path d="M5 21h14" />
+            </svg>
+          </span>
+          <p className="font-sans text-[13px] leading-[1.6] text-ink-dim m-0">
+            <span className="text-ink font-semibold">Nothing to ship.</span> Your
+            download appears on your order page as soon as payment is confirmed,
+            and stays there for good — so there&apos;s no address to enter.
+          </p>
+        </div>
+      )}
+
       {/* 2 — Shipping address */}
+      {needsShipping && (
       <SectionCard step={2} title="Shipping address">
         <div className="grid grid-cols-2 gap-3.5 max-[560px]:grid-cols-1">
           <Field label="Address" htmlFor="co-line1" required error={errors.line1} span2>
@@ -109,8 +133,10 @@ export function CheckoutForm({
           </Field>
         </div>
       </SectionCard>
+      )}
 
       {/* 3 — Shipping method */}
+      {needsShipping && (
       <SectionCard step={3} title="Shipping method">
         <div className="flex flex-col gap-3">
           {SHIPPING_ORDER.map((key) => {
@@ -147,16 +173,23 @@ export function CheckoutForm({
           })}
         </div>
       </SectionCard>
+      )}
 
       {/* 4 — Payment */}
-      <SectionCard step={4} title="Payment method">
+      <SectionCard step={paymentStep} title="Payment method">
         <div className="flex flex-col gap-3">
           <OptionCard
             selected={payment === "cod"}
             onSelect={() => onSelectPayment("cod")}
             icon={PAY_ICON.cod}
             title={PAYMENT_LABEL.cod}
-            sub="Pay when your order arrives"
+            // Nothing arrives for a download, so the usual line would be a lie
+            // — and the buyer should know the file waits for the payment.
+            sub={
+              needsShipping
+                ? "Pay when your order arrives"
+                : "Pay us directly — your download unlocks once we confirm it"
+            }
           />
           <OptionCard
             selected={payment === "card"}
@@ -316,6 +349,15 @@ const SHIP_ICON: Record<ShippingKey, ReactNode> = {
       <path d="M14 9h4l3 3v3h-7z" />
       <circle cx="7" cy="18" r="1.6" />
       <circle cx="17" cy="18" r="1.6" />
+    </Svg>
+  ),
+  // Never rendered as an option — "digital" is absent from SHIPPING_ORDER —
+  // but the record is keyed by ShippingKey, so it needs an entry.
+  digital: (
+    <Svg>
+      <path d="M12 3v12" />
+      <path d="m7 10 5 5 5-5" />
+      <path d="M5 21h14" />
     </Svg>
   ),
 };
