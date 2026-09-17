@@ -40,9 +40,9 @@ export const FEATURED_CATEGORY_SLUGS = [
   "accessories",
   "aftercare",
   "belly-rings",
+  "berry-baby",
   "cartilage-jewelry",
   "elixirs",
-  "merch",
   "nose-rings",
   "tongue-rings",
 ] as const;

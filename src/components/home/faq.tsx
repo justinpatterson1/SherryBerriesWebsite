@@ -12,19 +12,17 @@ type Item = {
 
 const ITEMS: Item[] = [
   {
-    q: "How to clean a fresh piercing",
+    q: "Caring for a Fresh Piercing 🍓",
     a: (
-      <>
-        <p>
-          Twice a day, spray a sterile saline mist over the piercing and let it air-dry —
-          no twisting, no soap, no peroxide. If crust forms, soften it with saline first,
-          then gently wipe with a clean gauze.
-        </p>
-        <p>
-          Avoid touching the piercing with unwashed hands, and skip pools, hot tubs, and
-          oceans until the studio has cleared the site.
-        </p>
-      </>
+      <p>
+        A fresh piercing needs gentle, consistent care while it heals. Keep the area
+        clean, avoid unnecessary touching or twisting your jewelry, and stay away from
+        harsh products that can irritate the piercing. A simple routine using properly
+        prepared non-iodized sea salt soaks can help keep your aftercare gentle and
+        uncomplicated. We&rsquo;ve made keeping up with your routine easier with our
+        SherryBerries piercing aftercare essentials, so you can spend less time wondering
+        what to use and more time letting your piercing heal.
+      </p>
     ),
   },
   {
@@ -42,19 +40,29 @@ const ITEMS: Item[] = [
     q: "Fresh vs healed piercings",
     a: (
       <>
-        <p>How you treat a piercing depends on where it is in its healing journey:</p>
+        <p>
+          Your piercing needs different care at different stages of its healing journey.
+          Knowing where you are in that process helps you know when to keep things simple
+          and when it&rsquo;s finally time for new jewelry. 🍓
+        </p>
         <ul>
           <li>
-            <strong>Fresh (0–6 weeks):</strong> longer post, daily saline, implant-grade
-            titanium only.
+            <strong>Fresh (0–6 weeks):</strong> Longer jewelry posts to accommodate
+            swelling, consistent daily care, and safe jewelry materials such as surgical
+            steel, titanium or Bioplast.
           </li>
           <li>
-            <strong>Healing (6 weeks–6 months):</strong> still saline, but you can start
-            gentler material rotations.
+            <strong>Healing (6 weeks–6 months, longer for cartilage, navels and
+            nipples):</strong>{" "}
+            Your piercing is still healing beneath the surface, so continue with gentle
+            cleaning, avoid unnecessary touching or twisting, and give it time. See the
+            healing timeline below for how long each placement usually takes.
           </li>
           <li>
-            <strong>Healed:</strong> wear what makes you glow — gold-fill, opals, dangles,
-            statement pieces.
+            <strong>Healed:</strong> The moment we&rsquo;ve been waiting for! Once your
+            piercing is fully healed and ready for a jewelry change, it&rsquo;s time to
+            find a piece that feels like you.{" "}
+            <Link href="/products">Shop our jewelry collection →</Link>
           </li>
         </ul>
       </>
@@ -63,12 +71,19 @@ const ITEMS: Item[] = [
   {
     q: "Signs of irritation",
     a: (
-      <p>
-        Mild redness, clear lymph fluid, and tenderness in the first few weeks are normal.
-        Watch for thick yellow or green discharge, hot/painful swelling that worsens,
-        bleeding after the first week, or angry bumps. Those are signs to message us or
-        visit a piercer — never try to remove the jewelry on your own.
-      </p>
+      <>
+        <p>
+          Some tenderness, mild redness and a small amount of clear or whitish fluid can
+          be part of the normal healing process. However, increased swelling, persistent
+          redness, unusual bumps, worsening pain, excessive bleeding or yellow/green
+          discharge may mean your piercing needs some extra attention.
+        </p>
+        <p>
+          If you&rsquo;re experiencing any of these concerns, contact us directly for
+          guidance or visit your professional piercer for an assessment. Avoid removing or
+          changing the jewelry yourself until you&rsquo;ve received appropriate guidance.
+        </p>
+      </>
     ),
   },
   {
@@ -76,10 +91,21 @@ const ITEMS: Item[] = [
     a: (
       <>
         <p>
-          We only stock materials safe for long-term wear: implant-grade titanium (ASTM
-          F-136), solid 14k gold, niobium, and nickel-free surgical-grade options. Avoid
-          plated jewelry, sterling silver, and mystery alloys in fresh piercings — they
-          off-gas and prolong healing.
+          The material you wear matters, especially while your piercing is healing.
+          Quality surgical steel and implant-grade titanium are commonly used options for
+          healing piercings, while certain body-safe flexible materials may be appropriate
+          in specific situations when recommended by a professional piercer.
+        </p>
+        <p>
+          Be careful not to confuse gold-colored jewelry with solid gold. Many costume
+          jewelry pieces are made from mixed metals such as copper or brass and may simply
+          have a gold-colored or plated finish. These materials can cause irritation,
+          discoloration or sensitivity, particularly in a fresh piercing.
+        </p>
+        <p>
+          Once your piercing is fully healed, you&rsquo;ll have much more freedom to
+          experiment with fashion and statement pieces. Until then, keep your jewelry
+          simple, good quality and appropriate for healing. 🍓
         </p>
       </>
     ),
@@ -87,12 +113,22 @@ const ITEMS: Item[] = [
   {
     q: "Piercing healing timeline",
     a: (
-      <p>
-        Earlobes heal in 6–10 weeks. Nostrils, septums, and most cartilage piercings take
-        4–9 months. Navels and nipples can take 9–12 months. Healing is not linear — you
-        may feel fully healed and then have a flare-up. Stay consistent with aftercare
-        and don&apos;t downsize too early.
-      </p>
+      <>
+        <p>
+          Earlobe piercings typically take around 6–8 weeks to heal, while nostril and
+          septum piercings can take several months. Cartilage piercings should be given a
+          minimum of 6 months, with some taking considerably longer depending on the
+          placement and your body. Navel piercings also need at least 6 months and can
+          take up to a year or longer to fully heal. Nipple piercings commonly take 6–12
+          months or longer.
+        </p>
+        <p>
+          Remember, healing happens from the outside in, so a piercing can look and feel
+          healed before the inside is actually ready. Stay consistent with your aftercare,
+          avoid changing your jewelry too soon, and when in doubt, check with your
+          piercer. 🍓
+        </p>
+      </>
     ),
   },
 ];
@@ -101,7 +137,12 @@ const panelInnerProse =
   "pl-1 pr-1 pb-[30px] font-sans text-[21px] leading-[1.65] text-ink-dim max-w-[760px] " +
   "[&_p]:m-0 [&_p+p]:mt-3 [&_p+ul]:mt-3 [&_ul+p]:mt-3 " +
   "[&_ul]:m-0 [&_ul]:pl-[18px] [&_ul]:list-disc " +
-  "[&_li]:mt-1.5 [&_li:first-child]:mt-0";
+  "[&_li]:mt-1.5 [&_li:first-child]:mt-0 " +
+  // Preflight strips a link's colour and underline, so an inline link in an
+  // answer would read as plain body text without this.
+  "[&_a]:text-blush [&_a]:font-medium [&_a]:underline [&_a]:underline-offset-4 " +
+  "[&_a]:decoration-pink/40 [&_a]:transition-colors [&_a:hover]:text-pink " +
+  "[&_a:hover]:decoration-pink";
 
 export function Faq() {
   const [open, setOpen] = useState(0);
@@ -169,7 +210,10 @@ export function Faq() {
                   role="region"
                   className={
                     "overflow-hidden transition-[max-height] duration-[420ms] ease-[cubic-bezier(0.2,0.8,0.2,1)] " +
-                    (isOpen ? "max-h-[500px]" : "max-h-0")
+                    // The cap has to clear the tallest answer at phone width,
+                    // where 21px body copy wraps to roughly triple the lines it
+                    // takes on desktop — anything shorter silently clips.
+                    (isOpen ? "max-h-[1200px]" : "max-h-0")
                   }
                 >
                   <div className={panelInnerProse}>{item.a}</div>
@@ -181,11 +225,16 @@ export function Faq() {
 
         <aside
           className={
-            "sticky top-[100px] rounded-[22px] p-[18px] " +
+            // Not pinned: the kit copy makes this card taller than a laptop
+            // viewport, and a pinned card holds its top in place, so the Shop
+            // button would never scroll into view. Letting it sit in the column
+            // means the box grows to its content and the page scroll reaches
+            // all of it — no inner scrollbar, nothing cut off.
+            "self-start rounded-[22px] p-[18px] " +
             "bg-[linear-gradient(160deg,rgba(255,79,163,0.16),rgba(212,175,55,0.1))] " +
             "border border-pink/[0.28] " +
             "shadow-[0_24px_60px_rgba(0,0,0,0.35),0_0_0_1px_rgba(255,255,255,0.04)_inset] " +
-            "max-[1000px]:static max-[1000px]:max-w-[480px]"
+            "max-[1000px]:max-w-[480px]"
           }
         >
           <div className="relative aspect-[4/5] rounded-2xl overflow-hidden">
@@ -204,10 +253,21 @@ export function Faq() {
           <h3 className="font-display text-[28px] leading-[1.1] text-ink mt-[22px] mb-2.5 mx-1">
             Aftercare Essentials
           </h3>
-          <p className="font-sans text-[17px] leading-[1.6] text-ink-dim m-1 mb-6">
-            Saline mists, healing oils, and salt soaks — the studio-tested pieces we
-            reach for while a piercing settles.
-          </p>
+          <div className="font-sans text-[17px] leading-[1.6] text-ink-dim m-1 mb-6 [&_p]:m-0 [&_p+p]:mt-3">
+            <p>
+              Everything you need to keep your piercing-care routine simple and
+              consistent. Our SherryBerries Aftercare Kit includes non-iodized sea salt,
+              saline piercing spray, 100% pure tea tree oil, Q-tips and a reusable shot
+              glass, thoughtfully brought together with the love, care and intention we
+              put into every SherryBerries product.
+            </p>
+            <p>
+              Whether you&rsquo;re caring for a fresh piercing or giving an irritated
+              piercing some extra attention, we&rsquo;ve made it easier to have your
+              piercing-care essentials together in one place.
+            </p>
+            <p>Care for your piercing with love &amp; intention. 🍓</p>
+          </div>
           <Link
             href="/products?category=aftercare"
             className={

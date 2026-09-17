@@ -167,9 +167,9 @@ export function Hero() {
               </span>
             </h1>
             <p className="font-sans text-[17px] leading-[1.65] text-ink-dim mt-6 mb-0 max-w-[540px]">
-              Implant-grade titanium, gold-fill, and editorial-grade pieces — paired with
-              aftercare that treats your piercing like skincare. Crafted in Trinidad,
-              loved worldwide.
+              Express yourself with body jewelry that feels like you, alongside piercing
+              aftercare created with love, care and intention. Made for every style, every
+              mood and every version of you. Crafted in Trinidad, loved worldwide. 🍓
             </p>
           </div>
 
