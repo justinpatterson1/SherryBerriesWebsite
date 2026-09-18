@@ -1,4 +1,6 @@
+import Image from "next/image";
 import Link from "next/link";
+import logoImg from "../../../assets/images/sherryBerries.png";
 
 const SHOP = [
   { label: "Belly Rings", href: "/products?category=belly-rings" },
@@ -32,25 +34,36 @@ export function Footer() {
   return (
     <footer className="bg-[#050505] border-t border-white/[0.06] px-[8%] pt-20 pb-8 text-ink-dim font-sans light:bg-[#1a0d12] light:text-[#cfc6c9] light:border-white/[0.05]">
       <div className="grid grid-cols-[1.5fr_1fr_1fr_1fr_1fr] gap-14 max-[980px]:grid-cols-2 max-[980px]:gap-10 max-[560px]:grid-cols-1 max-[560px]:gap-9">
-        <div className="flex flex-col gap-5 max-w-[360px] max-[980px]:col-span-full">
-          <Link
-            href="/"
-            className="font-display text-[32px] tracking-[0.02em] text-white no-underline leading-none"
-          >
-            Sherry<span className="font-serif italic text-pink ml-px">Berries</span>
-          </Link>
-          <p className="text-base leading-[1.65] text-[#8a8084] m-0 max-w-[340px]">
-            Luxury body jewelry &amp; piercing aftercare — made with love in Trinidad
-            &amp; Tobago.
-          </p>
+        <div className="flex items-start gap-6 max-w-[440px] max-[980px]:col-span-full max-[560px]:gap-4">
+          {/* Decorative: the wordmark link beside it already names the brand,
+              so alt text here would only make a screen reader say it twice. */}
+          <Image
+            src={logoImg}
+            alt=""
+            sizes="120px"
+            className="w-[116px] h-auto shrink-0 max-[560px]:w-[86px]"
+          />
 
-          <div className="flex gap-2.5">
-            <SocialLink href="https://www.instagram.com/sherryberries_/" label="Instagram">
-              <InstagramIcon />
-            </SocialLink>
-            <SocialLink href="https://www.tiktok.com/@sherrybvanessa?lang=en" label="TikTok">
-              <TikTokIcon />
-            </SocialLink>
+          <div className="flex flex-col gap-5">
+            <Link
+              href="/"
+              className="font-display text-[32px] tracking-[0.02em] text-white no-underline leading-none"
+            >
+              Sherry<span className="font-serif italic text-pink ml-px">Berries</span>
+            </Link>
+            <p className="text-base leading-[1.65] text-[#8a8084] m-0">
+              Luxury body jewelry &amp; piercing aftercare — made with love in Trinidad
+              &amp; Tobago.
+            </p>
+
+            <div className="flex gap-2.5">
+              <SocialLink href="https://www.instagram.com/sherryberries_/" label="Instagram">
+                <InstagramIcon />
+              </SocialLink>
+              <SocialLink href="https://www.tiktok.com/@sherrybvanessa?lang=en" label="TikTok">
+                <TikTokIcon />
+              </SocialLink>
+            </div>
           </div>
         </div>
 
