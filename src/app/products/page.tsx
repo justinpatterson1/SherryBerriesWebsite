@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { listProducts } from "@/lib/queries/product";
 import { getHomeCategories } from "@/lib/queries/home";
+import { BackToTop } from "@/components/product/back-to-top";
 
 type PageProps = { searchParams: Promise<{ category?: string }> };
 
@@ -114,6 +115,8 @@ export default async function ProductsListingPage({ searchParams }: PageProps) {
           ))}
         </div>
       )}
+
+      <BackToTop />
     </main>
   );
 }
