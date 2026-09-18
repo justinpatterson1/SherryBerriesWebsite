@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
-import promoImg from "../../../assets/images/aftercare.jpg";
+import promoImg from "../../../assets/images/aftercare-homepage.jpg";
 
 type Item = {
   q: string;
@@ -237,10 +237,13 @@ export function Faq() {
             "max-[1000px]:max-w-[480px]"
           }
         >
-          <div className="relative aspect-[4/5] rounded-2xl overflow-hidden">
+          {/* Square, matching the photo: the kit spans the full frame edge to
+              edge, so a 4:5 crop would cut the sea salt jar and the tea tree
+              oil — the two pieces the copy below names first and last. */}
+          <div className="relative aspect-square rounded-2xl overflow-hidden">
             <Image
               src={promoImg}
-              alt="Aftercare essentials kit"
+              alt="The SherryBerries aftercare kit — non-iodized sea salt, saline piercing spray, Q-tips, tea tree oil and a reusable shot glass"
               fill
               sizes="(max-width: 1000px) 80vw, 36vw"
               placeholder="blur"
