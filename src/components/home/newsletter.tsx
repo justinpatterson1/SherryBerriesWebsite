@@ -74,9 +74,13 @@ export function Newsletter() {
         >
           Join the <span className="font-serif italic text-pink">Berry List</span>.
         </h2>
-        <p className="font-sans text-lg leading-[1.6] text-ink-dim mt-[22px] mb-10 max-w-[620px]">
-          Soft drops and healing tips — straight to your inbox, never too often.
-          Unsubscribe any time.
+        <p className="font-sans text-lg leading-[1.6] text-ink-dim mt-[22px] mb-4 max-w-[620px]">
+          New drops, piercing tips, exclusive offers, inspiration, little
+          surprises and the occasional treat from brands we think you&apos;ll
+          love. Being on our list has its perks.
+        </p>
+        <p className="font-sans text-lg leading-[1.6] text-ink-dim mb-10 max-w-[620px]">
+          Never too often. Unsubscribe anytime.
         </p>
 
         {status === "done" ? (
