@@ -5,9 +5,9 @@ import { useState, type FormEvent } from "react";
 
 const STRENGTH_COPY = [
   "Use 8+ characters with letters, numbers & a symbol.",
-  "Getting started — try a longer mix.",
-  "Decent — add a number or symbol for extra glow.",
-  "Strong — one more touch unlocks elite.",
+  "Getting started. Try a longer mix.",
+  "Decent. Add a number or symbol for extra glow.",
+  "Strong. One more touch unlocks elite.",
   "Sparkling secure. Sherry-approved ✦",
 ];
 
@@ -120,7 +120,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
         <em className="font-serif italic text-blush font-medium">password</em>
       </h1>
       <p className="font-sans text-[15px] leading-[1.6] text-ink-dim mb-7">
-        Make it strong — 8+ characters with a mix of letters, numbers, and a
+        Make it strong: 8+ characters with a mix of letters, numbers, and a
         symbol.
       </p>
 

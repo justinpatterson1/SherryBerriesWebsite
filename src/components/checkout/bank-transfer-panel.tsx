@@ -142,7 +142,7 @@ export function BankTransferPanel({
           {!paid && !submitted && (
             <p className="font-sans text-[13px] leading-[1.6] text-ink-dim m-0 mt-3">
               Your order has been received but is <strong className="text-ink">not yet
-              confirmed</strong>. Your items are temporarily reserved — please complete your
+              confirmed</strong>. Your items are temporarily reserved, so please complete your
               transfer and upload your receipt within {windowHours} hours. Unpaid orders may
               be cancelled and the items returned to stock.
             </p>
@@ -163,7 +163,7 @@ export function BankTransferPanel({
             <p className="font-sans text-[15px] leading-[1.7] text-ink m-0">
               Thank you, Sweet Berry! We&apos;ve received your payment receipt for{" "}
               {orderNumber}. We&apos;ll verify the transfer and confirm your order once the
-              payment has arrived — no further action is needed right now.
+              payment has arrived. No further action is needed right now.
             </p>
           </div>
         )}

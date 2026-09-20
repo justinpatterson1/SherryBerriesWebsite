@@ -163,7 +163,7 @@ export async function PATCH(request: Request) {
         // A slug change breaks shared links, so name it in the summary rather
         // than leaving it buried in the JSON.
         summary: changes.slug
-          ? `Updated “${row.name}” — web address ${existing.slug} → ${row.slug}`
+          ? `Updated “${row.name}”: web address ${existing.slug} → ${row.slug}`
           : `Updated “${row.name}” (${Object.keys(changes).join(", ")})`,
         changes,
         ip: auditIp(request),

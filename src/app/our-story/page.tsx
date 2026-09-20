@@ -32,7 +32,7 @@ const VALUES = [
   },
   {
     title: "Good piercing care",
-    note: "Aftercare, education and honest answers — not guesswork.",
+    note: "Aftercare, education and honest answers, not guesswork.",
   },
   {
     title: "Somewhere you belong",
@@ -67,7 +67,7 @@ export default function OurStoryPage() {
             Our <span className="font-serif italic">story</span>.
           </h1>
           <p className="font-serif italic text-[clamp(22px,2.1vw,32px)] leading-[1.4] text-blush m-0 max-w-[740px]">
-            A love for cute, affordable body jewelry — and the simple idea that expressing
+            A love for cute, affordable body jewelry, and the simple idea that expressing
             yourself should be fun.
           </p>
         </div>

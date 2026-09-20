@@ -200,7 +200,7 @@ export function WishlistClient({ recPool }: { recPool: RecProduct[] }) {
             </h1>
             <p className="font-sans text-[14px] leading-[1.6] text-ink-dim m-0 mt-3 max-w-[560px]">
               The pieces you&apos;re dreaming of. Saved across every device when
-              you&apos;re signed in — move them to your bag whenever you&apos;re ready.
+              you&apos;re signed in. Move them to your bag whenever you&apos;re ready.
             </p>
           </div>
 

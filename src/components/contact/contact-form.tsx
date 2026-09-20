@@ -58,7 +58,7 @@ export function ContactForm() {
         </span>
         <h2 className="font-display text-[30px] text-ink m-0">Message sent!</h2>
         <p className="font-sans text-[16px] leading-[1.6] text-ink-dim m-0 max-w-[400px]">
-          Thanks{name ? `, ${name.split(" ")[0]}` : ""} — we&apos;ve got your note and will get back
+          Thanks{name ? `, ${name.split(" ")[0]}` : ""}. We&apos;ve got your note and will get back
           to you within 1–2 business days.
         </p>
         <div className="flex flex-wrap justify-center gap-3 mt-2">

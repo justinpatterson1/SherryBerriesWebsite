@@ -5,7 +5,7 @@ import { BestsellerCard } from "@/components/home/bestseller-card";
 export const metadata: Metadata = {
   title: "Bestsellers | SherryBerries",
   description:
-    "The pieces our customers reach for again and again — our most-loved body jewelry and aftercare, all in one place.",
+    "The pieces our customers reach for again and again: our most-loved body jewelry and aftercare, all in one place.",
 };
 
 export default async function BestsellersPage() {
@@ -36,7 +36,7 @@ export default async function BestsellersPage() {
         </div>
       ) : (
         <p className="font-sans text-sm text-ink-faint">
-          No bestsellers just yet — check back soon.
+          No bestsellers just yet. Check back soon.
         </p>
       )}
     </main>

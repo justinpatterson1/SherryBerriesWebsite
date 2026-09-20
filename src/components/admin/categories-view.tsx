@@ -148,7 +148,7 @@ export function CategoriesView({
 
       <p className="font-sans text-[12px] leading-[1.6] text-ink-faint m-0 px-1">
         <span className="text-ink-dim">Note:</span> jewelry and aftercare are final sale once
-        an order leaves — anything that is not merchandise or an accessory is treated that
+        an order leaves. Anything that is not merchandise or an accessory is treated that
         way, so a new category is <strong>final sale</strong> until a developer says
         otherwise. Items that arrive damaged, defective, or incorrect are always covered,
         whatever this label says.
@@ -478,7 +478,7 @@ function CategoryForm({
               <span className="block mt-1 font-sans text-[11px] leading-[1.5] text-ink-faint">
                 {isJewelry
                   ? "Products in this category appear in the main Jewelry listing as well as on their own category page."
-                  : "Products here are reachable only from this category’s own page — right for aftercare, elixirs, accessories and merch."}
+                  : "Products here are reachable only from this category’s own page: right for aftercare, elixirs, accessories and merch."}
               </span>
             </span>
           </label>

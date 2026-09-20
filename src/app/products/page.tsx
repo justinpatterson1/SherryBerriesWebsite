@@ -15,7 +15,7 @@ export async function generateMetadata({
     return {
       title: "Jewelry | SherryBerries",
       description:
-        "Luxury body jewelry from Trinidad & Tobago — belly rings, nose rings, septum, and cartilage pieces.",
+        "Luxury body jewelry from Trinidad & Tobago: belly rings, nose rings, septum, and cartilage pieces.",
     };
   }
   const categories = await getHomeCategories();
@@ -99,7 +99,7 @@ export default async function ProductsListingPage({ searchParams }: PageProps) {
         <div className="px-[8%] max-[900px]:px-[6%]">
           <div className="p-10 rounded-[20px] border border-white/[0.06] bg-card text-center">
             <p className="font-serif italic text-[18px] text-ink-dim m-0">
-              Nothing here yet — try another category.
+              Nothing here yet. Try another category.
             </p>
           </div>
         </div>

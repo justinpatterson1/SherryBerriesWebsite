@@ -75,7 +75,7 @@ export function ReturnsView({
           .filter((it) => !openItemLabels.has(`${o.orderNumber}::${it.name}`))
           .map((it) => ({
             orderItemId: it.id,
-            label: `${o.orderNumber} — ${it.name}${it.variant ? ` (${it.variant})` : ""}`,
+            label: `${o.orderNumber} · ${it.name}${it.variant ? ` (${it.variant})` : ""}`,
           })),
       ),
     [eligibleOrders, openItemLabels],
@@ -100,8 +100,8 @@ export function ReturnsView({
       onSubmitted({
         id: json.request.id,
         reference: json.request.reference,
-        orderNumber: selected?.label.split(" — ")[0] ?? "",
-        itemName: selected?.label.split(" — ")[1] ?? "",
+        orderNumber: selected?.label.split(" · ")[0] ?? "",
+        itemName: selected?.label.split(" · ")[1] ?? "",
         variant: null,
         reason,
         notes: notes || null,
@@ -136,7 +136,7 @@ export function ReturnsView({
 
         {options.length === 0 ? (
           <p className="font-sans text-[14px] text-ink-dim m-0">
-            Nothing to return right now — items become available once an order has been
+            Nothing to return right now. Items become available once an order has been
             delivered, and each item can have one open request at a time.
           </p>
         ) : (

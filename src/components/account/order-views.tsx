@@ -87,7 +87,7 @@ export function DashboardView({
 
         {recent.length === 0 ? (
           <p className="font-sans text-[14px] text-ink-dim m-0">
-            No orders yet — your pieces will appear here.
+            No orders yet. Your pieces will appear here.
           </p>
         ) : (
           <div className="flex flex-col">
@@ -271,12 +271,12 @@ export function OrderDetailView({
             // Not "no address recorded" — there was never one to record, and
             // that message reads like a bug on an order that ships nothing.
             <p className="font-sans text-[13px] leading-[1.6] text-ink-dim m-0">
-              Nothing to ship — this order is a download. It stays on this page
+              Nothing to ship: this order is a download. It stays on this page
               for good, so you can get it again whenever you need to.
             </p>
           ) : order.shipTo ? (
             <>
-              <Row label="Recipient" value={order.shipTo.name ?? "—"} />
+              <Row label="Recipient" value={order.shipTo.name ?? "Not provided"} />
               <Row
                 label="Address"
                 value={
@@ -299,7 +299,7 @@ export function OrderDetailView({
                   </span>
                 }
               />
-              <Row label="Contact" value={order.shipTo.phone || "—"} last />
+              <Row label="Contact" value={order.shipTo.phone || "Not provided"} last />
             </>
           ) : (
             <p className="font-sans text-[13px] text-ink-dim m-0">

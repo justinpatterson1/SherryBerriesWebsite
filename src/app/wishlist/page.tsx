@@ -7,7 +7,7 @@ import { WishlistClient, type RecProduct } from "@/components/wishlist/wishlist-
 export const metadata: Metadata = {
   title: "Your wishlist | SherryBerries",
   description:
-    "The pieces you're dreaming of — saved across every device when you're signed in.",
+    "The pieces you're dreaming of, saved across every device when you're signed in.",
 };
 
 export default async function WishlistPage() {

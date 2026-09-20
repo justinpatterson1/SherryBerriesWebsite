@@ -71,7 +71,7 @@ export function validateSizes(rawLabel: unknown, rawSizes: unknown): SizesCheck 
     // to delete it before saving.
     if (!value) continue;
     if (value.length > SIZE_VALUE_MAX) {
-      return { ok: false, error: `“${value}” is too long — ${SIZE_VALUE_MAX} characters or fewer.` };
+      return { ok: false, error: `“${value}” is too long: ${SIZE_VALUE_MAX} characters or fewer.` };
     }
 
     const key = value.toLowerCase();

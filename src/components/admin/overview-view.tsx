@@ -58,7 +58,7 @@ export function OverviewView({
       >
         {attention.length === 0 ? (
           <p className="p-6 font-sans text-[13px] text-ink-faint">
-            Nothing pending — every order is on its way. ✦
+            Nothing pending. Every order is on its way. ✦
           </p>
         ) : (
           <ul className="flex flex-col">

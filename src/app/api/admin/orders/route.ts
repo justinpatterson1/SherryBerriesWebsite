@@ -167,7 +167,7 @@ async function markPaid(
       action: AUDIT_ACTIONS.paymentMarkedPaid,
       entityType: "Order",
       entityId: orderId,
-      summary: `${existing.orderNumber}: marked paid by hand — $${amount} via ${existing.paymentMethod ?? "unknown method"}`,
+      summary: `${existing.orderNumber}: marked paid by hand: $${amount} via ${existing.paymentMethod ?? "unknown method"}`,
       changes: { paymentStatus: { from: existing.paymentStatus, to: "PAID" } },
       ip: auditIp(request),
     });

@@ -243,7 +243,7 @@ export function Faq() {
           <div className="relative aspect-square rounded-2xl overflow-hidden">
             <Image
               src={promoImg}
-              alt="The SherryBerries aftercare kit — non-iodized sea salt, saline piercing spray, Q-tips, tea tree oil and a reusable shot glass"
+              alt="The SherryBerries aftercare kit: non-iodized sea salt, saline piercing spray, Q-tips, tea tree oil and a reusable shot glass"
               fill
               sizes="(max-width: 1000px) 80vw, 36vw"
               placeholder="blur"

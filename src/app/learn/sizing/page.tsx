@@ -15,7 +15,7 @@ import {
 export const metadata: Metadata = {
   title: "Jewelry Sizing Guide | SherryBerries",
   description:
-    "How piercing jewelry is measured — gauge, diameter, and length — with recommended sizes for every placement and which materials are safe for fresh vs. healed piercings.",
+    "How piercing jewelry is measured: gauge, diameter, and length, with recommended sizes for every placement and which materials are safe for fresh vs. healed piercings.",
 };
 
 const JUMP_LINKS = [
@@ -79,7 +79,7 @@ export default function SizingGuidePage() {
             <span className="font-serif italic">fit</span>.
           </h1>
           <p className="font-sans text-[19px] leading-[1.65] text-ink-dim m-0 max-w-[620px]">
-            Body jewelry is measured in gauge, diameter, and length — and the right size changes
+            Body jewelry is measured in gauge, diameter, and length, and the right size changes
             with each piercing. Here&apos;s everything you need to order with confidence.
           </p>
           <div className="flex flex-wrap gap-2.5 mt-2">
@@ -186,7 +186,7 @@ export default function SizingGuidePage() {
             <span className={eyebrow}>02 · Diameter &amp; length</span>
             <h2 className={sectionTitle}>Measuring the size</h2>
             <p className="font-sans text-[18px] leading-[1.65] text-ink-dim m-0">
-              Once you know the gauge, you need the size — and how you measure it depends on the
+              Once you know the gauge, you need the size, and how you measure it depends on the
               style of the piece.
             </p>
           </div>
@@ -199,7 +199,7 @@ export default function SizingGuidePage() {
               <div>
                 <h3 className="font-serif text-[22px] text-ink m-0 mb-1.5">Rings &amp; hoops</h3>
                 <p className="font-sans text-[16px] leading-[1.6] text-ink-dim m-0">
-                  Measure the <strong className="text-ink">inner diameter</strong> — the gap across
+                  Measure the <strong className="text-ink">inner diameter</strong>: the gap across
                   the inside of the ring, not the outer edge.
                 </p>
               </div>
@@ -212,7 +212,7 @@ export default function SizingGuidePage() {
               <div>
                 <h3 className="font-serif text-[22px] text-ink m-0 mb-1.5">Barbells &amp; studs</h3>
                 <p className="font-sans text-[16px] leading-[1.6] text-ink-dim m-0">
-                  Measure the <strong className="text-ink">wearable bar</strong> between the ends —
+                  Measure the <strong className="text-ink">wearable bar</strong> between the ends,
                   the length of post inside the piercing, not the balls or decorative tops.
                 </p>
               </div>
@@ -355,7 +355,7 @@ export default function SizingGuidePage() {
               Sized up and ready?
             </h2>
             <p className="font-sans text-[18px] leading-[1.6] text-ink-dim m-0 max-w-[520px]">
-              Explore the collection and find your next piece — now that you know exactly what to look for.
+              Explore the collection and find your next piece, now that you know exactly what to look for.
             </p>
             <Link
               href="/products"
@@ -396,7 +396,7 @@ function Spec({ label, value }: { label: string; value: string }) {
 
 function RingDiagram() {
   return (
-    <svg viewBox="0 0 200 120" className="w-full h-auto text-pink" role="img" aria-label="Ring — measure the inner diameter">
+    <svg viewBox="0 0 200 120" className="w-full h-auto text-pink" role="img" aria-label="Ring: measure the inner diameter">
       <circle cx="100" cy="60" r="42" fill="none" stroke="currentColor" strokeWidth="10" opacity="0.85" />
       <line x1="66" y1="60" x2="134" y2="60" stroke="currentColor" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.7" />
       <path d="M66 60 l8 -5 M66 60 l8 5" stroke="currentColor" strokeWidth="1.5" fill="none" opacity="0.7" />
@@ -410,7 +410,7 @@ function RingDiagram() {
 
 function BarbellDiagram() {
   return (
-    <svg viewBox="0 0 200 120" className="w-full h-auto text-pink" role="img" aria-label="Barbell — measure the wearable bar length">
+    <svg viewBox="0 0 200 120" className="w-full h-auto text-pink" role="img" aria-label="Barbell: measure the wearable bar length">
       <line x1="55" y1="60" x2="145" y2="60" stroke="currentColor" strokeWidth="8" opacity="0.85" strokeLinecap="round" />
       <circle cx="52" cy="60" r="12" fill="currentColor" opacity="0.85" />
       <circle cx="148" cy="60" r="12" fill="currentColor" opacity="0.85" />

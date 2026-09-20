@@ -137,7 +137,7 @@ export function CartRow({
             {out
               ? "Out of stock"
               : low
-              ? `Only ${inv} left — last chance`
+              ? `Only ${inv} left, last chance`
               : line.isDigital
               ? "Instant download"
               : "In stock · ships in 2 days"}

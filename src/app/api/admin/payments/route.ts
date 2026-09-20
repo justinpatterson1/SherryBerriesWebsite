@@ -162,7 +162,7 @@ export async function PATCH(request: Request) {
   // become arbitrary content from a crafted request.
   if (!isRejectionReason(rawReason)) return bad("That is not a valid reason.");
   const notes = typeof b.notes === "string" ? b.notes.trim().slice(0, 1000) : "";
-  const reason = notes ? `${rawReason} — ${notes}` : rawReason;
+  const reason = notes ? `${rawReason}: ${notes}` : rawReason;
 
   const done = await prisma.$transaction(async (tx) => {
     const claimed = await tx.order.updateMany({
@@ -193,7 +193,7 @@ export async function PATCH(request: Request) {
       action: AUDIT_ACTIONS.paymentRejected,
       entityType: "Order",
       entityId: order.id,
-      summary: `${order.orderNumber}: rejected $${amount} bank transfer — ${rawReason}`,
+      summary: `${order.orderNumber}: rejected $${amount} bank transfer: ${rawReason}`,
       changes: { paymentStatus: { from: "PAYMENT_SUBMITTED", to: "REJECTED" } },
       ip,
     });

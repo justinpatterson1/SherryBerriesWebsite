@@ -80,7 +80,7 @@ export function PromosView({
             <h2 className="font-display text-[26px] text-ink m-0">Promo codes</h2>
             <p className="font-sans text-[13px] leading-[1.6] text-ink-dim m-0 mt-1.5 max-w-[560px]">
               Codes customers type into the promo box on the bag and at checkout. A code
-              works the moment it is created — there is no scheduling, so create it when
+              works the moment it is created. There is no scheduling, so create it when
               you want it live, or switch it off until then.
             </p>
           </div>
@@ -158,7 +158,7 @@ export function PromosView({
                       disabled={busy || p.timesUsed > 0}
                       title={
                         p.timesUsed > 0
-                          ? "This code has been used on real orders — switch it off instead"
+                          ? "This code has been used on real orders. Switch it off instead"
                           : undefined
                       }
                       onClick={async () => {
@@ -185,7 +185,7 @@ export function PromosView({
 
       <p className="font-sans text-[12px] leading-[1.6] text-ink-faint m-0 px-1">
         <span className="text-ink-dim">Note:</span> a code that has been used cannot be
-        deleted — switching it off stops it working immediately and keeps the record of the
+        deleted. Switching it off stops it working immediately and keeps the record of the
         orders it was applied to. A percentage applies to the bag subtotal; a fixed amount
         never takes the subtotal below zero.
       </p>
@@ -401,7 +401,7 @@ function PromoForm({
               />
             </span>
             <span className="font-sans text-[13px] text-ink-dim">
-              Active — customers can use it now
+              Active. Customers can use it now
             </span>
           </button>
         </div>

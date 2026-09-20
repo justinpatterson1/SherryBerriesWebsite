@@ -52,7 +52,7 @@ export function BrandStory() {
           </h2>
           <p className="font-serif italic text-[26px] leading-[1.4] text-blush mt-8 max-w-[600px]">
             SherryBerries was created to make piercing care and self expression feel
-            beautiful — never clinical.
+            beautiful, never clinical.
           </p>
           <p className="font-sans text-[17px] leading-[1.7] text-ink-dim mt-6 max-w-[600px]">
             SherryBerries started with a love for cute, affordable body jewelry and the

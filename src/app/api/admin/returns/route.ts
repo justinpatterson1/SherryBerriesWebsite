@@ -60,7 +60,7 @@ export async function PATCH(request: Request) {
   // A rejection without a reason is the thing a customer will write in about,
   // so require one at the point it is easiest to give.
   if (status === "REJECTED" && !resolution) {
-    return bad("Please say why the return was rejected — the customer sees this.");
+    return bad("Please say why the return was rejected. The customer sees this.");
   }
 
   // Audited in the same transaction: approving or refunding a return is a money

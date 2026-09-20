@@ -178,7 +178,7 @@ const SECTIONS: Section[] = [
       {
         kind: "p",
         text: [
-          "Every newsletter carries an unsubscribe link, and you can use it at any time without contacting us. Unsubscribing stops the newsletter only — order confirmations, shipping updates, and account emails are not marketing and keep coming, because you need them.",
+          "Every newsletter carries an unsubscribe link, and you can use it at any time without contacting us. Unsubscribing stops the newsletter only. Order confirmations, shipping updates, and account emails are not marketing and keep coming, because you need them.",
         ],
       },
       {

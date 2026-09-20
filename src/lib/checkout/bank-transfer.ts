@@ -218,7 +218,7 @@ export function receiptKey(orderNumber: string, extension: string, random: strin
 
 /** "4h 32m", or "Expired" once the deadline has passed. */
 export function timeRemaining(expiresAt: Date | null, now: Date = new Date()): string {
-  if (!expiresAt) return "—";
+  if (!expiresAt) return "Not set";
   const ms = expiresAt.getTime() - now.getTime();
   if (ms <= 0) return "Expired";
   const totalMinutes = Math.floor(ms / 60_000);

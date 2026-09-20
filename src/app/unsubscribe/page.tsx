@@ -52,7 +52,7 @@ export default async function UnsubscribePage({ searchParams }: PageProps) {
         </h1>
         <p className="font-sans text-[15px] leading-[1.65] text-ink-dim mt-4">
           {result === "done"
-            ? "You won't get any more newsletters from us. Your orders and account emails are separate — those keep coming, because you need them."
+            ? "You won't get any more newsletters from us. Your orders and account emails are separate. Those keep coming, because you need them."
             : "The link may be incomplete, or the address may already have been removed. If you're still getting newsletters, contact us and we'll take care of it."}
         </p>
         <div className="mt-8 flex flex-wrap gap-3 justify-center">

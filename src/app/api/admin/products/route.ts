@@ -303,7 +303,7 @@ export async function POST(request: Request) {
         entityId: row.id,
         summary:
           `Created “${d.name}” (${d.sku}) at $${d.price.toFixed(2)}` +
-          (d.sizes.length > 0 ? ` — ${sizesSummary(d.sizeLabel, d.sizes)}` : ""),
+          (d.sizes.length > 0 ? `: ${sizesSummary(d.sizeLabel, d.sizes)}` : ""),
         ip: auditIp(request),
       });
 
@@ -528,7 +528,7 @@ export async function DELETE(request: Request) {
   if (ordered > 0) {
     return bad(
       `“${existing.name}” appears on ${ordered} order line${ordered === 1 ? "" : "s"}. ` +
-        "Untick Active in the product instead — deleting it would erase what those customers bought.",
+        "Untick Active in the product instead. Deleting it would erase what those customers bought.",
       409,
     );
   }
@@ -554,7 +554,7 @@ export async function DELETE(request: Request) {
       summary:
         `Deleted “${existing.name}” (${existing.sku})` +
         (imageUrls.length > 0
-          ? ` — ${imageUrls.length} image${imageUrls.length === 1 ? "" : "s"}`
+          ? `: ${imageUrls.length} image${imageUrls.length === 1 ? "" : "s"}`
           : "") +
         (existing._count.variants > 0
           ? `, ${existing._count.variants} size${existing._count.variants === 1 ? "" : "s"}`

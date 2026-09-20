@@ -181,8 +181,8 @@ export async function POST(request: Request) {
       {
         error:
           oversold.available <= 0
-            ? `${oversold.name} just sold out — please remove it from your bag.`
-            : `Only ${oversold.available} of ${oversold.name} left — please lower the quantity.`,
+            ? `${oversold.name} just sold out. Please remove it from your bag.`
+            : `Only ${oversold.available} of ${oversold.name} left. Please lower the quantity.`,
       },
       { status: 409 },
     );
@@ -353,7 +353,7 @@ export async function POST(request: Request) {
   } catch (e) {
     if (e instanceof OversoldError) {
       return NextResponse.json(
-        { error: `${e.itemName} just sold out — please adjust your bag.` },
+        { error: `${e.itemName} just sold out. Please adjust your bag.` },
         { status: 409 },
       );
     }

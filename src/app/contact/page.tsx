@@ -75,8 +75,7 @@ export default function ContactPage() {
                   className="text-blush no-underline hover:text-pink transition-colors"
                 >
                   TikTok
-                </a>{" "}
-                — we answer DMs there too.
+                </a>. We answer DMs there too.
               </p>
             </div>
           </aside>

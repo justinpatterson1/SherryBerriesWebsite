@@ -322,7 +322,7 @@ export function InventoryView({
           >
             <h3 className="font-display text-[20px] text-ink">Delete “{confirmDelete.name}”?</h3>
             <p className="mt-2 font-sans text-[13px] text-ink-dim leading-relaxed">
-              Its page, its sizes, its reviews and its uploaded images are all removed — the
+              Its page, its sizes, its reviews and its uploaded images are all removed, and the
               images from storage too. This cannot be undone.
             </p>
             <p className="mt-3 font-sans text-[13px] text-ink-dim leading-relaxed">

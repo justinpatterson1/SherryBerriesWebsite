@@ -37,7 +37,7 @@ export function ForgotPasswordForm() {
       <p className="font-sans text-[14px] leading-[1.6] text-blush">
         ✦ If an account exists for that email, check your inbox for the next
         step. If your email isn&apos;t verified yet, you&apos;ll get a
-        verification link first — confirm it, then request your reset.
+        verification link first. Confirm it, then request your reset.
       </p>
     );
   }

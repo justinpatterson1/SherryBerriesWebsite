@@ -97,7 +97,7 @@ export function SubscribersView({
               Everyone who signed up from the site, plus anyone added here.{" "}
               <strong className="text-ink">{subscribedCount}</strong> subscribed of{" "}
               {subscribers.length}. Unsubscribing stops the mail but keeps the record
-              that they opted in — delete only a typo or a junk signup.
+              that they opted in, so delete only a typo or a junk signup.
             </p>
           </div>
         </div>

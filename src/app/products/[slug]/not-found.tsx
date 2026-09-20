@@ -4,7 +4,7 @@ export default function ProductNotFound() {
   return (
     <main className="pt-[160px] pb-20 px-[8%] max-[900px]:px-[6%] flex flex-col items-center text-center">
       <span className="font-sans text-[11px] tracking-[0.22em] uppercase text-pink mb-3">
-        Out of stock — or out of orbit
+        Out of stock, or out of orbit
       </span>
       <h1 className="font-display text-[clamp(40px,4.4vw,60px)] leading-[1.05] tracking-[-0.01em] text-ink m-0 mb-4">
         We can&apos;t find that piece.

@@ -224,6 +224,6 @@ describe("timeRemaining", () => {
   });
 
   it("has nothing to show without a deadline", () => {
-    expect(timeRemaining(null, now)).toBe("—");
+    expect(timeRemaining(null, now)).toBe("Not set");
   });
 });

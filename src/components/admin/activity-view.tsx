@@ -73,7 +73,7 @@ export function ActivityView({ entries }: { entries: AdminAuditEntry[] }) {
             <h2 className="font-display text-[26px] text-ink m-0">Activity</h2>
             <p className="font-sans text-[13px] leading-[1.6] text-ink-dim m-0 mt-1.5 max-w-[560px]">
               Every change made through this panel, newest first. Records are written
-              alongside the change itself, so nothing done here is missing — but changes
+              alongside the change itself, so nothing done here is missing, but changes
               made directly in the database do not appear. Kept for 12 months.
             </p>
           </div>

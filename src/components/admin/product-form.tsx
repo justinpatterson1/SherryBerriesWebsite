@@ -317,7 +317,7 @@ export function ProductForm({
             <p className="mt-1.5 font-sans text-[11px] leading-[1.5] text-ink-faint">
               {f.careInstructions.trim()
                 ? "Shown in the Care & cleaning section on this product’s page."
-                : "Optional — leave blank to use the standard care advice."}
+                : "Optional. Leave blank to use the standard care advice."}
             </p>
           </div>
 
@@ -328,7 +328,7 @@ export function ProductForm({
             </div>
             <div>
               <label className={labelClass}>Compare-at</label>
-              <input type="number" min={0} step="0.01" className={numClass} value={f.compareAtPrice} onChange={(e) => set("compareAtPrice", e.target.value)} placeholder="—" />
+              <input type="number" min={0} step="0.01" className={numClass} value={f.compareAtPrice} onChange={(e) => set("compareAtPrice", e.target.value)} placeholder="0.00" />
             </div>
             {/* A download cannot run out, so it has no stock or reorder point. */}
             {!f.isDigital && (
@@ -410,7 +410,7 @@ export function ProductForm({
                   onChange={(e) => handleDigitalFile(e.target.files?.[0])}
                 />
                 <p className="mt-1.5 font-sans text-[11px] leading-[1.5] text-ink-faint">
-                  PDF only, up to 5 MB. Stored privately — buyers reach it through their order
+                  PDF only, up to 5 MB. Stored privately, so buyers reach it through their order
                   page, never a public link.
                 </p>
                 {digitalError && (
@@ -438,7 +438,7 @@ export function ProductForm({
                   choice hide stock silently. */}
               <p className="mt-1.5 font-sans text-[11px] leading-[1.5] text-ink-faint">
                 {categories.find((c) => c.id === f.categoryId)?.isJewelry === false
-                  ? "Hidden from the main Jewelry page — reachable only from its own category."
+                  ? "Hidden from the main Jewelry page, reachable only from its own category."
                   : "Shown on the Jewelry page as well as its category."}
               </p>
             </div>
@@ -452,7 +452,7 @@ export function ProductForm({
                 <span className={labelClass + " mb-0"}>Sizes &amp; stock</span>
                 <p className="font-sans text-[11px] leading-[1.5] text-ink-faint mt-1">
                   {hasSizes
-                    ? `Stock is the total of these rows — ${sizeTotal} in all.`
+                    ? `Stock is the total of these rows: ${sizeTotal} in all.`
                     : "Leave empty for a product sold in one size only."}
                 </p>
               </div>
@@ -520,7 +520,7 @@ export function ProductForm({
                           className={numClass}
                           value={r.additionalPrice}
                           onChange={(e) => setSize(i, "additionalPrice", e.target.value)}
-                          placeholder="—"
+                          placeholder="0.00"
                           aria-label={`Extra price for size ${i + 1}`}
                         />
                       </div>
@@ -538,7 +538,7 @@ export function ProductForm({
 
                 {product && (
                   <p className="font-sans text-[11px] leading-[1.5] text-ink-faint m-0">
-                    A size that has already been ordered can&apos;t be removed — set its
+                    A size that has already been ordered can&apos;t be removed. Set its
                     quantity to 0 instead, so those orders keep a record of what was bought.
                   </p>
                 )}

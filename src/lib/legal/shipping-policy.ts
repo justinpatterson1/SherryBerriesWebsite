@@ -51,7 +51,7 @@ const RATE_ITEMS = SHIPPING_ORDER.map((key) => {
     : option.fee === 0
       ? "Free"
       : money(option.fee);
-  return [{ b: option.label }, ` — ${price}. ${option.eta}.`];
+  return [{ b: option.label }, `: ${price}. ${option.eta}.`];
 });
 
 const INTRO: Block[] = [
@@ -200,7 +200,7 @@ const SECTIONS: Section[] = [
     blocks: [
       {
         kind: "p",
-        text: "Once an order has been handed over to the shipping provider, we are not responsible for delays caused by the carrier — but we will always help you chase it.",
+        text: "Once an order has been handed over to the shipping provider, we are not responsible for delays caused by the carrier, but we will always help you chase it.",
       },
       {
         kind: "p",

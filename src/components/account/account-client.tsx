@@ -547,7 +547,7 @@ function ConfirmDeleteAddress({
     <div>
       <h2 className="font-display text-[26px] text-ink m-0 mb-2">Delete address?</h2>
       <p className="font-sans text-[14px] leading-[1.6] text-ink-dim m-0 mb-6">
-        {address.fullName} — {address.line1}, {address.city}. This can&apos;t be
+        {address.fullName}, {address.line1}, {address.city}. This can&apos;t be
         undone.
       </p>
       <div className="flex justify-end gap-2.5">

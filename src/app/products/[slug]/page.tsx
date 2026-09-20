@@ -174,7 +174,7 @@ export default async function ProductPage({ params }: PageProps) {
                 body: (
                   <p className="m-0">
                     Pick the gauge that matches your current jewelry. Not sure? Reach
-                    out to our studio team on WhatsApp — we&apos;ll match you to the
+                    out to our studio team on WhatsApp. We&apos;ll match you to the
                     right size.
                   </p>
                 ),
@@ -212,7 +212,7 @@ export default async function ProductPage({ params }: PageProps) {
                         const option = SHIPPING[key];
                         return (
                           <li key={option.key}>
-                            {option.label} — {option.fee === 0 ? "Free" : `$${option.fee.toFixed(2)}`}.{" "}
+                            {option.label}: {option.fee === 0 ? "Free" : `$${option.fee.toFixed(2)}`}.{" "}
                             {option.eta}.
                           </li>
                         );
@@ -230,7 +230,7 @@ export default async function ProductPage({ params }: PageProps) {
                         <>
                           We don&apos;t accept returns for a change of mind. Anything that
                           arrives damaged, defective, or incorrect is always put right at no
-                          cost to you — please tell us within {RETURN_WINDOW_DAYS} days of
+                          cost to you, so please tell us within {RETURN_WINDOW_DAYS} days of
                           delivery.
                         </>
                       )}{" "}

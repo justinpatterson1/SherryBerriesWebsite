@@ -90,7 +90,7 @@ export function CheckoutForm({
           <p className="font-sans text-[13px] leading-[1.6] text-ink-dim m-0">
             <span className="text-ink font-semibold">Nothing to ship.</span> Your
             download appears on your order page as soon as payment is confirmed,
-            and stays there for good — so there&apos;s no address to enter.
+            and stays there for good, so there&apos;s no address to enter.
           </p>
         </div>
       )}
@@ -121,7 +121,7 @@ export function CheckoutForm({
                 <optgroup key={region} label={region}>
                   {CITIES_BY_REGION[region].map((c) => (
                     <option key={c.name} value={c.name}>
-                      {c.name} — {money(c.fee)}
+                      {c.name}: {money(c.fee)}
                     </option>
                   ))}
                 </optgroup>
@@ -188,7 +188,7 @@ export function CheckoutForm({
             sub={
               needsShipping
                 ? "Pay when your order arrives"
-                : "Pay us directly — your download unlocks once we confirm it"
+                : "Pay us directly. Your download unlocks once we confirm it"
             }
           />
           <OptionCard
@@ -253,7 +253,7 @@ export function CheckoutForm({
                   Complete your order first and we&apos;ll give you the bank transfer
                   details. Your items are{" "}
                   <span className="text-ink font-semibold">temporarily reserved</span>{" "}
-                  while we wait for payment — you&apos;ll upload your receipt on the next
+                  while we wait for payment. You&apos;ll upload your receipt on the next
                   page, and we&apos;ll confirm your order once the transfer arrives.
                 </p>
               </div>

@@ -142,7 +142,7 @@ export function CheckoutClient({
       if (wipay === "error") {
         showToast("We couldn't confirm your payment. If you were charged, please contact support.");
       } else if (wipay === "pending") {
-        showToast("Your payment is still processing — we'll email you once it's confirmed.");
+        showToast("Your payment is still processing. We'll email you once it's confirmed.");
       }
     });
     window.history.replaceState(null, "", window.location.pathname);
@@ -181,7 +181,7 @@ export function CheckoutClient({
       try {
         sessionStorage.setItem(PROMO_KEY, JSON.stringify({ code: p.code }));
       } catch {}
-      showToast(`✦ ${p.code} applied — ${p.label}`);
+      showToast(`✦ ${p.code} applied: ${p.label}`);
     },
     [showToast],
   );
@@ -265,7 +265,7 @@ export function CheckoutClient({
       clearCart();
       setOrder(data.order!);
     } catch {
-      showToast("Network error — please try again");
+      showToast("Network error. Please try again");
       setPlacing(false);
     }
     // Intentionally leave `placing` true on success — the view swaps to Thank-You.
@@ -359,7 +359,7 @@ function CheckoutEmpty() {
         Nothing to check out yet
       </h2>
       <p className="font-sans text-[14px] text-ink-dim m-0 mb-6 max-w-[360px] mx-auto">
-        Your bag is empty — add a piece or two and they&apos;ll show up here.
+        Your bag is empty. Add a piece or two and they&apos;ll show up here.
       </p>
       <div className="flex items-center justify-center gap-3">
         <Link

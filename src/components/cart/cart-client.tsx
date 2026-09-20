@@ -83,7 +83,7 @@ export function CartClient() {
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("wipay") !== "failed") return;
     queueMicrotask(() => {
-      showToast("Payment didn't go through — your bag is saved. Feel free to try again.");
+      showToast("Payment didn't go through. Your bag is saved. Feel free to try again.");
     });
     window.history.replaceState(null, "", window.location.pathname);
   }, [showToast]);
@@ -262,7 +262,7 @@ export function CartClient() {
             promo={promo}
             onApplyPromo={(p) => {
               setPromo(p);
-              showToast(`✦ ${p.code} applied — ${p.label}`);
+              showToast(`✦ ${p.code} applied: ${p.label}`);
             }}
             onRemovePromo={() => {
               setPromo(null);

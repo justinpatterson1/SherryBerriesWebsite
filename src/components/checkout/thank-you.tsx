@@ -64,7 +64,7 @@ export function ThankYou({ order }: { order: PlacedOrder }) {
           !
         </h1>
         <p className="font-sans text-[15px] leading-[1.65] text-ink-dim m-0 mt-3 max-w-[440px] mx-auto">
-          Your order is in — we&apos;re already wrapping it in pink and gold. A
+          Your order is in. We&apos;re already wrapping it in pink and gold. A
           confirmation has been sent to{" "}
           <span className="text-ink">{order.contact.email}</span>.
         </p>
@@ -125,7 +125,7 @@ export function ThankYou({ order }: { order: PlacedOrder }) {
           <p className="font-sans text-[13px] leading-[1.6] text-ink-dim m-0">
             {order.digital ? (
               <>
-                {order.eta}. It stays on your order page for good — download it
+                {order.eta}. It stays on your order page for good, so download it
                 as often as you like.
                 {isCod && " Payment is collected before your download unlocks."}
               </>
@@ -133,7 +133,7 @@ export function ThankYou({ order }: { order: PlacedOrder }) {
               <>
                 {order.eta}. We&apos;ll text{" "}
                 <span className="text-ink">{order.contact.phone}</span> with updates
-                {isCod ? " — please have payment ready on arrival." : "."}
+                {isCod ? ". Please have payment ready on arrival." : "."}
               </>
             )}
           </p>

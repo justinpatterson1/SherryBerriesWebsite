@@ -52,7 +52,7 @@ export function Footer() {
               Sherry<span className="font-serif italic text-pink ml-px">Berries</span>
             </Link>
             <p className="text-base leading-[1.65] text-[#8a8084] m-0">
-              Luxury body jewelry &amp; piercing aftercare — made with love in Trinidad
+              Luxury body jewelry &amp; piercing aftercare, made with love in Trinidad
               &amp; Tobago.
             </p>
 

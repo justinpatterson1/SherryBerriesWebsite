@@ -587,7 +587,7 @@ export async function getAdminData(
       label: "Conversion",
       value: "3.2%",
       delta: 0.4,
-      hint: "est. — no traffic data",
+      hint: "est., no traffic data",
     },
   ];
 
@@ -742,7 +742,7 @@ export async function getAdminData(
       customer: { name, email: o.user.email, initials: initials(name) },
       shipTo: resolveShipTo(o),
       channel: channelFor(o.paymentMethod),
-      paymentMethod: o.paymentMethod ?? "—",
+      paymentMethod: o.paymentMethod ?? "Not recorded",
       subtotal,
       shippingFee,
       discount,
@@ -803,7 +803,7 @@ export async function getAdminData(
         o.shipName ||
         o.user?.name ||
         [o.user?.firstName, o.user?.lastName].filter(Boolean).join(" ") ||
-        "—",
+        "Not recorded",
       amount: Number(o.total),
       paymentStatus: o.paymentStatus,
       expiresAt: o.paymentExpiresAt ? o.paymentExpiresAt.toISOString() : null,

@@ -6,7 +6,7 @@ import { AdminClient } from "@/components/admin/admin-client";
 
 export const metadata: Metadata = {
   title: "Control Room | SherryBerries",
-  description: "Store admin — orders, inventory, and analytics.",
+  description: "Store admin: orders, inventory, and analytics.",
   robots: { index: false },
 };
 

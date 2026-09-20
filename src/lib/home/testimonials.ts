@@ -21,7 +21,7 @@ export const TESTIMONIALS: Testimonial[] = [
     rating: 5,
     date: "May 2026",
     quote:
-      "My titanium studs healed cleaner than any piercing I've had. Three weeks in, zero irritation — the aftercare spray made all the difference.",
+      "My titanium studs healed cleaner than any piercing I've had. Three weeks in, zero irritation. The aftercare spray made all the difference.",
   },
   {
     name: "Renee Charles",
@@ -45,7 +45,7 @@ export const TESTIMONIALS: Testimonial[] = [
     rating: 4,
     date: "March 2026",
     quote:
-      "Finally implant-grade jewelry I can trust for a fresh helix. The sizing guide was spot on — no guessing, no swelling drama.",
+      "Finally implant-grade jewelry I can trust for a fresh helix. The sizing guide was spot on, no guessing, no swelling drama.",
   },
   {
     name: "Maria Lakhan",

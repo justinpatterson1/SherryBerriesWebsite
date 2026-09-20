@@ -77,7 +77,7 @@ export function AdminReturnsView({
               {openCount === 0
                 ? "Nothing waiting on you."
                 : `${openCount} request${openCount === 1 ? "" : "s"} waiting on you.`}{" "}
-              Approving does not move money — mark a request refunded once you have
+              Approving does not move money. Mark a request refunded once you have
               actually issued it.
             </p>
           </div>

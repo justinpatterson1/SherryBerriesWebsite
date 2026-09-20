@@ -380,7 +380,7 @@ export function SearchOverlay({
                   </div>
                   {results.products.length > PRODUCT_CAP && (
                     <p className="px-3 py-2 font-sans text-[11px] tracking-[0.06em] text-ink-faint">
-                      Showing {PRODUCT_CAP} of {results.products.length} — keep
+                      Showing {PRODUCT_CAP} of {results.products.length}, keep
                       typing to narrow down.
                     </p>
                   )}

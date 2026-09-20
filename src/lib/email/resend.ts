@@ -67,7 +67,7 @@ export async function sendPasswordResetEmail({
       to,
       subject: "Reset your SherryBerries password ✦",
       html: passwordResetHtml({ greeting, resetUrl }),
-      text: `${greeting}\n\nWe got a request to reset your SherryBerries password. Tap the link below to choose a new one:\n\n${resetUrl}\n\nThis link expires in 1 hour. If you didn't request this, you can safely ignore this email — your password won't change.`,
+      text: `${greeting}\n\nWe got a request to reset your SherryBerries password. Tap the link below to choose a new one:\n\n${resetUrl}\n\nThis link expires in 1 hour. If you didn't request this, you can safely ignore this email. Your password won't change.`,
     });
     if (error) return { ok: false, error: error.message };
     return { ok: true };
@@ -167,7 +167,7 @@ export async function sendOrderConfirmationEmail({
   const lines = order.items
     .map(
       (it) =>
-        `  • ${it.qty}× ${it.name}${it.variant ? ` (${it.variant})` : ""} — $${(it.price * it.qty).toFixed(2)}`,
+        `  • ${it.qty}× ${it.name}${it.variant ? ` (${it.variant})` : ""}: $${(it.price * it.qty).toFixed(2)}`,
     )
     .join("\n");
 
@@ -177,7 +177,7 @@ export async function sendOrderConfirmationEmail({
       to,
       subject: `Your SherryBerries order ${order.orderNumber} is confirmed ✦`,
       html: orderConfirmationHtml({ greeting, order }),
-      text: `${greeting}\n\nYour order is in — we're already wrapping it in pink and gold.\n\nOrder ${order.orderNumber}\n${lines}\n\nSubtotal: $${order.subtotal.toFixed(2)}${order.discount > 0 ? `\nDiscount: -$${order.discount.toFixed(2)}` : ""}${order.digital ? "" : `\nShipping (${order.shipLabel}): ${order.shipFee === 0 ? "Free" : `$${order.shipFee.toFixed(2)}`}`}\nTotal: $${order.total.toFixed(2)}\n\nPayment: ${order.paymentLabel}\n${order.eta}.\n\nWith love,\nSherryBerries`,
+      text: `${greeting}\n\nYour order is in. We're already wrapping it in pink and gold.\n\nOrder ${order.orderNumber}\n${lines}\n\nSubtotal: $${order.subtotal.toFixed(2)}${order.discount > 0 ? `\nDiscount: -$${order.discount.toFixed(2)}` : ""}${order.digital ? "" : `\nShipping (${order.shipLabel}): ${order.shipFee === 0 ? "Free" : `$${order.shipFee.toFixed(2)}`}`}\nTotal: $${order.total.toFixed(2)}\n\nPayment: ${order.paymentLabel}\n${order.eta}.\n\nWith love,\nSherryBerries`,
     });
     if (error) return { ok: false, error: error.message };
     return { ok: true };
@@ -256,7 +256,7 @@ export function orderConfirmationHtml({
           <tr><td style="padding:8px 36px 0;">
             <h1 style="font-size:24px;line-height:1.25;color:#ffffff;margin:16px 0 12px;">Order confirmed ✦</h1>
             <p style="font-size:15px;line-height:1.6;color:#cbb8c0;margin:0 0 8px;">${escapeHtml(greeting)}</p>
-            <p style="font-size:15px;line-height:1.6;color:#cbb8c0;margin:0 0 20px;">Your order is in — we're already wrapping it in pink and gold. Here's a copy for your records.</p>
+            <p style="font-size:15px;line-height:1.6;color:#cbb8c0;margin:0 0 20px;">Your order is in. We're already wrapping it in pink and gold. Here's a copy for your records.</p>
           </td></tr>
           <tr><td style="padding:0 36px 8px;">
             <p style="font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:#8a7780;margin:0 0 4px;">Order number</p>
@@ -354,7 +354,7 @@ function passwordResetHtml({
           <tr><td style="padding:0 36px 36px;">
             <p style="font-size:12px;line-height:1.6;color:#8a7780;margin:0;">This link expires in 1 hour. If the button doesn't work, paste this link into your browser:</p>
             <p style="font-size:12px;line-height:1.6;color:#ff4fa3;word-break:break-all;margin:8px 0 0;">${resetUrl}</p>
-            <p style="font-size:12px;line-height:1.6;color:#8a7780;margin:16px 0 0;">If you didn't request a password reset, you can safely ignore this email — your password won't change.</p>
+            <p style="font-size:12px;line-height:1.6;color:#8a7780;margin:16px 0 0;">If you didn't request a password reset, you can safely ignore this email, your password won't change.</p>
           </td></tr>
         </table>
       </td></tr>
@@ -458,14 +458,14 @@ export async function sendReceiptSubmittedEmail({
         greeting,
         body: [
           `Thank you, Sweet Berry! We&rsquo;ve received your payment receipt for <strong style="color:#ffffff;">${order}</strong> (${money}).`,
-          "We&rsquo;ll check the transfer against our bank account and confirm your order once the payment has arrived. Nothing else is needed from you right now &mdash; we&rsquo;ll email you as soon as it&rsquo;s verified.",
+          "We&rsquo;ll check the transfer against our bank account and confirm your order once the payment has arrived. Nothing else is needed from you right now. We&rsquo;ll email you as soon as it&rsquo;s verified.",
         ],
         note: "This confirms we received your receipt, not that the payment has cleared. We verify every transfer by hand.",
       }),
       text:
         `${greeting}\n\nWe've received your payment receipt for ${orderNumber} (${amount}).\n\n` +
         `We'll check the transfer against our bank account and confirm your order once the payment has arrived. Nothing else is needed from you right now.\n\n` +
-        `This confirms we received your receipt, not that the payment has cleared — we verify every transfer by hand.`,
+        `This confirms we received your receipt, not that the payment has cleared. We verify every transfer by hand.`,
     });
     if (error) return { ok: false, error: error.message };
     return { ok: true };
@@ -547,13 +547,13 @@ export async function sendDigitalReadyEmail({
     const { error } = await resend.emails.send({
       from: FROM,
       to,
-      subject: `Your download${many ? "s are" : " is"} ready — ${orderNumber}`,
+      subject: `Your download${many ? "s are" : " is"} ready: ${orderNumber}`,
       html: bankTransferHtml({
         heading: many ? "Your downloads are ready" : "Your download is ready",
         greeting,
         body: [
           `Payment for <strong style="color:#ffffff;">${order}</strong> is confirmed, so ${listHtml} ${many ? "are" : "is"} yours to download.`,
-          "It lives on your order page for good — open it as many times as you like, on any device.",
+          "It lives on your order page for good. Open it as many times as you like, on any device.",
         ],
         actionUrl: orderUrl,
         actionLabel: many ? "Get your downloads" : "Get your download",
@@ -562,7 +562,7 @@ export async function sendDigitalReadyEmail({
       text:
         `${greeting}\n\nPayment for ${orderNumber} is confirmed, so your download${many ? "s are" : " is"} ready:\n\n${listText}\n\n` +
         `Open your order page to download:\n${orderUrl}\n\n` +
-        `It stays there for good — download it as many times as you like. You'll need to be signed in to the account that placed the order.\n\n` +
+        `It stays there for good. Download it as many times as you like. You'll need to be signed in to the account that placed the order.\n\n` +
         `With love,\nSherryBerries`,
     });
     if (error) return { ok: false, error: error.message };
@@ -603,14 +603,14 @@ export async function sendPaymentRejectedEmail({
           `<strong style="color:#ffffff;">Reason:</strong> ${escapeHtml(reason)}`,
           "You can upload a new receipt using the button below. If you think this is a mistake, just reply to this email and we&rsquo;ll sort it out.",
         ],
-        note: "Your order is still being held for now — nothing has been cancelled.",
+        note: "Your order is still being held for now. Nothing has been cancelled.",
         actionUrl: paymentUrl,
         actionLabel: "Upload a new receipt",
       }),
       text:
         `${greeting}\n\nWe looked for your transfer of ${amount} for ${orderNumber} and couldn't confirm it.\n\n` +
         `Reason: ${reason}\n\nYou can upload a new receipt here:\n${paymentUrl}\n\n` +
-        `If you think this is a mistake, reply to this email and we'll sort it out. Your order is still being held for now — nothing has been cancelled.`,
+        `If you think this is a mistake, reply to this email and we'll sort it out. Your order is still being held for now. Nothing has been cancelled.`,
     });
     if (error) return { ok: false, error: error.message };
     return { ok: true };

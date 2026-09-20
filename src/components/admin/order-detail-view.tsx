@@ -136,7 +136,7 @@ export function OrderDetailView({
             {order.shipTo ? (
               <div className="flex flex-col gap-2">
                 <div className="font-sans text-[14px] text-ink">
-                  {order.shipTo.name ?? "—"}
+                  {order.shipTo.name ?? "Not provided"}
                 </div>
                 <div className="font-sans text-[13px] leading-[1.6] text-ink-dim">
                   {order.shipTo.line1}
@@ -154,13 +154,13 @@ export function OrderDetailView({
                   ) : null}
                 </div>
                 <div className="mt-2 pt-3 border-t border-white/[0.06] flex flex-col gap-2 light:border-[rgba(26,13,18,0.06)]">
-                  <Row label="Phone" value={order.shipTo.phone ?? "—"} />
+                  <Row label="Phone" value={order.shipTo.phone ?? "Not provided"} />
                   <Row label="Email" value={order.shipTo.email ?? order.customer.email} />
                 </div>
               </div>
             ) : (
               <p className="font-sans text-[13px] leading-[1.6] text-ink-dim m-0">
-                No address recorded against this order — it predates the snapshot.
+                No address recorded against this order. It predates the snapshot.
                 Check with the customer before shipping.
               </p>
             )}
@@ -213,7 +213,7 @@ export function OrderDetailView({
                 disabled={payBusy}
                 className={`${btnSolid} w-full`}
               >
-                {payBusy ? "Recording…" : `Mark as paid — ${money(order.total)}`}
+                {payBusy ? "Recording…" : `Mark as paid: ${money(order.total)}`}
               </button>
               <p className="font-sans text-[11px] leading-[1.5] text-ink-faint m-0 mt-2">
                 Only do this once the money is actually in hand. It is recorded in the

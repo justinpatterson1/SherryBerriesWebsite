@@ -53,13 +53,13 @@ const OWNER_DECISIONS = {
 const INTRO: Block[] = [
   {
     kind: "p",
-    text: "Body jewelry is worn in a healing or healed piercing, so returns work differently here than for most products. We do not accept returns because an item was not wanted after all — nothing in the shop comes back for a change of mind. Jewelry and aftercare go further still: once an order has left us, those items cannot be returned or exchanged for any reason other than a fault.",
+    text: "Body jewelry is worn in a healing or healed piercing, so returns work differently here than for most products. We do not accept returns because an item was not wanted after all. Nothing in the shop comes back for a change of mind. Jewelry and aftercare go further still: once an order has left us, those items cannot be returned or exchanged for any reason other than a fault.",
   },
   {
     kind: "p",
     text: [
       { b: "This does not apply when something is our fault." },
-      " If an item reaches you damaged, defective, or is not what you ordered, we will put it right — see below.",
+      " If an item reaches you damaged, defective, or is not what you ordered, we will put it right. See below.",
     ],
   },
   {
@@ -95,7 +95,7 @@ const SECTIONS: Section[] = [
       },
       {
         kind: "p",
-        text: "This applies whether or not the packaging has been opened. Once these items are out of our hands we have no way to verify how they were stored or handled, and reselling jewelry that may have been in contact with a piercing is a genuine infection risk. It is not a matter of preference — we will not do it.",
+        text: "This applies whether or not the packaging has been opened. Once these items are out of our hands we have no way to verify how they were stored or handled, and reselling jewelry that may have been in contact with a piercing is a genuine infection risk. It is not a matter of preference. We will not do it.",
       },
       {
         kind: "p",
@@ -106,7 +106,7 @@ const SECTIONS: Section[] = [
       },
       {
         kind: "p",
-        text: "Final sale does not cover our mistakes. If an item arrives damaged, defective, or is not what you ordered, it is always put right — see below.",
+        text: "Final sale does not cover our mistakes. If an item arrives damaged, defective, or is not what you ordered, it is always put right. See below.",
       },
     ],
   },
@@ -120,15 +120,15 @@ const SECTIONS: Section[] = [
       {
         kind: "list",
         items: [
-          "Items that arrive damaged or defective — any item, always.",
-          "Items that are not what you ordered — any item, always.",
+          "Items that arrive damaged or defective, any item, always.",
+          "Items that are not what you ordered, any item, always.",
         ],
       },
       {
         kind: "p",
         text: [
           { b: "We do not accept returns for a change of mind." },
-          ` That applies to every category, merchandise and accessories included. If an item simply turned out not to be what you wanted, we cannot take it back — please ask us anything you are unsure of before ordering.`,
+          ` That applies to every category, merchandise and accessories included. If an item simply turned out not to be what you wanted, we cannot take it back. Please ask us anything you are unsure of before ordering.`,
         ],
       },
       {
@@ -159,7 +159,7 @@ const SECTIONS: Section[] = [
       { kind: "list", items: [...RETURN_REASONS] },
       {
         kind: "p",
-        text: "Returns can only be opened against an order that has been delivered. Once submitted, your request is given a reference number and we will contact you with next steps — please do not send anything back before we have replied.",
+        text: "Returns can only be opened against an order that has been delivered. Once submitted, your request is given a reference number and we will contact you with next steps. Please do not send anything back before we have replied.",
       },
       {
         kind: "p",
@@ -243,7 +243,7 @@ const SECTIONS: Section[] = [
     blocks: [
       {
         kind: "p",
-        text: "We do not offer exchanges for a change of mind on anything we sell — including exchanges for a different size, gauge, style, or colour. For jewelry and aftercare this is absolute, for the hygiene reasons set out above.",
+        text: "We do not offer exchanges for a change of mind on anything we sell, including exchanges for a different size, gauge, style, or colour. For jewelry and aftercare this is absolute, for the hygiene reasons set out above.",
       },
       {
         kind: "p",
@@ -290,7 +290,7 @@ const SECTIONS: Section[] = [
         text: [
           "A reaction to a material is not a fault in the item, so worn jewelry cannot be returned on those grounds. Our ",
           { href: "/learn/sizing", text: "sizing guide" },
-          " sets out which materials are safe for fresh piercings — if you have known metal sensitivities, please ask us before ordering.",
+          " sets out which materials are safe for fresh piercings. If you have known metal sensitivities, please ask us before ordering.",
         ],
       },
     ],

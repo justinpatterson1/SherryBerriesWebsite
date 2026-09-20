@@ -50,7 +50,7 @@ export function validatePromo(raw: {
     return { ok: false, error: `Codes must be ${PROMO_LIMITS.codeMax} characters or fewer.` };
   }
   if (!CODE_RE.test(code)) {
-    return { ok: false, error: "Use letters and numbers only — no spaces or symbols." };
+    return { ok: false, error: "Use letters and numbers only, no spaces or symbols." };
   }
 
   const percentageOff = optionalNumber(raw.percentageOff);
@@ -62,7 +62,7 @@ export function validatePromo(raw: {
     return { ok: false, error: "Set either a percentage or an amount off." };
   }
   if (percentageOff !== null && amountOff !== null) {
-    return { ok: false, error: "Choose one — a percentage or a fixed amount, not both." };
+    return { ok: false, error: "Choose one: a percentage or a fixed amount, not both." };
   }
 
   if (percentageOff !== null) {
@@ -79,7 +79,7 @@ export function validatePromo(raw: {
       return { ok: false, error: "Amount off must be more than zero." };
     }
     if (amountOff > PROMO_LIMITS.maxAmount) {
-      return { ok: false, error: "That amount looks like a typo — keep it under $10,000." };
+      return { ok: false, error: "That amount looks like a typo. Keep it under $10,000." };
     }
   }
 

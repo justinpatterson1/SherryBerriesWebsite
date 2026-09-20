@@ -92,11 +92,11 @@ export function PaymentsView({
               {needsReview > 0 ? (
                 <>
                   <strong className="text-ink">{needsReview}</strong> awaiting verification. A
-                  receipt is what the customer says they sent — check it against the bank
+                  receipt is what the customer says they sent, so check it against the bank
                   account before confirming.
                 </>
               ) : (
-                "Nothing awaiting verification. A receipt is what the customer says they sent — always check the bank account before confirming."
+                "Nothing awaiting verification. A receipt is what the customer says they sent, so always check the bank account before confirming."
               )}
             </p>
           </div>
@@ -244,7 +244,7 @@ export function PaymentsView({
       {rejecting && (
         <Dialog title="Reject payment" onClose={() => setRejecting(null)}>
           <p className="font-sans text-[13px] leading-[1.65] text-ink-dim m-0">
-            {rejecting.orderNumber} — {money(rejecting.amount)} TTD. The customer will see the
+            {rejecting.orderNumber}: {money(rejecting.amount)} TTD. The customer will see the
             reason and can upload another receipt.
           </p>
 

@@ -23,7 +23,7 @@ export function CartEmpty() {
           but empty.
         </h2>
         <p className="font-sans text-[14px] leading-[1.6] text-ink-dim mb-7">
-          Start your collection — pick a piece that sings to you.
+          Start your collection. Pick a piece that sings to you.
         </p>
         <div className="inline-flex flex-wrap gap-2.5 justify-center">
           <Link

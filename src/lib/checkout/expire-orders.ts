@@ -118,7 +118,7 @@ async function writeExpiryLog(
       action: "payment.expired",
       entityType: "Order",
       entityId: order.id,
-      summary: `${order.orderNumber}: cancelled and restocked — ${because}`,
+      summary: `${order.orderNumber}: cancelled and restocked: ${because}`,
       changes: { paymentStatus: { from: order.paymentStatus, to: "EXPIRED" } },
     },
   });

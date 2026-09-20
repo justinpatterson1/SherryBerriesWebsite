@@ -138,7 +138,7 @@ export function ProductBuyBox({
           {outOfStock
             ? "Out of stock"
             : lowStock
-            ? `Low stock — only ${effectiveInventory} left`
+            ? `Low stock, only ${effectiveInventory} left`
             : isDigital
             ? "Instant download"
             : "In stock"}

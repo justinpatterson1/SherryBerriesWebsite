@@ -156,7 +156,7 @@ export function AdminClient({
         const order = orders.find((o) => o.id === id);
         showToast(
           order?.hasDigital
-            ? "Payment recorded — the download is unlocked and the buyer has been emailed."
+            ? "Payment recorded. The download is unlocked and the buyer has been emailed."
             : "Payment recorded.",
         );
         return true;

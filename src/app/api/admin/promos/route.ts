@@ -88,7 +88,7 @@ export async function POST(request: Request) {
       action: AUDIT_ACTIONS.promoCreate,
       entityType: "DiscountCode",
       entityId: row.id,
-      summary: `Created ${row.code} — ${promoLabel(d.percentageOff, d.amountOff)}${
+      summary: `Created ${row.code}: ${promoLabel(d.percentageOff, d.amountOff)}${
         d.usageLimit ? `, limit ${d.usageLimit}` : ""
       }`,
       ip: auditIp(request),

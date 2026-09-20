@@ -96,7 +96,7 @@ export function OrderSummary({
         <div className="flex items-center justify-between gap-3 py-2 px-3 rounded-xl border border-dashed border-pink/50 bg-pink/[0.06]">
           <span className="font-sans text-[12px] tracking-[0.12em] uppercase text-ink">
             <strong className="text-pink font-bold">{promo.code}</strong>
-            <span className="text-ink-faint mx-1.5">—</span>
+            <span className="text-ink-faint mx-1.5">·</span>
             {promo.label}
           </span>
           <button

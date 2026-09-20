@@ -53,7 +53,7 @@ export function validateContact(raw: {
 
   if (!message) return { ok: false, error: "Please enter a message." };
   if (message.length < CONTACT_LIMITS.messageMin) {
-    return { ok: false, error: "Your message is a little short — tell us a bit more." };
+    return { ok: false, error: "Your message is a little short. Tell us a bit more." };
   }
   if (message.length > CONTACT_LIMITS.messageMax) {
     return { ok: false, error: "Your message is too long." };

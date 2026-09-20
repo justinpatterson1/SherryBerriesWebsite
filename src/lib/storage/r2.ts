@@ -27,7 +27,7 @@ export function validateImageUpload(contentType: string, size: number): UploadCh
   }
   if (size <= 0) return { ok: false, error: "That file is empty." };
   if (size > MAX_UPLOAD_BYTES) {
-    return { ok: false, error: "Image is too large — the maximum size is 5 MB." };
+    return { ok: false, error: "Image is too large. The maximum size is 5 MB." };
   }
   return { ok: true };
 }
@@ -275,7 +275,7 @@ export function validateDigitalUpload(contentType: string, size: number): Upload
   }
   if (!Number.isFinite(size) || size <= 0) return { ok: false, error: "That file is empty." };
   if (size > MAX_DIGITAL_BYTES) {
-    return { ok: false, error: "PDF is too large — the maximum size is 5 MB." };
+    return { ok: false, error: "PDF is too large. The maximum size is 5 MB." };
   }
   return { ok: true };
 }

@@ -6,7 +6,7 @@ import { AccountClient } from "@/components/account/account-client";
 
 export const metadata: Metadata = {
   title: "My Account | SherryBerries",
-  description: "Your orders, returns, addresses, and profile — all in one place.",
+  description: "Your orders, returns, addresses, and profile, all in one place.",
   robots: { index: false },
 };
 
