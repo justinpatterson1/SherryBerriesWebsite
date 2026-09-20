@@ -34,7 +34,7 @@ export type Placement = {
 export const PLACEMENTS: Placement[] = [
   {
     name: "Earlobe",
-    gauge: "20G – 18G",
+    gauge: "16G",
     size: "6 – 8 mm",
     styles: "Studs, huggies, hoops",
     note: "The standard starting point. Downsize studs once healed for a flush fit.",
@@ -100,7 +100,7 @@ export const PLACEMENTS: Placement[] = [
     gauge: "14G",
     size: "12 – 16 mm",
     styles: "Straight or curved barbells, rings",
-    note: "Sizing varies most with anatomy here — 14 mm is a common middle ground.",
+    note: "Sizing varies most with anatomy here: 14 mm is a common middle ground.",
   },
   {
     name: "Daith",
@@ -131,7 +131,7 @@ export const STEPS: Step[] = [
   },
   {
     title: "Measure the right span",
-    body: "For rings, measure the inner diameter. For barbells and studs, measure the wearable bar between the ends — not the balls or decorative tops.",
+    body: "For rings, measure the inner diameter. For barbells and studs, measure the wearable bar between the ends, not the balls or decorative tops.",
   },
   {
     title: "Note the gauge",
@@ -162,7 +162,7 @@ export const MATERIALS: Material[] = [
   {
     name: "Solid gold (14k+)",
     tier: "fresh",
-    note: "Nickel-free solid gold — never plated. Safe for fresh wear and long-term.",
+    note: "Nickel-free solid gold, never plated. Safe for fresh wear and long-term.",
   },
   {
     name: "Niobium",
@@ -171,8 +171,8 @@ export const MATERIALS: Material[] = [
   },
   {
     name: "Surgical steel (316L)",
-    tier: "healed",
-    note: "Fine for most healed piercings, but its nickel content isn't ideal for fresh or sensitive skin.",
+    tier: "fresh",
+    note: "Fine for most healed piercings, but its nickel content isn't ideal for sensitive skin.",
   },
   {
     name: "Gold-plated / gold-filled",
@@ -190,20 +190,20 @@ export type SizingFaqItem = { q: string; a: string };
 
 export const SIZING_FAQS: SizingFaqItem[] = [
   {
-    q: "I'm between two sizes — which do I pick?",
+    q: "I'm between two sizes: which do I pick?",
     a: "While a piercing is fresh, size up to leave room for swelling. Once it's fully healed you can size to the smaller, flusher fit. When in doubt, message us your current piece's measurements.",
   },
   {
     q: "Why do fresh piercings need a longer bar?",
-    a: "Fresh piercings swell. A longer post or bar keeps the jewelry from pressing into the tissue while that happens. Downsize once the swelling settles — usually 4 to 12 weeks depending on the placement.",
+    a: "Fresh piercings swell. A longer post or bar keeps the jewelry from pressing into the tissue while that happens. Downsize once the swelling settles, usually 4 to 12 weeks depending on the placement.",
   },
   {
     q: "Can I change my own gauge (stretch up)?",
-    a: "Not on a fresh piercing, and never force a thicker gauge into an existing hole. Stretch gradually with a professional — forcing it tears tissue and causes scarring.",
+    a: "Not on a fresh piercing, and never force a thicker gauge into an existing hole. Stretch gradually with a professional: forcing it tears tissue and causes scarring.",
   },
   {
     q: "How do I convert gauge to millimeters?",
-    a: "Use the conversion table above: 20G ≈ 0.8 mm, 18G ≈ 1.0 mm, 16G ≈ 1.2 mm, 14G ≈ 1.6 mm. Remember the counter-intuitive rule — a higher gauge number means a thinner bar.",
+    a: "Use the conversion table above: 20G ≈ 0.8 mm, 18G ≈ 1.0 mm, 16G ≈ 1.2 mm, 14G ≈ 1.6 mm. Remember the counter-intuitive rule: a higher gauge number means a thinner bar.",
   },
   {
     q: "Still not sure of my size?",
