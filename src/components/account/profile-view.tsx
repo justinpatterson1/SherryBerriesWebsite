@@ -41,6 +41,7 @@ export function ProfileView({
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!form.firstName.trim()) return setError("First name is required.");
+    if (!form.lastName.trim()) return setError("Last name is required.");
     if (!EMAIL_RE.test(form.email)) return setError("Enter a valid email address.");
     if (!form.phone.trim()) return setError("Phone number is required.");
     setError(null);
@@ -72,7 +73,9 @@ export function ProfileView({
             <input id="pf-first" className={fieldClass} value={form.firstName} onChange={(e) => set("firstName")(e.target.value)} autoComplete="given-name" />
           </div>
           <div>
-            <label className={labelClass} htmlFor="pf-last">Last name</label>
+            <label className={labelClass} htmlFor="pf-last">
+              Last name<span className="text-pink"> *</span>
+            </label>
             <input id="pf-last" className={fieldClass} value={form.lastName} onChange={(e) => set("lastName")(e.target.value)} autoComplete="family-name" />
           </div>
           <div className="col-span-2 max-[560px]:col-span-1">

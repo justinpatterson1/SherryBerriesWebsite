@@ -23,13 +23,16 @@ export async function PATCH(request: Request) {
   if (typeof firstName !== "string" || !firstName.trim()) {
     return NextResponse.json({ error: "First name is required." }, { status: 400 });
   }
+  if (typeof lastName !== "string" || !lastName.trim()) {
+    return NextResponse.json({ error: "Last name is required." }, { status: 400 });
+  }
   if (typeof email !== "string" || !EMAIL_RE.test(email)) {
     return NextResponse.json({ error: "A valid email is required." }, { status: 400 });
   }
   if (typeof phone !== "string" || !phone.trim()) {
     return NextResponse.json({ error: "Phone number is required." }, { status: 400 });
   }
-  const last = typeof lastName === "string" ? lastName.trim() : "";
+  const last = lastName.trim();
   const normalizedEmail = email.toLowerCase();
 
   // Guard the unique email constraint with a friendly message.
@@ -46,12 +49,12 @@ export async function PATCH(request: Request) {
     }
   }
 
-  const name = [firstName.trim(), last].filter(Boolean).join(" ");
+  const name = `${firstName.trim()} ${last}`;
   const user = await prisma.user.update({
     where: { id: session.user.id },
     data: {
       firstName: firstName.trim(),
-      lastName: last || null,
+      lastName: last,
       name,
       email: normalizedEmail,
       phoneNumber: phone.trim(),

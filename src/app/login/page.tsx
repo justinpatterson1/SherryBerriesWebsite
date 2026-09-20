@@ -52,9 +52,9 @@ const COPY: Record<Mode, { title: ReactNode; sub: ReactNode; foot: ReactNode }> 
 
 const STRENGTH_COPY = [
   "Use 8+ characters with letters, numbers & a symbol.",
-  "Getting started — try a longer mix.",
-  "Decent — add a number or symbol for extra glow.",
-  "Strong — one more touch unlocks elite.",
+  "Getting started. Try a longer mix.",
+  "Decent. Add a number or symbol for extra glow.",
+  "Strong. One more touch unlocks elite.",
   "Sparkling secure. Sherry-approved ✦",
 ];
 
@@ -163,7 +163,7 @@ export default function LoginPage() {
         showToast(
           result?.code === "rate_limited"
             ? "Too many sign-in attempts. Please try again in a few minutes ♡"
-            : "Wrong email or password — or email not yet verified ♡",
+            : "Wrong email or password, or email not yet verified ♡",
         );
         return;
       }
@@ -178,13 +178,21 @@ export default function LoginPage() {
     // No auto sign-in — the credentials provider blocks unverified users.
     const firstName = String(data.get("firstName") ?? "").trim();
     const lastName = String(data.get("lastName") ?? "").trim();
-    const fullName = [firstName, lastName].filter(Boolean).join(" ") || firstName;
+    if (!firstName || !lastName) {
+      setSubmitState((s) => ({ ...s, signup: "idle" }));
+      showToast("Please enter both your first and last name ♡");
+      return;
+    }
 
+    // Sent as two fields rather than one joined string: the server stores them
+    // separately, and splitting a full name on whitespace guesses wrong for
+    // anyone whose first or last name has a space in it.
     const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        name: fullName,
+        firstName,
+        lastName,
         email,
         password,
         confirmPassword: password,
@@ -198,7 +206,7 @@ export default function LoginPage() {
     }
 
     setSubmitState((s) => ({ ...s, signup: "success" }));
-    showToast(`Verify your email ✦ — we sent a link to ${email}`);
+    showToast(`Verify your email ✦ We sent a link to ${email}`);
     await new Promise((r) => setTimeout(r, 1800));
     setMode("login");
     setSubmitState((s) => ({ ...s, signup: "idle" }));
@@ -240,8 +248,8 @@ export default function LoginPage() {
             <em className="font-serif italic text-blush font-medium">made for your glow</em>.
           </h1>
           <p className="font-serif italic text-lg leading-[1.55] text-ink-dim max-w-[440px] border-l-2 border-pink pl-[18px] max-[900px]:hidden">
-            “The aftercare alone changed how I think about piercings — and the gold-fill
-            pieces are now half my jewelry box.” — Maya, Port of Spain
+            “The aftercare alone changed how I think about piercings, and the gold-fill
+            pieces are now half my jewelry box.” · Maya, Port of Spain
           </p>
         </div>
 
@@ -392,6 +400,7 @@ export default function LoginPage() {
                   id="lastName"
                   name="lastName"
                   type="text"
+                  required
                   placeholder=" "
                   autoComplete="family-name"
                   className={inputClass}

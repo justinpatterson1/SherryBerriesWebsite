@@ -23,11 +23,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
 
-  const { name, email, password, confirmPassword } =
+  const { firstName, lastName, email, password, confirmPassword } =
     (body ?? {}) as Record<string, unknown>;
 
-  if (typeof name !== "string" || !name.trim()) {
-    return NextResponse.json({ error: "Name is required." }, { status: 400 });
+  if (typeof firstName !== "string" || !firstName.trim()) {
+    return NextResponse.json({ error: "First name is required." }, { status: 400 });
+  }
+  if (typeof lastName !== "string" || !lastName.trim()) {
+    return NextResponse.json({ error: "Last name is required." }, { status: 400 });
   }
   if (typeof email !== "string" || !EMAIL_RE.test(email)) {
     return NextResponse.json({ error: "A valid email is required." }, { status: 400 });
@@ -54,17 +57,17 @@ export async function POST(request: Request) {
     );
   }
 
-  const trimmedName = name.trim();
-  const [firstName, ...rest] = trimmedName.split(/\s+/);
-  const lastName = rest.length > 0 ? rest.join(" ") : null;
+  const first = firstName.trim();
+  const last = lastName.trim();
+  const trimmedName = `${first} ${last}`;
   const passwordHash = await bcrypt.hash(password, 10);
 
   const user = await prisma.user.create({
     data: {
       email: normalizedEmail,
       name: trimmedName,
-      firstName,
-      lastName,
+      firstName: first,
+      lastName: last,
       password: passwordHash,
       role: "CUSTOMER",
       // emailVerified intentionally left null — set once the link is clicked.
