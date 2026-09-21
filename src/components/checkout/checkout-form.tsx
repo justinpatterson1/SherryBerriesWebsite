@@ -6,6 +6,7 @@ import {
   SHIPPING,
   SHIPPING_ORDER,
   feeForCity,
+  paymentUnavailableReason,
   type PaymentKey,
   type ShippingKey,
 } from "@/lib/checkout/shipping";
@@ -36,6 +37,10 @@ export function CheckoutForm({
   // The address and method sections disappear for a download-only bag, so the
   // payment card moves up rather than leaving a gap in the numbering.
   const paymentStep = needsShipping ? 4 : 2;
+  // Non-null when the chosen shipping method rules Cash on Delivery out — it is
+  // both the flag that greys the option and the line explaining why. A
+  // download-only bag has no shipping method, so nothing is ruled out.
+  const codUnavailable = needsShipping ? paymentUnavailableReason("cod", shipping) : null;
   const input = (key: keyof FormState, props?: Record<string, string>) => {
     const invalid = !!errors[key];
     return (
@@ -183,12 +188,14 @@ export function CheckoutForm({
             onSelect={() => onSelectPayment("cod")}
             icon={PAY_ICON.cod}
             title={PAYMENT_LABEL.cod}
+            disabled={codUnavailable !== null}
             // Nothing arrives for a download, so the usual line would be a lie
             // — and the buyer should know the file waits for the payment.
             sub={
-              needsShipping
+              codUnavailable ??
+              (needsShipping
                 ? "Pay when your order arrives"
-                : "Pay us directly. Your download unlocks once we confirm it"
+                : "Pay us directly. Your download unlocks once we confirm it")
             }
           />
           <OptionCard
@@ -272,6 +279,7 @@ function OptionCard({
   title,
   sub,
   right,
+  disabled = false,
 }: {
   selected: boolean;
   onSelect: () => void;
@@ -279,27 +287,38 @@ function OptionCard({
   title: string;
   sub: string;
   right?: ReactNode;
+  /** Unselectable in the current combination; `sub` should say why. */
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onSelect}
       aria-pressed={selected}
+      disabled={disabled}
       className={
-        "flex items-center gap-3.5 text-left p-4 rounded-[14px] border cursor-pointer transition-[border-color,background-color] duration-200 " +
-        (selected
-          ? "border-pink bg-[linear-gradient(120deg,rgba(255,79,163,0.12),rgba(255,79,163,0.03))] shadow-[0_0_0_3px_rgba(255,79,163,0.12)_inset]"
-          : "border-white/12 bg-white/[0.02] hover:border-blush light:border-[rgba(26,13,18,0.12)]")
+        "flex items-center gap-3.5 text-left p-4 rounded-[14px] border transition-[border-color,background-color,opacity] duration-200 " +
+        (disabled
+          ? "cursor-not-allowed opacity-45 border-white/12 bg-white/[0.02] light:border-[rgba(26,13,18,0.12)]"
+          : "cursor-pointer " +
+            (selected
+              ? "border-pink bg-[linear-gradient(120deg,rgba(255,79,163,0.12),rgba(255,79,163,0.03))] shadow-[0_0_0_3px_rgba(255,79,163,0.12)_inset]"
+              : "border-white/12 bg-white/[0.02] hover:border-blush light:border-[rgba(26,13,18,0.12)]"))
       }
     >
       <span
         className={
           "flex-none w-5 h-5 rounded-full border-2 grid place-items-center transition-colors " +
-          (selected ? "border-pink" : "border-line-strong")
+          (selected && !disabled ? "border-pink" : "border-line-strong")
         }
         aria-hidden="true"
       >
-        <span className={"w-2.5 h-2.5 rounded-full bg-pink transition-transform " + (selected ? "scale-100" : "scale-0")} />
+        <span
+          className={
+            "w-2.5 h-2.5 rounded-full bg-pink transition-transform " +
+            (selected && !disabled ? "scale-100" : "scale-0")
+          }
+        />
       </span>
       <span className="flex-none text-blush [&_svg]:w-[22px] [&_svg]:h-[22px]" aria-hidden="true">
         {icon}

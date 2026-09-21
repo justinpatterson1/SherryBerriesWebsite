@@ -120,7 +120,11 @@ export type AdminPromo = {
   amountOff: number | null;
   active: boolean;
   usageLimit: number | null;
+  /** Redemptions allowed per customer; null for unlimited. */
+  perUserLimit: number | null;
   timesUsed: number;
+  /** Categories this code never discounts; empty applies it to everything. */
+  excludedCategoryIds: string[];
   /** ISO string, or null for no expiry. */
   expiresAt: string | null;
 };
@@ -450,7 +454,10 @@ export async function getAdminData(
     }),
     // Promo codes for the Promos view. Newest first: the one just created is
     // the one you want to see.
-    prisma.discountCode.findMany({ orderBy: { createdAt: "desc" } }),
+    prisma.discountCode.findMany({
+      orderBy: { createdAt: "desc" },
+      include: { excludedCategories: { select: { id: true } } },
+    }),
     // Bank transfer orders for the Payments queue. Selected by payment status
     // rather than by paymentMethod, because the method is a display string
     // while these statuses are only ever reached by a bank transfer.
@@ -791,7 +798,9 @@ export async function getAdminData(
       amountOff: p.amountOff == null ? null : Number(p.amountOff),
       active: p.active,
       usageLimit: p.usageLimit,
+      perUserLimit: p.perUserLimit,
       timesUsed: p.timesUsed,
+      excludedCategoryIds: p.excludedCategories.map((c) => c.id),
       expiresAt: p.expiresAt ? p.expiresAt.toISOString() : null,
     })),
     payments: paymentRows.map((o) => ({

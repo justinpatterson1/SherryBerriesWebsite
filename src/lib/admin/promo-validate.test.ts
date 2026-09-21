@@ -64,6 +64,38 @@ describe("validatePromo", () => {
   it("rejects an unparseable expiry", () => {
     expect(validatePromo({ ...base, expiresAt: "next tuesday" })).toMatchObject({ ok: false });
   });
+
+  it("requires a per-customer limit of at least 1 when one is given", () => {
+    expect(validatePromo({ ...base, perUserLimit: 0 })).toMatchObject({ ok: false });
+    expect(validatePromo({ ...base, perUserLimit: 1.5 })).toMatchObject({ ok: false });
+    expect(validatePromo({ ...base, perUserLimit: 1 }).ok).toBe(true);
+  });
+
+  // Almost always the two numbers typed into the wrong boxes: a cap of 5 per
+  // customer against a total of 2 can never bind, because the total runs out
+  // first.
+  it("refuses a per-customer limit above the total limit", () => {
+    expect(validatePromo({ ...base, usageLimit: 2, perUserLimit: 5 })).toMatchObject({
+      ok: false,
+    });
+    expect(validatePromo({ ...base, usageLimit: 5, perUserLimit: 5 }).ok).toBe(true);
+  });
+
+  it("allows a per-customer limit when the total is unlimited", () => {
+    const res = validatePromo({ ...base, usageLimit: "", perUserLimit: 1 });
+    expect(res.ok && res.data.perUserLimit).toBe(1);
+  });
+
+  it("defaults excluded categories to none and drops junk entries", () => {
+    const none = validatePromo(base);
+    expect(none.ok && none.data.excludedCategoryIds).toEqual([]);
+
+    const messy = validatePromo({
+      ...base,
+      excludedCategoryIds: ["cat_a", "", "cat_a", 7, "cat_b"],
+    });
+    expect(messy.ok && messy.data.excludedCategoryIds).toEqual(["cat_a", "cat_b"]);
+  });
 });
 
 describe("promoLabel", () => {

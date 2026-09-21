@@ -9,6 +9,8 @@ export type AppliedPromo = {
   code: string;
   percentageOff: number | null;
   amountOff: number | null;
+  /** Categories this code does not discount; drives the totals math. */
+  excludedCategoryIds: string[];
   label: string;
 };
 
@@ -55,6 +57,7 @@ export function CheckoutSummary({
         code: data.code,
         percentageOff: data.percentageOff,
         amountOff: data.amountOff,
+        excludedCategoryIds: data.excludedCategoryIds ?? [],
         label: data.label,
       });
       setCode("");

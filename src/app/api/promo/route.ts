@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { auth } from "@/auth";
+import { loadUsablePromo } from "@/lib/checkout/promo-server";
 import {
   checkRateLimit,
   getClientIp,
@@ -12,6 +13,8 @@ export type PromoSuccess = {
   code: string;
   percentageOff: number | null;
   amountOff: number | null;
+  /** Categories this code does not discount; the bag computes around them. */
+  excludedCategoryIds: string[];
   label: string;
 };
 
@@ -33,38 +36,25 @@ export async function POST(request: Request) {
   if (typeof raw !== "string" || !raw.trim()) {
     return NextResponse.json({ error: "Promo code is required." }, { status: 400 });
   }
-  const code = raw.trim().toUpperCase();
+  const session = await auth();
+  const found = await loadUsablePromo(raw, session?.user?.id ?? null);
+  if (!found.ok) {
+    return NextResponse.json({ error: found.error }, { status: found.status });
+  }
+  const { code: codeName, rules } = found.promo;
 
-  const row = await prisma.discountCode.findUnique({ where: { code } });
-  if (!row || !row.active) {
-    return NextResponse.json(
-      { error: "Hmm, that code didn't work." },
-      { status: 404 },
-    );
-  }
-  if (row.expiresAt && row.expiresAt.getTime() < Date.now()) {
-    return NextResponse.json({ error: "That code has expired." }, { status: 410 });
-  }
-  if (row.usageLimit != null && row.timesUsed >= row.usageLimit) {
-    return NextResponse.json(
-      { error: "That code has reached its limit." },
-      { status: 410 },
-    );
-  }
-
-  const percentageOff = row.percentageOff ?? null;
-  const amountOff = row.amountOff ? Number(row.amountOff) : null;
-  const label = percentageOff
-    ? `${percentageOff}% off`
-    : amountOff
-    ? `$${amountOff.toFixed(2)} off`
+  const label = rules.percentageOff
+    ? `${rules.percentageOff}% off`
+    : rules.amountOff
+    ? `$${rules.amountOff.toFixed(2)} off`
     : "discount";
 
   return NextResponse.json({
     ok: true,
-    code: row.code,
-    percentageOff,
-    amountOff,
+    code: codeName,
+    percentageOff: rules.percentageOff,
+    amountOff: rules.amountOff,
+    excludedCategoryIds: rules.excludedCategoryIds,
     label,
   } satisfies PromoSuccess);
 }

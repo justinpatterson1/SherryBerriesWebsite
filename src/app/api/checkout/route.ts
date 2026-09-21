@@ -6,11 +6,14 @@ import {
   PAYMENT_LABEL,
   SHIPPING,
   feeForCity,
+  isPaymentAllowedFor,
   isPaymentKey,
   isShippingKey,
   type ShippingKey,
 } from "@/lib/checkout/shipping";
 import { cartNeedsShipping } from "@/lib/checkout/digital";
+import { applyPromo } from "@/lib/checkout/promo";
+import { loadUsablePromo } from "@/lib/checkout/promo-server";
 import { getWipayConfig, requestHostedPage } from "@/lib/checkout/wipay";
 import { bankDetails, paymentDeadline } from "@/lib/checkout/bank-transfer";
 import { sendOrderConfirmationEmail } from "@/lib/email/resend";
@@ -26,6 +29,30 @@ class OversoldError extends Error {
   constructor(public itemName: string) {
     super("oversold");
   }
+}
+
+// Thrown when the conditional increment on a capped promo finds the cap already
+// reached — someone else took the last use between this order being priced and
+// it being placed. Rolls the order back rather than quietly charging the
+// undiscounted total, which is the one outcome the customer never agreed to.
+class PromoExhaustedError extends Error {
+  constructor(public code: string) {
+    super("promo exhausted");
+  }
+}
+
+// Thrown when this customer has no uses of a per-customer-capped code left —
+// either the count said so, or a simultaneous checkout of their own took the
+// last one and won the race for the seq.
+class PromoAlreadyUsedError extends Error {
+  constructor(public code: string) {
+    super("promo already used");
+  }
+}
+
+/** Postgres refused a duplicate on a unique index. */
+function isUniqueViolation(e: unknown): boolean {
+  return typeof e === "object" && e !== null && (e as { code?: unknown }).code === "P2002";
 }
 
 async function uniqueOrderNumber(): Promise<string> {
@@ -98,6 +125,9 @@ export async function POST(request: Request) {
               inventory: true,
               material: true,
               isDigital: true,
+              // Decides whether a promo with category exclusions discounts
+              // this line (see lib/checkout/promo.ts).
+              categoryId: true,
               // First photo only — it becomes the thumbnail in the confirmation email.
               images: { select: { imageUrl: true }, orderBy: { position: "asc" }, take: 1 },
             },
@@ -125,6 +155,7 @@ export async function POST(request: Request) {
     return {
       productId: it.productId,
       variantId: it.variantId,
+      categoryId: it.product.categoryId,
       name: it.product.name,
       variant: variantLabel,
       quantity: it.quantity,
@@ -171,6 +202,17 @@ export async function POST(request: Request) {
   }
   const shipping = SHIPPING[shipKey];
 
+  // Checked here rather than with the other body validation because it needs
+  // the settled shipping key, which depends on the cart. The form greys the
+  // option out; this is what makes the rule true regardless of what the
+  // browser sends.
+  if (!isPaymentAllowedFor(paymentKey, shipKey)) {
+    return NextResponse.json(
+      { error: `${PAYMENT_LABEL[paymentKey]} isn't available with ${shipping.label}.` },
+      { status: 400 },
+    );
+  }
+
   // Fast, friendly pre-check for the common case. This is NOT the correctness
   // gate — the authoritative guard is the atomic conditional decrement inside
   // the transaction below (this read can go stale under concurrent orders).
@@ -191,25 +233,29 @@ export async function POST(request: Request) {
   const subtotal = round2(lines.reduce((s, l) => s + l.unitPrice * l.quantity, 0));
 
   // Re-validate the promo against the DB; silently drop it if no longer valid
-  // rather than blocking the order.
+  // rather than blocking the order. loadUsablePromo covers expiry, the total
+  // limit and this customer's own limit; the category exclusions then decide
+  // how much of the subtotal it is allowed to discount.
   let discount = 0;
-  let appliedPromo: { id: string; code: string } | null = null;
+  let appliedPromo:
+    | { id: string; code: string; usageLimit: number | null; perUserLimit: number | null }
+    | null = null;
   const promoCode = str(b.promoCode).toUpperCase();
   if (promoCode) {
-    const row = await prisma.discountCode.findUnique({ where: { code: promoCode } });
-    const usable =
-      row &&
-      row.active &&
-      (!row.expiresAt || row.expiresAt.getTime() >= Date.now()) &&
-      (row.usageLimit == null || row.timesUsed < row.usageLimit);
-    if (usable) {
-      if (row.percentageOff != null) {
-        discount = (subtotal * row.percentageOff) / 100;
-      } else if (row.amountOff != null) {
-        discount = Math.min(subtotal, Number(row.amountOff));
+    const found = await loadUsablePromo(promoCode, userId);
+    if (found.ok) {
+      discount = applyPromo(found.promo.rules, lines).discount;
+      // A code whose every eligible line was excluded discounts nothing. It is
+      // not recorded as redeemed either — the customer got no benefit, so it
+      // must not burn their one use of a per-customer code.
+      if (discount > 0) {
+        appliedPromo = {
+          id: found.promo.id,
+          code: found.promo.code,
+          usageLimit: found.promo.usageLimit,
+          perUserLimit: found.promo.perUserLimit,
+        };
       }
-      discount = round2(discount);
-      appliedPromo = { id: row.id, code: row.code };
     }
   }
 
@@ -342,10 +388,45 @@ export async function POST(request: Request) {
     await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
 
     if (appliedPromo) {
-      await tx.discountCode.update({
-        where: { id: appliedPromo.id },
+      // Conditional increment, same shape as the stock decrement above: the
+      // row moves only while it is still under its limit, and Postgres locks
+      // it for the duration. The earlier check in loadUsablePromo is a
+      // courtesy — it reads outside this transaction, so two orders placed at
+      // the same instant could both see the last use available. This is the
+      // gate that actually holds the cap.
+      const claimed = await tx.discountCode.updateMany({
+        where:
+          appliedPromo.usageLimit == null
+            ? { id: appliedPromo.id }
+            : { id: appliedPromo.id, timesUsed: { lt: appliedPromo.usageLimit } },
         data: { timesUsed: { increment: 1 } },
       });
+      if (claimed.count === 0) throw new PromoExhaustedError(appliedPromo.code);
+
+      // The per-customer tally, written in the same transaction as the order so
+      // a code can never be counted against someone whose order rolled back,
+      // nor an order exist without its redemption recorded.
+      //
+      // The count says which use this is; the unique index on
+      // (codeId, userId, seq) is what makes the limit hold. Two checkouts by
+      // the same customer at the same instant both count the same number and
+      // both claim the same seq — Postgres lets one commit and fails the
+      // other, which lands in the catch below.
+      const mine = await tx.discountRedemption.count({
+        where: { codeId: appliedPromo.id, userId },
+      });
+      const seq = mine + 1;
+      if (appliedPromo.perUserLimit != null && seq > appliedPromo.perUserLimit) {
+        throw new PromoAlreadyUsedError(appliedPromo.code);
+      }
+      try {
+        await tx.discountRedemption.create({
+          data: { codeId: appliedPromo.id, userId, orderId: order.id, seq },
+        });
+      } catch (e) {
+        if (isUniqueViolation(e)) throw new PromoAlreadyUsedError(appliedPromo.code);
+        throw e;
+      }
     }
 
     return order;
@@ -354,6 +435,22 @@ export async function POST(request: Request) {
     if (e instanceof OversoldError) {
       return NextResponse.json(
         { error: `${e.itemName} just sold out. Please adjust your bag.` },
+        { status: 409 },
+      );
+    }
+    if (e instanceof PromoExhaustedError) {
+      return NextResponse.json(
+        {
+          error: `${e.code} was just used up. Remove it and your order will go through at the full price.`,
+        },
+        { status: 409 },
+      );
+    }
+    if (e instanceof PromoAlreadyUsedError) {
+      return NextResponse.json(
+        {
+          error: `You've already used ${e.code}. Remove it and your order will go through at the full price.`,
+        },
         { status: 409 },
       );
     }

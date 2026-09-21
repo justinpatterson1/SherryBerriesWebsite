@@ -157,6 +157,8 @@ model User {
   wishlistItems  Wishlist[]
   cart           Cart?
 
+  promoRedemptions DiscountRedemption[]
+
   @@index([email])
 }
 
@@ -209,6 +211,9 @@ model Category {
   createdAt DateTime @default(now())
 
   products Product[]
+
+  /// Promo codes that never discount this category.
+  excludedFromCodes DiscountCode[] @relation("PromoExclusions")
 }
 
 model Product {
@@ -429,6 +434,7 @@ model Order {
   orderItems     OrderItem[]
   returnRequests ReturnRequest[]
   paymentReceipts PaymentReceipt[]
+  promoRedemption DiscountRedemption?
 
   @@index([userId])
   @@index([orderNumber])
@@ -601,11 +607,56 @@ model DiscountCode {
   percentageOff Int?
   amountOff     Decimal?  @db.Decimal(10, 2)
   active        Boolean   @default(true)
+  /// Total redemptions allowed across every customer; null for unlimited.
   usageLimit    Int?
+  /// Redemptions allowed per customer; null for unlimited. Counted from
+  /// DiscountRedemption rather than a counter, because a per-customer tally
+  /// cannot live in a single column on this row.
+  perUserLimit  Int?
   timesUsed     Int       @default(0)
   expiresAt     DateTime?
 
   createdAt DateTime @default(now())
 
+  /// Categories this code never discounts. A cart holding an excluded product
+  /// still takes the code — the discount is just computed on the rest of the
+  /// subtotal (see lib/checkout/promo.ts). Empty means the code applies to
+  /// everything.
+  excludedCategories Category[]           @relation("PromoExclusions")
+  redemptions        DiscountRedemption[]
+
   @@index([active, expiresAt])
+}
+
+/// One customer's one use of one code, written in the order transaction.
+///
+/// This is what makes `perUserLimit` enforceable; `DiscountCode.timesUsed`
+/// answers "how many in total" and these rows answer "how many by whom". Kept
+/// even when the order is later cancelled — the redemption happened, and a
+/// customer should not get a one-per-person code back by cancelling.
+model DiscountRedemption {
+  id     String @id @default(cuid())
+  codeId String
+  userId String
+  /// The order the code was applied to. Unique: an order redeems a code once.
+  orderId String @unique
+
+  /// This customer's Nth use of this code, starting at 1.
+  ///
+  /// Exists for the unique constraint below, which is what actually holds
+  /// `perUserLimit`. Counting rows and comparing to the limit is not enough on
+  /// its own: two checkouts running at the same instant both count the same
+  /// number and both think there is room. With this, both try to write the
+  /// same seq and Postgres lets exactly one through.
+  seq Int
+
+  createdAt DateTime @default(now())
+
+  code  DiscountCode @relation(fields: [codeId], references: [id], onDelete: Cascade)
+  user  User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([codeId, userId, seq])
+  @@index([codeId, userId])
+  @@index([userId])
 }

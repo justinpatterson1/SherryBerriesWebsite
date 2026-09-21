@@ -8,6 +8,7 @@ export type CartSnapshotLine = {
   quantity: number;
   productName: string;
   productSlug: string;
+  categoryId: string;
   categoryName: string;
   imageUrl: string | null;
   basePrice: number;
@@ -76,7 +77,7 @@ export async function POST(request: Request) {
       where: { id: { in: productIds } },
       include: {
         images: { orderBy: { position: "asc" }, take: 1 },
-        category: { select: { name: true } },
+        category: { select: { id: true, name: true } },
       },
     }),
     variantIds.length > 0
@@ -100,6 +101,7 @@ export async function POST(request: Request) {
         quantity: line.quantity,
         productName: product.name,
         productSlug: product.slug,
+        categoryId: product.categoryId,
         categoryName: product.category.name,
         imageUrl: product.images[0]?.imageUrl ?? null,
         basePrice,

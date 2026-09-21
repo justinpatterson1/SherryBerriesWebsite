@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { SHIPPING, SHIPPING_ORDER, feeForCity, isShippingKey } from "./shipping";
+import {
+  SHIPPING,
+  SHIPPING_ORDER,
+  feeForCity,
+  isPaymentAllowedFor,
+  isShippingKey,
+  paymentUnavailableReason,
+} from "./shipping";
 
 describe("feeForCity", () => {
   it("prices courier from the city's rate card", () => {
@@ -56,5 +63,38 @@ describe("the digital shipping key", () => {
     expect(isShippingKey("pickup")).toBe(true);
     expect(isShippingKey("ttpost")).toBe(true);
     expect(isShippingKey("courier")).toBe(true);
+  });
+});
+
+// Cash on Delivery needs a person to hand the money to. TTPost posts the
+// parcel, so there is nobody there to collect — the checkout form greys the
+// option out and /api/checkout refuses the combination outright.
+describe("isPaymentAllowedFor", () => {
+  it("rules out Cash on Delivery with TTPost", () => {
+    expect(isPaymentAllowedFor("cod", "ttpost")).toBe(false);
+  });
+
+  it("keeps Cash on Delivery for pickup, courier and downloads", () => {
+    expect(isPaymentAllowedFor("cod", "pickup")).toBe(true);
+    expect(isPaymentAllowedFor("cod", "courier")).toBe(true);
+    expect(isPaymentAllowedFor("cod", "digital")).toBe(true);
+  });
+
+  it("leaves card and bank transfer available everywhere", () => {
+    for (const ship of ["pickup", "ttpost", "courier", "digital"] as const) {
+      expect(isPaymentAllowedFor("card", ship)).toBe(true);
+      expect(isPaymentAllowedFor("bank", ship)).toBe(true);
+    }
+  });
+});
+
+describe("paymentUnavailableReason", () => {
+  it("explains the one combination that is blocked", () => {
+    expect(paymentUnavailableReason("cod", "ttpost")).toMatch(/TTPost/);
+  });
+
+  it("is null whenever the combination is allowed", () => {
+    expect(paymentUnavailableReason("cod", "pickup")).toBeNull();
+    expect(paymentUnavailableReason("card", "ttpost")).toBeNull();
   });
 });

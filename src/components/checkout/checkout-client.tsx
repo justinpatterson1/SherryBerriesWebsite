@@ -7,10 +7,13 @@ import type { CartSnapshotLine } from "@/app/api/cart/snapshot/route";
 import {
   SHIPPING,
   feeForCity,
+  isPaymentAllowedFor,
   type PaymentKey,
   type ShippingKey,
 } from "@/lib/checkout/shipping";
 import { cartNeedsShipping } from "@/lib/checkout/digital";
+// Aliased: this file already has an applyPromo handler for the promo box.
+import { applyPromo as promoTotals } from "@/lib/checkout/promo";
 import { findDeliveryCity, isDeliverableCity } from "@/lib/checkout/delivery-zones";
 import { StepIndicator } from "./shared";
 import { CheckoutForm } from "./checkout-form";
@@ -155,11 +158,10 @@ export function CheckoutClient({
 
   const totals = useMemo(() => {
     const subtotal = snapshot.reduce((s, l) => s + l.unitPrice * l.quantity, 0);
-    let discount = 0;
-    if (promo) {
-      if (promo.percentageOff != null) discount = (subtotal * promo.percentageOff) / 100;
-      else if (promo.amountOff != null) discount = Math.min(subtotal, promo.amountOff);
-    }
+    // Excluded categories are left out of what the code can discount, so this
+    // is not simply a percentage of `subtotal`. The API recomputes it from the
+    // same helper and is the authority.
+    const discount = promo ? promoTotals(promo, snapshot).discount : 0;
     // Courier is priced by city; before one is picked there is no rate yet, so
     // the summary shows the cheapest until the customer chooses. The API
     // recomputes this from the same rate card and is the authority.
@@ -182,6 +184,22 @@ export function CheckoutClient({
         sessionStorage.setItem(PROMO_KEY, JSON.stringify({ code: p.code }));
       } catch {}
       showToast(`✦ ${p.code} applied: ${p.label}`);
+    },
+    [showToast],
+  );
+
+  // Picking a shipping method can invalidate the payment method already
+  // chosen — TTPost has nobody to hand cash to. Move the selection rather than
+  // leaving a greyed-out option selected, and say so, since silently changing
+  // how someone pays is not something to do quietly.
+  const selectShipping = useCallback(
+    (key: ShippingKey) => {
+      setShipping(key);
+      setPayment((current) => {
+        if (isPaymentAllowedFor(current, key)) return current;
+        showToast("Cash on Delivery isn't available with TTPost — switched to Credit Card");
+        return "card";
+      });
     },
     [showToast],
   );
@@ -309,7 +327,7 @@ export function CheckoutClient({
                 errors={errors}
                 onField={setField}
                 shipping={shipping}
-                onSelectShipping={setShipping}
+                onSelectShipping={selectShipping}
                 payment={payment}
                 onSelectPayment={setPayment}
                 needsShipping={needsShipping}

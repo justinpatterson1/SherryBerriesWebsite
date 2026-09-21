@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { AdminPromo } from "@/lib/queries/admin";
+import type { AdminCategory, AdminPromo } from "@/lib/queries/admin";
 import {
   promoLabel,
   promoState,
@@ -34,13 +34,21 @@ function toDateInput(iso: string | null): string {
   return iso ? iso.slice(0, 10) : "";
 }
 
+/** Excluded category ids → "Aftercare, Berry Baby" for the summary line. */
+function categoryNames(ids: string[], categories: AdminCategory[]): string {
+  const byId = new Map(categories.map((c) => [c.id, c.name]));
+  return ids.map((id) => byId.get(id) ?? "a deleted category").join(", ");
+}
+
 export function PromosView({
   promos,
+  categories,
   onCreate,
   onUpdate,
   onDelete,
 }: {
   promos: AdminPromo[];
+  categories: AdminCategory[];
   onCreate: (data: PromoFormData) => Promise<boolean>;
   onUpdate: (id: string, data: PromoFormData) => Promise<boolean>;
   onDelete: (id: string) => Promise<boolean>;
@@ -66,6 +74,8 @@ export function PromosView({
       percentageOff: p.percentageOff,
       amountOff: p.amountOff,
       usageLimit: p.usageLimit,
+      perUserLimit: p.perUserLimit,
+      excludedCategoryIds: p.excludedCategoryIds,
       expiresAt: toDateInput(p.expiresAt),
       active: !p.active,
     });
@@ -131,6 +141,8 @@ export function PromosView({
                     <p className="font-sans text-[12px] text-ink-faint m-0 mt-1.5">
                       Used {p.timesUsed}
                       {p.usageLimit != null ? ` of ${p.usageLimit}` : " times"}
+                      {p.perUserLimit != null &&
+                        ` · ${p.perUserLimit} per customer`}
                       {p.expiresAt
                         ? ` · expires ${new Date(p.expiresAt).toLocaleDateString("en-US", {
                             month: "short",
@@ -139,6 +151,11 @@ export function PromosView({
                           })}`
                         : " · no expiry"}
                     </p>
+                    {p.excludedCategoryIds.length > 0 && (
+                      <p className="font-sans text-[12px] text-ink-faint m-0 mt-1">
+                        Excludes {categoryNames(p.excludedCategoryIds, categories)}
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
@@ -193,6 +210,7 @@ export function PromosView({
       {(adding || editing) && (
         <PromoForm
           promo={editing}
+          categories={categories}
           busy={busy}
           onCancel={() => {
             setAdding(false);
@@ -209,11 +227,13 @@ export function PromosView({
 
 function PromoForm({
   promo,
+  categories,
   busy,
   onCancel,
   onSubmit,
 }: {
   promo: AdminPromo | null;
+  categories: AdminCategory[];
   busy: boolean;
   onCancel: () => void;
   onSubmit: (data: PromoFormData) => void;
@@ -229,9 +249,19 @@ function PromoForm({
   );
   const [amount, setAmount] = useState(promo?.amountOff != null ? String(promo.amountOff) : "");
   const [limit, setLimit] = useState(promo?.usageLimit != null ? String(promo.usageLimit) : "");
+  const [perUser, setPerUser] = useState(
+    promo?.perUserLimit != null ? String(promo.perUserLimit) : "",
+  );
+  const [excluded, setExcluded] = useState<string[]>(promo?.excludedCategoryIds ?? []);
   const [expires, setExpires] = useState(toDateInput(promo?.expiresAt ?? null));
   const [active, setActive] = useState(promo?.active ?? true);
   const [error, setError] = useState<string | null>(null);
+
+  const toggleCategory = (id: string) => {
+    setExcluded((prev) =>
+      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id],
+    );
+  };
 
   const handleSubmit = () => {
     setError(null);
@@ -240,6 +270,8 @@ function PromoForm({
       percentageOff: mode === "percent" && percent.trim() !== "" ? Number(percent) : null,
       amountOff: mode === "amount" && amount.trim() !== "" ? Number(amount) : null,
       usageLimit: limit.trim() === "" ? null : Number(limit),
+      perUserLimit: perUser.trim() === "" ? null : Number(perUser),
+      excludedCategoryIds: excluded,
       expiresAt: expires,
       active,
     });
@@ -359,27 +391,88 @@ function PromoForm({
                 onChange={(e) => setLimit(e.target.value)}
                 placeholder="Unlimited"
               />
-              {promo && promo.timesUsed > 0 && (
-                <p className="mt-1.5 font-sans text-[11px] text-ink-faint">
-                  Already used {promo.timesUsed} time{promo.timesUsed === 1 ? "" : "s"}.
-                </p>
-              )}
-            </div>
-            <div>
-              <label className={labelClass} htmlFor="promo-expires">
-                Expires
-              </label>
-              <input
-                id="promo-expires"
-                type="date"
-                className={fieldClass}
-                value={expires}
-                onChange={(e) => setExpires(e.target.value)}
-              />
               <p className="mt-1.5 font-sans text-[11px] text-ink-faint">
-                Works to the end of that day. Leave blank for no expiry.
+                {promo && promo.timesUsed > 0
+                  ? `Already used ${promo.timesUsed} time${
+                      promo.timesUsed === 1 ? "" : "s"
+                    }. Total across all customers.`
+                  : "Total across all customers. Blank for unlimited."}
               </p>
             </div>
+            <div>
+              <label className={labelClass} htmlFor="promo-per-user">
+                Per-customer limit
+              </label>
+              <input
+                id="promo-per-user"
+                type="number"
+                min={1}
+                step={1}
+                className={fieldClass}
+                value={perUser}
+                onChange={(e) => setPerUser(e.target.value)}
+                placeholder="Unlimited"
+              />
+              <p className="mt-1.5 font-sans text-[11px] text-ink-faint">
+                Set 1 for one use per customer. Blank lets one person use it
+                repeatedly.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <span className={labelClass}>Excluded categories</span>
+            {categories.length === 0 ? (
+              <p className="font-sans text-[12px] text-ink-faint m-0">
+                No categories yet.
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {categories.map((c) => {
+                  const on = excluded.includes(c.id);
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() => toggleCategory(c.id)}
+                      className={
+                        "py-2 px-3.5 rounded-full border font-sans text-[12px] font-semibold " +
+                        "cursor-pointer transition-colors " +
+                        (on
+                          ? "border-[rgba(255,141,141,0.4)] bg-[rgba(255,141,141,0.14)] text-[#ff8d8d]"
+                          : "border-white/12 text-ink-dim hover:border-blush hover:text-ink " +
+                            "light:border-[rgba(26,13,18,0.12)]")
+                      }
+                    >
+                      {c.name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            <p className="mt-2 font-sans text-[11px] text-ink-faint">
+              {excluded.length === 0
+                ? "Nothing excluded — the code discounts the whole bag."
+                : "The code still works, but these items are left out of the discount. " +
+                  "A bag of only excluded items gets nothing off."}
+            </p>
+          </div>
+
+          <div>
+            <label className={labelClass} htmlFor="promo-expires">
+              Expires
+            </label>
+            <input
+              id="promo-expires"
+              type="date"
+              className={fieldClass}
+              value={expires}
+              onChange={(e) => setExpires(e.target.value)}
+            />
+            <p className="mt-1.5 font-sans text-[11px] text-ink-faint">
+              Works to the end of that day. Leave blank for no expiry.
+            </p>
           </div>
 
           <button

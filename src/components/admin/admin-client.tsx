@@ -687,6 +687,7 @@ export function AdminClient({
           {view === "promos" && (
             <PromosView
               promos={promos}
+              categories={categories}
               onCreate={createPromo}
               onUpdate={updatePromo}
               onDelete={deletePromo}

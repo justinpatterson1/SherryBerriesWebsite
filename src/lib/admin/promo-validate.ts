@@ -7,7 +7,12 @@ export type PromoFormData = {
   /** Exactly one of these two is set; the other is null. */
   percentageOff: number | null;
   amountOff: number | null;
+  /** Total redemptions across all customers; null for unlimited. */
   usageLimit: number | null;
+  /** Redemptions allowed per customer; null for unlimited. */
+  perUserLimit: number | null;
+  /** Category ids this code never discounts; empty applies it to everything. */
+  excludedCategoryIds: string[];
   /** ISO date (yyyy-mm-dd) or "" for no expiry. */
   expiresAt: string;
   active: boolean;
@@ -38,6 +43,8 @@ export function validatePromo(raw: {
   percentageOff?: unknown;
   amountOff?: unknown;
   usageLimit?: unknown;
+  perUserLimit?: unknown;
+  excludedCategoryIds?: unknown;
   expiresAt?: unknown;
   active?: unknown;
 }): PromoCheck {
@@ -88,6 +95,33 @@ export function validatePromo(raw: {
     return { ok: false, error: "Usage limit must be a whole number of at least 1." };
   }
 
+  const perUserLimit = optionalNumber(raw.perUserLimit);
+  if (perUserLimit !== null && (!Number.isInteger(perUserLimit) || perUserLimit < 1)) {
+    return {
+      ok: false,
+      error: "Per-customer limit must be a whole number of at least 1.",
+    };
+  }
+  // A per-customer cap above the total is not wrong, just meaningless — the
+  // total runs out first. Caught here because the admin almost certainly typed
+  // one of the two numbers into the wrong box.
+  if (usageLimit !== null && perUserLimit !== null && perUserLimit > usageLimit) {
+    return {
+      ok: false,
+      error: "Per-customer limit cannot be higher than the total usage limit.",
+    };
+  }
+
+  const excludedCategoryIds = Array.isArray(raw.excludedCategoryIds)
+    ? Array.from(
+        new Set(
+          raw.excludedCategoryIds.filter(
+            (id): id is string => typeof id === "string" && id.trim() !== "",
+          ),
+        ),
+      )
+    : [];
+
   const expiresAt = typeof raw.expiresAt === "string" ? raw.expiresAt.trim() : "";
   if (expiresAt) {
     const when = new Date(expiresAt);
@@ -103,6 +137,8 @@ export function validatePromo(raw: {
       percentageOff,
       amountOff: amountOff === null ? null : round2(amountOff),
       usageLimit,
+      perUserLimit,
+      excludedCategoryIds,
       expiresAt,
       active: raw.active !== false,
     },

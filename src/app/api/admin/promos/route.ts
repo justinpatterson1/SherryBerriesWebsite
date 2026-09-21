@@ -31,8 +31,10 @@ const SELECT = {
   amountOff: true,
   active: true,
   usageLimit: true,
+  perUserLimit: true,
   timesUsed: true,
   expiresAt: true,
+  excludedCategories: { select: { id: true } },
 } as const;
 
 async function readBody(request: Request): Promise<unknown | null> {
@@ -49,6 +51,27 @@ function toExpiry(date: string): Date | null {
   const when = new Date(date);
   when.setHours(23, 59, 59, 999);
   return when;
+}
+
+/**
+ * Category exclusions as one comparable string, for the audit diff.
+ *
+ * diffFields compares with Object.is, which reports two arrays of identical ids
+ * as a change every time. Sorting and joining makes the set order-insensitive
+ * and comparable, and reads better in the log than a raw array would.
+ */
+function exclusionKey(ids: string[]): string {
+  return [...ids].sort().join(",");
+}
+
+/** Refuses ids that are not real categories, so a stale form cannot save junk. */
+async function validCategoryIds(ids: string[]): Promise<string[] | null> {
+  if (ids.length === 0) return [];
+  const rows = await prisma.category.findMany({
+    where: { id: { in: ids } },
+    select: { id: true },
+  });
+  return rows.length === ids.length ? ids : null;
 }
 
 // --- Create ------------------------------------------------------------------
@@ -70,6 +93,9 @@ export async function POST(request: Request) {
   });
   if (clash) return bad(`“${d.code}” already exists.`, 409);
 
+  const excluded = await validCategoryIds(d.excludedCategoryIds);
+  if (!excluded) return bad("One of those categories no longer exists. Reload and try again.");
+
   const created = await prisma.$transaction(async (tx) => {
     const row = await tx.discountCode.create({
       data: {
@@ -77,8 +103,10 @@ export async function POST(request: Request) {
         percentageOff: d.percentageOff,
         amountOff: d.amountOff,
         usageLimit: d.usageLimit,
+        perUserLimit: d.perUserLimit,
         expiresAt: toExpiry(d.expiresAt),
         active: d.active,
+        excludedCategories: { connect: excluded.map((id) => ({ id })) },
       },
       select: SELECT,
     });
@@ -90,6 +118,8 @@ export async function POST(request: Request) {
       entityId: row.id,
       summary: `Created ${row.code}: ${promoLabel(d.percentageOff, d.amountOff)}${
         d.usageLimit ? `, limit ${d.usageLimit}` : ""
+      }${d.perUserLimit ? `, ${d.perUserLimit} per customer` : ""}${
+        excluded.length ? `, ${excluded.length} category excluded` : ""
       }`,
       ip: auditIp(request),
     });
@@ -126,25 +156,40 @@ export async function PATCH(request: Request) {
   });
   if (clash && clash.id !== id) return bad(`“${d.code}” already exists.`, 409);
 
+  const excluded = await validCategoryIds(d.excludedCategoryIds);
+  if (!excluded) return bad("One of those categories no longer exists. Reload and try again.");
+
   // timesUsed is never touched here — it belongs to the checkout, and editing a
-  // code must not quietly reset how many times it has been redeemed.
+  // code must not quietly reset how many times it has been redeemed. Neither
+  // are the redemption rows: lowering the per-customer limit applies to future
+  // orders and cannot un-redeem a past one.
   const data = {
     code: d.code,
     percentageOff: d.percentageOff,
     amountOff: d.amountOff,
     usageLimit: d.usageLimit,
+    perUserLimit: d.perUserLimit,
     expiresAt: toExpiry(d.expiresAt),
     active: d.active,
+    // `set` rather than `connect`: this is the whole list, so unticking a
+    // category has to disconnect it.
+    excludedCategories: { set: excluded.map((cid) => ({ id: cid })) },
   };
 
-  const changes = diffFields(existing, data, [
-    "code",
-    "percentageOff",
-    "amountOff",
-    "usageLimit",
-    "expiresAt",
-    "active",
-  ]);
+  const changes = diffFields(
+    { ...existing, excludedCategories: exclusionKey(existing.excludedCategories.map((c) => c.id)) },
+    { ...data, excludedCategories: exclusionKey(excluded) },
+    [
+      "code",
+      "percentageOff",
+      "amountOff",
+      "usageLimit",
+      "perUserLimit",
+      "expiresAt",
+      "active",
+      "excludedCategories",
+    ],
+  );
 
   const updated = await prisma.$transaction(async (tx) => {
     const row = await tx.discountCode.update({ where: { id }, data, select: SELECT });
@@ -219,8 +264,10 @@ function serialize(row: {
   amountOff: unknown;
   active: boolean;
   usageLimit: number | null;
+  perUserLimit: number | null;
   timesUsed: number;
   expiresAt: Date | null;
+  excludedCategories: { id: string }[];
 }) {
   return {
     id: row.id,
@@ -229,7 +276,9 @@ function serialize(row: {
     amountOff: row.amountOff == null ? null : Number(row.amountOff),
     active: row.active,
     usageLimit: row.usageLimit,
+    perUserLimit: row.perUserLimit,
     timesUsed: row.timesUsed,
     expiresAt: row.expiresAt ? row.expiresAt.toISOString() : null,
+    excludedCategoryIds: row.excludedCategories.map((c) => c.id),
   };
 }

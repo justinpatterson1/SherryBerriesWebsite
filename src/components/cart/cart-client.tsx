@@ -11,6 +11,7 @@ import {
   type SavedItem,
 } from "@/lib/cart/local-extras";
 import type { CartSnapshotLine } from "@/app/api/cart/snapshot/route";
+import { applyPromo } from "@/lib/checkout/promo";
 import { CartRow } from "./cart-row";
 import { OrderSummary, type AppliedPromo } from "./order-summary";
 import { SavedForLater } from "./saved-for-later";
@@ -94,14 +95,10 @@ export function CartClient() {
     );
     const subtotal = visible.reduce((sum, l) => sum + l.unitPrice * l.quantity, 0);
 
-    let discount = 0;
-    if (promo) {
-      if (promo.percentageOff != null) {
-        discount = (subtotal * promo.percentageOff) / 100;
-      } else if (promo.amountOff != null) {
-        discount = Math.min(subtotal, promo.amountOff);
-      }
-    }
+    // Excluded categories are left out of what the code can discount, so this
+    // is not simply a percentage of `subtotal`. /api/checkout recomputes the
+    // same way from the same helper, so the quote here is what gets charged.
+    const discount = promo ? applyPromo(promo, visible).discount : 0;
 
     const total = Math.max(0, subtotal - discount);
 

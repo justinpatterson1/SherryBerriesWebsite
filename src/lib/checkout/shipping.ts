@@ -110,3 +110,28 @@ export function isStoredShippingKey(v: unknown): v is ShippingKey {
 export function isPaymentKey(v: unknown): v is PaymentKey {
   return v === "cod" || v === "card" || v === "bank";
 }
+
+/**
+ * Whether a payment method can be used with a shipping method.
+ *
+ * Cash on Delivery needs a person to hand the money to. TTPost posts the parcel
+ * — nobody from the shop is there when it arrives, so there is no one to
+ * collect. Pickup keeps COD (pay over the counter), and so does a download
+ * (pay us directly, the file unlocks once it clears).
+ *
+ * Used by the checkout form to grey the option out and by /api/checkout to
+ * refuse the combination outright, so the rule holds whatever the browser
+ * sends.
+ */
+export function isPaymentAllowedFor(payment: PaymentKey, shipping: ShippingKey): boolean {
+  return !(payment === "cod" && shipping === "ttpost");
+}
+
+/** Why a payment method is unavailable, shown on the greyed-out option. */
+export function paymentUnavailableReason(
+  payment: PaymentKey,
+  shipping: ShippingKey,
+): string | null {
+  if (isPaymentAllowedFor(payment, shipping)) return null;
+  return "Not available with TTPost — nobody is there to collect the cash";
+}
