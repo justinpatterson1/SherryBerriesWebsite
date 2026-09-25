@@ -9,6 +9,7 @@ import type {
 import type { AdminOrderStatus } from "@/lib/admin/status";
 import { resolveShipTo, type OrderShipTo } from "@/lib/account/ship-to";
 import { customerName } from "@/lib/admin/customer-name";
+import { deliveryFor, type DeliveryMethod } from "@/lib/admin/delivery";
 
 // -----------------------------------------------------------------------------
 // Public shapes (everything the admin client renders)
@@ -50,6 +51,8 @@ export type AdminOrder = {
   date: string;
   customer: { name: string; email: string; initials: string };
   channel: string;
+  /** How the order reaches the customer, read back from the checkout snapshot. */
+  delivery: DeliveryMethod;
   paymentMethod: string;
   subtotal: number;
   shippingFee: number;
@@ -749,6 +752,7 @@ export async function getAdminData(
       customer: { name, email: o.user.email, initials: initials(name) },
       shipTo: resolveShipTo(o),
       channel: channelFor(o.paymentMethod),
+      delivery: deliveryFor(o.notes),
       paymentMethod: o.paymentMethod ?? "Not recorded",
       subtotal,
       shippingFee,

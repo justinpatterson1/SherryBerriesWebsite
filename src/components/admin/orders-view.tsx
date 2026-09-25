@@ -2,7 +2,14 @@
 
 import { useMemo, useState } from "react";
 import type { AdminOrder, AdminOrderStatus } from "@/lib/queries/admin";
-import { AdminCard, OrderStatusBadge, ProductThumb, money, ICONS } from "@/components/admin/shared";
+import {
+  AdminCard,
+  DeliveryBadge,
+  OrderStatusBadge,
+  ProductThumb,
+  money,
+  ICONS,
+} from "@/components/admin/shared";
 
 const TABS: (AdminOrderStatus | "All")[] = [
   "All",
@@ -122,12 +129,13 @@ export function OrdersView({
 
       <AdminCard bodyClassName="p-0">
         <div className="overflow-x-auto">
-          <div className="min-w-[760px]">
+          <div className="min-w-[860px]">
             {/* Head */}
-            <div className="grid grid-cols-[1.6fr_1.1fr_0.8fr_0.9fr_0.8fr] gap-4 px-5 py-3 border-b border-white/[0.06] font-sans text-[10px] font-bold tracking-[0.14em] uppercase text-ink-faint light:border-[rgba(26,13,18,0.06)]">
+            <div className="grid grid-cols-[1.6fr_1fr_0.8fr_0.8fr_0.9fr_0.8fr] gap-4 px-5 py-3 border-b border-white/[0.06] font-sans text-[10px] font-bold tracking-[0.14em] uppercase text-ink-faint light:border-[rgba(26,13,18,0.06)]">
               <span>Customer</span>
               <span>Items</span>
               <span>Channel</span>
+              <span>Delivery</span>
               <span>Status</span>
               <span className="text-right">Total</span>
             </div>
@@ -142,7 +150,7 @@ export function OrdersView({
                     <button
                       type="button"
                       onClick={() => onOpenOrder(o.id)}
-                      className="w-full grid grid-cols-[1.6fr_1.1fr_0.8fr_0.9fr_0.8fr] gap-4 items-center px-5 py-3.5 text-left cursor-pointer border-b border-white/[0.04] transition-colors duration-150 hover:bg-white/[0.04] last:border-0 light:border-[rgba(26,13,18,0.04)] light:hover:bg-[rgba(26,13,18,0.04)]"
+                      className="w-full grid grid-cols-[1.6fr_1fr_0.8fr_0.8fr_0.9fr_0.8fr] gap-4 items-center px-5 py-3.5 text-left cursor-pointer border-b border-white/[0.04] transition-colors duration-150 hover:bg-white/[0.04] last:border-0 light:border-[rgba(26,13,18,0.04)] light:hover:bg-[rgba(26,13,18,0.04)]"
                     >
                       <span className="flex items-center gap-3 min-w-0">
                         <span className="w-9 h-9 grid place-items-center rounded-full bg-gradient-to-br from-pink to-pink-deep text-white font-sans text-[11px] font-bold shrink-0">
@@ -161,6 +169,9 @@ export function OrdersView({
                         <Thumbs items={o.items} />
                       </span>
                       <span className="font-sans text-[12px] text-ink-dim">{o.channel}</span>
+                      <span>
+                        <DeliveryBadge delivery={o.delivery} />
+                      </span>
                       <span>
                         <OrderStatusBadge status={o.status} />
                       </span>

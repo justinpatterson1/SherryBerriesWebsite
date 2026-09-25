@@ -2,6 +2,7 @@
 
 import { useEffect, type ReactNode } from "react";
 import type { AdminOrderStatus, StockStatus, Kpi } from "@/lib/queries/admin";
+import type { DeliveryMethod } from "@/lib/admin/delivery";
 
 /**
  * Scrim + centering for a modal. The backdrop is a real button rather than a
@@ -213,6 +214,18 @@ export function OrderStatusBadge({ status }: { status: AdminOrderStatus }) {
 
 export function StockBadge({ status }: { status: StockStatus }) {
   return <Badge tone={STOCK_TONE[status]} label={status} />;
+}
+
+const DELIVERY_TONE: Record<DeliveryMethod["key"], Tone> = {
+  pickup: "green",
+  ttpost: "gold",
+  courier: "pink",
+  digital: "neutral",
+  unknown: "neutral",
+};
+
+export function DeliveryBadge({ delivery }: { delivery: DeliveryMethod }) {
+  return <Badge tone={DELIVERY_TONE[delivery.key]} label={delivery.label} />;
 }
 
 // --- Stepper -----------------------------------------------------------------
