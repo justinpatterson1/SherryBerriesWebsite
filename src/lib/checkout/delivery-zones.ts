@@ -95,7 +95,6 @@ const BANDS: Band[] = [
       "Barataria",
       "Beetham",
       "Belmont",
-      "Carenage",
       "Cascade",
       "Chaguaramas",
       "Champs Fleurs",
@@ -124,7 +123,7 @@ const BANDS: Band[] = [
   {
     region: "North / West",
     fee: 50,
-    cities: ["Santa Cruz"],
+    cities: ["Carenage", "Santa Cruz"],
   },
 
   {

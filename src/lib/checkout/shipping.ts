@@ -27,6 +27,12 @@ export type ShippingOption = {
   eta: string;
   /** True when `fee` is a starting price rather than the real one. */
   variesByCity?: boolean;
+  /**
+   * A condition the shopper should read before picking this method, shown
+   * beneath the option at checkout. Longer and more cautionary than `sub`,
+   * which is the one-line description beside the label.
+   */
+  note?: string;
 };
 
 export const SHIPPING: Record<ShippingKey, ShippingOption> = {
@@ -36,6 +42,7 @@ export const SHIPPING: Record<ShippingKey, ShippingOption> = {
     sub: "Collect in-store · ready in 24h",
     fee: 0,
     eta: "Ready for pickup within 24 hours",
+    note: "Only select pickup if you can collect within 24-48 hours.",
   },
   ttpost: {
     key: "ttpost",

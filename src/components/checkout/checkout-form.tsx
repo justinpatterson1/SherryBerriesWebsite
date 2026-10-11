@@ -152,28 +152,34 @@ export function CheckoutForm({
             const pending = opt.variesByCity && cityFee === null;
             const fee = cityFee ?? opt.fee;
             return (
-              <OptionCard
-                key={key}
-                selected={shipping === key}
-                onSelect={() => onSelectShipping(key)}
-                icon={SHIP_ICON[key]}
-                title={opt.label}
-                sub={opt.sub}
-                right={
-                  fee === 0 ? (
-                    <span className="font-sans text-[14px] font-bold text-[#5fd29a]">Free</span>
-                  ) : (
-                    <span className="font-serif text-[16px] font-semibold text-ink">
-                      {pending && (
-                        <span className="font-sans text-[11px] font-medium tracking-[0.08em] uppercase text-ink-faint mr-1">
-                          from
-                        </span>
-                      )}
-                      {money(fee)}
-                    </span>
-                  )
-                }
-              />
+              <div key={key} className="flex flex-col gap-1.5">
+                <OptionCard
+                  selected={shipping === key}
+                  onSelect={() => onSelectShipping(key)}
+                  icon={SHIP_ICON[key]}
+                  title={opt.label}
+                  sub={opt.sub}
+                  right={
+                    fee === 0 ? (
+                      <span className="font-sans text-[14px] font-bold text-[#5fd29a]">Free</span>
+                    ) : (
+                      <span className="font-serif text-[16px] font-semibold text-ink">
+                        {pending && (
+                          <span className="font-sans text-[11px] font-medium tracking-[0.08em] uppercase text-ink-faint mr-1">
+                            from
+                          </span>
+                        )}
+                        {money(fee)}
+                      </span>
+                    )
+                  }
+                />
+                {opt.note && (
+                  <p className="m-0 pl-1 font-sans text-[12px] leading-[1.5] text-blush">
+                    {opt.note}
+                  </p>
+                )}
+              </div>
             );
           })}
         </div>
