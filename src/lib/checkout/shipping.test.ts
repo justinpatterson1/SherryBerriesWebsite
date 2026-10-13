@@ -66,18 +66,21 @@ describe("the digital shipping key", () => {
   });
 });
 
-// Cash on Delivery needs a person to hand the money to. TTPost posts the
-// parcel, so there is nobody there to collect — the checkout form greys the
-// option out and /api/checkout refuses the combination outright.
+// Cash on Delivery needs a delivery to collect the cash on. TTPost posts the
+// parcel and a download never arrives at all, so neither has one — the checkout
+// form greys the option out and /api/checkout refuses the combination outright.
 describe("isPaymentAllowedFor", () => {
   it("rules out Cash on Delivery with TTPost", () => {
     expect(isPaymentAllowedFor("cod", "ttpost")).toBe(false);
   });
 
-  it("keeps Cash on Delivery for pickup, courier and downloads", () => {
+  it("rules out Cash on Delivery for a download-only order", () => {
+    expect(isPaymentAllowedFor("cod", "digital")).toBe(false);
+  });
+
+  it("keeps Cash on Delivery for pickup and courier", () => {
     expect(isPaymentAllowedFor("cod", "pickup")).toBe(true);
     expect(isPaymentAllowedFor("cod", "courier")).toBe(true);
-    expect(isPaymentAllowedFor("cod", "digital")).toBe(true);
   });
 
   it("leaves card and bank transfer available everywhere", () => {
@@ -89,12 +92,22 @@ describe("isPaymentAllowedFor", () => {
 });
 
 describe("paymentUnavailableReason", () => {
-  it("explains the one combination that is blocked", () => {
+  it("names TTPost when that is what blocks the cash", () => {
     expect(paymentUnavailableReason("cod", "ttpost")).toMatch(/TTPost/);
+  });
+
+  // Two blocked combinations now share one predicate, so the greyed-out option
+  // has to say which of them applies — "nobody is there to collect" is nonsense
+  // to someone buying a PDF.
+  it("points a download at the methods it can actually use", () => {
+    const why = paymentUnavailableReason("cod", "digital");
+    expect(why).toMatch(/download/i);
+    expect(why).not.toMatch(/TTPost/);
   });
 
   it("is null whenever the combination is allowed", () => {
     expect(paymentUnavailableReason("cod", "pickup")).toBeNull();
     expect(paymentUnavailableReason("card", "ttpost")).toBeNull();
+    expect(paymentUnavailableReason("bank", "digital")).toBeNull();
   });
 });

@@ -284,8 +284,12 @@ export async function POST(request: Request) {
   if (paymentKey === "bank" && !bankDetails()) {
     return NextResponse.json(
       {
-        error:
-          "Bank transfer is temporarily unavailable. Please use Cash on Delivery or a card.",
+        // A download-only order has no Cash on Delivery to fall back on, so
+        // offering it would send the customer at a method this same route
+        // refuses two checks above.
+        error: needsShipping
+          ? "Bank transfer is temporarily unavailable. Please use Cash on Delivery or a card."
+          : "Bank transfer is temporarily unavailable. Please pay by card instead.",
       },
       { status: 503 },
     );
@@ -301,7 +305,11 @@ export async function POST(request: Request) {
       config = getWipayConfig();
     } catch {
       return NextResponse.json(
-        { error: "Card payments are temporarily unavailable. Please use Cash on Delivery." },
+        {
+          error: needsShipping
+            ? "Card payments are temporarily unavailable. Please use Cash on Delivery."
+            : "Card payments are temporarily unavailable. Please use bank transfer instead.",
+        },
         { status: 503 },
       );
     }

@@ -121,17 +121,23 @@ export function isPaymentKey(v: unknown): v is PaymentKey {
 /**
  * Whether a payment method can be used with a shipping method.
  *
- * Cash on Delivery needs a person to hand the money to. TTPost posts the parcel
- * — nobody from the shop is there when it arrives, so there is no one to
- * collect. Pickup keeps COD (pay over the counter), and so does a download
- * (pay us directly, the file unlocks once it clears).
+ * Cash on Delivery needs a delivery to collect the cash on, and two methods
+ * have none. TTPost posts the parcel, so nobody from the shop is there when it
+ * arrives. A download-only order has nothing arriving at all, and the file
+ * stays locked until the payment clears, so "pay on delivery" would mean
+ * waiting indefinitely for a moment that never comes. Pickup keeps COD, paid
+ * over the counter in Curepe.
+ *
+ * A bag holding one physical item alongside a download is not digital-only, so
+ * it keeps COD on the usual terms.
  *
  * Used by the checkout form to grey the option out and by /api/checkout to
  * refuse the combination outright, so the rule holds whatever the browser
  * sends.
  */
 export function isPaymentAllowedFor(payment: PaymentKey, shipping: ShippingKey): boolean {
-  return !(payment === "cod" && shipping === "ttpost");
+  if (payment !== "cod") return true;
+  return shipping !== "ttpost" && shipping !== DIGITAL_SHIPPING_KEY;
 }
 
 /** Why a payment method is unavailable, shown on the greyed-out option. */
@@ -140,5 +146,7 @@ export function paymentUnavailableReason(
   shipping: ShippingKey,
 ): string | null {
   if (isPaymentAllowedFor(payment, shipping)) return null;
-  return "Not available with TTPost — nobody is there to collect the cash";
+  return shipping === DIGITAL_SHIPPING_KEY
+    ? "Not available for a download. Pay by card or bank transfer instead"
+    : "Not available with TTPost. Nobody is there to collect the cash";
 }

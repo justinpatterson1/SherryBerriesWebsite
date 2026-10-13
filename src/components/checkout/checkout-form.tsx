@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import {
+  DIGITAL_SHIPPING_KEY,
   PAYMENT_LABEL,
   SHIPPING,
   SHIPPING_ORDER,
@@ -37,10 +38,16 @@ export function CheckoutForm({
   // The address and method sections disappear for a download-only bag, so the
   // payment card moves up rather than leaving a gap in the numbering.
   const paymentStep = needsShipping ? 4 : 2;
-  // Non-null when the chosen shipping method rules Cash on Delivery out — it is
-  // both the flag that greys the option and the line explaining why. A
-  // download-only bag has no shipping method, so nothing is ruled out.
-  const codUnavailable = needsShipping ? paymentUnavailableReason("cod", shipping) : null;
+  // Non-null when the shipping method rules Cash on Delivery out — it is both
+  // the flag that greys the option and the line explaining why.
+  //
+  // A download-only bag is asked about under the key the server will settle on
+  // for it, not the one sitting unused in the form's state, so the form greys
+  // out exactly what /api/checkout would refuse.
+  const codUnavailable = paymentUnavailableReason(
+    "cod",
+    needsShipping ? shipping : DIGITAL_SHIPPING_KEY,
+  );
   const input = (key: keyof FormState, props?: Record<string, string>) => {
     const invalid = !!errors[key];
     return (
@@ -195,14 +202,7 @@ export function CheckoutForm({
             icon={PAY_ICON.cod}
             title={PAYMENT_LABEL.cod}
             disabled={codUnavailable !== null}
-            // Nothing arrives for a download, so the usual line would be a lie
-            // — and the buyer should know the file waits for the payment.
-            sub={
-              codUnavailable ??
-              (needsShipping
-                ? "Pay when your order arrives"
-                : "Pay us directly. Your download unlocks once we confirm it")
-            }
+            sub={codUnavailable ?? "Pay when your order arrives"}
           />
           <OptionCard
             selected={payment === "card"}

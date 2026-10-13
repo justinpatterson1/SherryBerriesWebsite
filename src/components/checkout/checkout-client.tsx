@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useCart } from "@/components/providers/cart-provider";
 import type { CartSnapshotLine } from "@/app/api/cart/snapshot/route";
 import {
+  DIGITAL_SHIPPING_KEY,
   SHIPPING,
   feeForCity,
   isPaymentAllowedFor,
@@ -59,7 +60,9 @@ export function CheckoutClient({
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [shipping, setShipping] = useState<ShippingKey>("pickup");
-  const [payment, setPayment] = useState<PaymentKey>("cod");
+  // What the customer picked. What is actually used is `payment` below, which
+  // is this filtered through the methods the settled shipping key allows.
+  const [paymentChoice, setPaymentChoice] = useState<PaymentKey>("cod");
 
   const [promo, setPromo] = useState<AppliedPromo | null>(null);
   const [placing, setPlacing] = useState(false);
@@ -188,20 +191,33 @@ export function CheckoutClient({
     [showToast],
   );
 
-  // Picking a shipping method can invalidate the payment method already
-  // chosen — TTPost has nobody to hand cash to. Move the selection rather than
-  // leaving a greyed-out option selected, and say so, since silently changing
-  // how someone pays is not something to do quietly.
+  // The key the server will settle on, which for a download-only bag is not the
+  // one in `shipping` — that stays at its default and goes unused.
+  const effectiveShipping: ShippingKey = needsShipping ? shipping : DIGITAL_SHIPPING_KEY;
+
+  // Payment defaults to Cash on Delivery, which a download-only bag cannot use.
+  // Whether the bag is download-only is only known once the cart snapshot
+  // resolves, after mount, so this is derived rather than corrected in an
+  // effect: there is no first paint where the form offers a method the server
+  // would refuse, and no cascading render to fix it.
+  const payment = isPaymentAllowedFor(paymentChoice, effectiveShipping)
+    ? paymentChoice
+    : "card";
+
+  // Picking TTPost invalidates a Cash on Delivery choice the customer actually
+  // made, so that one is committed rather than left to the derivation above and
+  // said out loud: silently changing how someone pays is not something to do
+  // quietly. The download case needs neither, since nobody chose COD there —
+  // it was only ever the default, and the greyed-out option explains itself.
   const selectShipping = useCallback(
     (key: ShippingKey) => {
       setShipping(key);
-      setPayment((current) => {
-        if (isPaymentAllowedFor(current, key)) return current;
-        showToast("Cash on Delivery isn't available with TTPost — switched to Credit Card");
-        return "card";
-      });
+      if (!isPaymentAllowedFor(paymentChoice, key)) {
+        setPaymentChoice("card");
+        showToast("Cash on Delivery isn't available with TTPost, so we've switched you to Credit Card");
+      }
     },
-    [showToast],
+    [paymentChoice, showToast],
   );
 
   const removePromo = useCallback(() => {
@@ -329,7 +345,7 @@ export function CheckoutClient({
                 shipping={shipping}
                 onSelectShipping={selectShipping}
                 payment={payment}
-                onSelectPayment={setPayment}
+                onSelectPayment={setPaymentChoice}
                 needsShipping={needsShipping}
               />
               <CheckoutSummary
