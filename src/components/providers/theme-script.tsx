@@ -1,3 +1,5 @@
+"use client";
+
 import { DEFAULT_THEME, THEME_KEY } from "@/lib/theme";
 
 /**
@@ -30,6 +32,25 @@ try {
   // Storage blocked — the default already on <html> stands.
 }`.trim();
 
+  // `text/javascript` on the server, `text/plain` on the client, which is what
+  // Next's "preventing flash before hydration" guide prescribes. React warns
+  // whenever a render produces a <script>, because a script inserted by a DOM
+  // update never executes — true, but irrelevant here: this one has already run
+  // during HTML parsing, long before React reaches it. Rendering it inert on
+  // the client silences a warning about a problem we do not have, and costs
+  // nothing, since re-running it would be a no-op anyway.
+  //
+  // This is why the component is a Client Component: the type has to be decided
+  // on each side, and a server-only component is evaluated once, on the server.
+  //
+  // `suppressHydrationWarning` covers the type differing between the two.
+  //
   // The content is built from our own constants, never from user input.
-  return <script dangerouslySetInnerHTML={{ __html: script }} />;
+  return (
+    <script
+      type={typeof window === "undefined" ? "text/javascript" : "text/plain"}
+      suppressHydrationWarning
+      dangerouslySetInnerHTML={{ __html: script }}
+    />
+  );
 }
