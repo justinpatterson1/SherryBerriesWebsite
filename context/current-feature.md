@@ -1,13 +1,62 @@
 # Current Feature
 
 ## Status
-Not Started
+In Progress — Colour variants (colour × size, with a photo per colour)
 
 ## Goals
-<!-- Populated by /feature load -->
+- A product can come in several **colours**, several **sizes**, both, or neither. Every colour × size combination is its own stock line.
+- Picking a colour on the PDP **jumps the gallery to that colour's photo**. All thumbnails stay visible; the gallery is not filtered.
+- A colour can carry an **optional extra price**, added on top of the base price, the same way sizes do.
+- **Schema (one migration):**
+  - New `ProductColor` table: `name`, optional `swatch` (hex), `imageUrl`, optional `additionalPrice`, `position`.
+  - `ProductVariant` gains `colorId` (nullable FK) and `size` (nullable). The migration backfills `size` from `value`, so existing sized products are unchanged.
+- **`ProductVariant.value` becomes the display label** ("Gold · 8mm", "Gold" or "8mm"). Cart rows, checkout summary, order pages, admin order detail, returns, emails and the inventory breakdown keep reading `value` and show the combination without edits.
+- **`ProductVariant.additionalPrice` is worked out on save** as size extra + colour extra, like `Product.inventory` is the sum of its sizes. The price code in cart, snapshot and checkout stays as it is. The form gets each size's extra back by subtracting the colour's extra.
+- **Admin product form** ([product-form.tsx](../src/components/admin/product-form.tsx), [products/route.ts](../src/app/api/admin/products/route.ts), [sizes.ts](../src/lib/admin/sizes.ts)):
+  - A repeatable **Colours** section: name, swatch, image upload (existing R2 upload) and extra price.
+  - Sizes keep their value and extra price. With colours and sizes both present, quantity becomes a **stock grid** (colour rows × size columns). With only one of the two, it stays a simple list.
+  - `syncSizes` becomes a variant sync over the combinations and keeps its protections: SKUs derived from the product SKU (`SB-LABRET-GOLD-8MM`), rows parked on a temporary SKU during the save, a refusal to delete a colour or combination that's on an order, a 409 on a SKU collision, and the product total worked out from the variants.
+  - Colour and combination validation lives in `src/lib/admin/`, with unit tests.
+  - Deleting a product also deletes the colour images from R2.
+  - **Every colour needs a photo**, enforced in the form and the API (`validateColors`). The form flags a colour without one as "Photo required".
+  - **Cover fallback:** a product with no main image takes its first colour's photo as its cover (stored as the position-0 `ProductImage`). An existing cover is never replaced by one. The form previews the fallback and says which colour it comes from.
+  - **Audit log:** the stock-line summary includes each line's extra price, and a colour summary (swatch, photo file name, extra price) is logged next to it. A price, photo or swatch change is recorded, not only a stock change. Both are logged under `product.sizes_update`; create logs the colours too.
+- **Storefront:**
+  - Buy box: colour swatches above the size pills. Size options depend on the chosen colour, and a combination that's out of stock shows struck through.
+  - Gallery: product images plus colour images. The selected colour's image is pushed in from the buy box through a small client wrapper around the two components.
+- **Inventory view:** the "sized products show static stock text" rule extends to coloured products, and the per-size breakdown lists the combinations.
+- **Build order:** schema → admin → storefront. Run `npm test`, `npm run lint` and `npm run build` after each step.
+
+## Progress
+- **Built** on branch `feat/colour-variants`: schema, admin and storefront are done. Tests (329), lint (0 errors) and build pass. Not yet committed.
+- **Migration `20261031120000_product_colors`** was written by hand (no shadow DB for `migrate diff`). It is applied to the **dev** DB (`.env.local`); all 9 existing variants were backfilled. **Production still needs `prisma migrate deploy`** before this ships. The Prisma CLI reads `.env`, not `.env.local`, so export `DATABASE_URL` from `.env.local` first.
+- **Reviewed twice.** Fixed: a sized product gaining colours showed 0 stock in the new grid and would have wiped its quantities on save.
+- **Still to do:** a manual browser pass:
+  - Add colours to an existing sized product.
+  - Rename a size.
+  - Create a coloured product with no main image.
+  - Pick colours on the PDP.
 
 ## Notes
-<!-- Populated by /feature load -->
+- **Why the image URL sits on the colour:** a colour stores its own `imageUrl` rather than linking to a `ProductImage` row. The admin save only manages the position-0 image and overwrites it, so a link to it would break.
+- **Out of scope:**
+  - Colour filters on the shop grid
+  - Several photos per colour (one each for now)
+  - Saving a copy of the label on order lines. Like sizes today, renaming a colour changes how past orders read; deleting one that's on an order is refused.
+- **How saved lines are matched** (`matchVariants` in [variants.ts](../src/lib/admin/variants.ts)):
+  - Lines follow their colour by id and their size through a rename (each size row carries the value it was loaded with as `previous`).
+  - A product that gains an axis keeps its lines under that axis's first value. A sized piece that gains colours keeps its sizes under the first colour, which avoids a refusal for anything already ordered.
+  - When an axis is removed, the first line to land on each combination keeps it.
+  - The form's stock grid mirrors this, so the quantities shown are the ones that will be saved.
+- **Module split:**
+  - [sizes.ts](../src/lib/admin/sizes.ts): the size axis only (no quantities).
+  - [colors.ts](../src/lib/admin/colors.ts): colours and their audit summary.
+  - [variants.ts](../src/lib/admin/variants.ts): the combinations, SKUs, stock total, audit summary and matching.
+- **PDP sync:** [product-color-sync.tsx](../src/components/product/product-color-sync.tsx) is a context provider around the PDP section. The buy box sends the picked colour's photo, and the gallery jumps to it during render (no effect).
+- **Cover is a copy:** replacing the first colour's photo later does not update a cover that was taken from it.
+- **Removing a colour does not delete its photo from R2:** the photo may also be the product's cover. Only deleting the product removes colour photos.
+- **Not part of this feature:** the uncommitted `next.config.ts` line (`hostname: "https://m.media-amazon.com"`, which should be `"m.media-amazon.com"`). Keep it out of this commit.
+- **Preorders commit first:** done. Preorders were committed as `13b1f2b` before this branch.
 
 ---
 

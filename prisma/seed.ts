@@ -503,6 +503,7 @@ async function seedProductVariants(
           productId: p.id,
           name: "Gauge",
           value: picked[i],
+          size: picked[i],
           // include full product id to guarantee uniqueness — truncated slugs collide
           sku: `V-${p.id}-${picked[i]}-${i}`,
           inventory: range(0, 30),

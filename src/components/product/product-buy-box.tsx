@@ -1,13 +1,26 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useCart } from "@/components/providers/cart-provider";
+import { useColorSync } from "@/components/product/product-color-sync";
 
 type Variant = {
   id: string;
   name: string;
   value: string;
   inventory: number;
+  /** The whole extra: the size's plus the colour's. */
+  additionalPrice: number;
+  colorId: string | null;
+  size: string | null;
+};
+
+type Color = {
+  id: string;
+  name: string;
+  swatch: string | null;
+  imageUrl: string;
   additionalPrice: number;
 };
 
@@ -17,6 +30,7 @@ export function ProductBuyBox({
   basePrice,
   compareAtPrice,
   variants,
+  colors = [],
   inventory,
   lowStockThreshold,
   isDigital = false,
@@ -27,6 +41,8 @@ export function ProductBuyBox({
   basePrice: number;
   compareAtPrice: number | null;
   variants: Variant[];
+  /** Empty for a product in one colour. */
+  colors?: Color[];
   inventory: number;
   lowStockThreshold: number;
   /** A download. Holds no stock, so it can never be out of it. */
@@ -35,8 +51,17 @@ export function ProductBuyBox({
   isPreorder?: boolean;
 }) {
   const { addItem } = useCart();
+  const colorSync = useColorSync();
+  const inStock = (v: Variant) => isPreorder || v.inventory > 0;
+  // The first line of a colour that can be bought, else its first line, so a
+  // product does not open on a sold-out combination when another is there.
+  const firstLineOf = (colorId: string | null) => {
+    const own = variants.filter((v) => v.colorId === colorId);
+    return own.find(inStock) ?? own[0] ?? null;
+  };
+  const [selectedColorId, setSelectedColorId] = useState<string | null>(colors[0]?.id ?? null);
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(
-    variants[0]?.id ?? null,
+    (colors.length > 0 ? firstLineOf(colors[0].id) : variants[0])?.id ?? null,
   );
   const [qty, setQty] = useState(1);
   const [busy, setBusy] = useState(false);
@@ -44,7 +69,22 @@ export function ProductBuyBox({
   const [showSticky, setShowSticky] = useState(false);
   const ctaRef = useRef<HTMLButtonElement>(null);
 
-  const variantGroup = variants[0]?.name ?? null;
+  const variantGroup = variants[0]?.name || null;
+  const selectedColor = colors.find((c) => c.id === selectedColorId) ?? null;
+  // With colours, the size pills are the chosen colour's lines; a colour-only
+  // product has one line per colour and no pills at all.
+  const sizeOptions = (colors.length > 0 ? variants.filter((v) => v.colorId === selectedColorId) : variants).filter(
+    (v) => colors.length === 0 || v.size !== null,
+  );
+
+  const pickColor = (color: Color) => {
+    setSelectedColorId(color.id);
+    // Keep the size the shopper already chose when this colour has it in stock.
+    const current = variants.find((v) => v.id === selectedVariantId);
+    const same = variants.find((v) => v.colorId === color.id && v.size === current?.size && inStock(v));
+    setSelectedVariantId((same ?? firstLineOf(color.id))?.id ?? null);
+    colorSync?.setPick({ imageUrl: color.imageUrl });
+  };
   const selectedVariant = useMemo(
     () => variants.find((v) => v.id === selectedVariantId) ?? null,
     [variants, selectedVariantId],
@@ -152,14 +192,69 @@ export function ProductBuyBox({
         </span>
       </div>
 
-      {variants.length > 0 && (
+      {colors.length > 0 && (
+        <div className="flex flex-col gap-2.5">
+          <span className="font-sans text-[11px] font-medium tracking-[0.22em] uppercase text-ink-faint">
+            Colour
+            {selectedColor && <span className="ml-2 text-ink normal-case tracking-normal">{selectedColor.name}</span>}
+          </span>
+          <div role="radiogroup" aria-label="Colour" className="flex flex-wrap gap-2.5">
+            {colors.map((c) => {
+              const active = c.id === selectedColorId;
+              // Still pickable when sold out, so its photo can be seen; the
+              // button below says Sold out.
+              const soldOut = !variants.some((v) => v.colorId === c.id && inStock(v));
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  aria-label={
+                    c.name +
+                    (c.additionalPrice > 0 ? `, +$${c.additionalPrice.toFixed(2)}` : "") +
+                    (soldOut ? ", sold out" : "")
+                  }
+                  title={c.name + (c.additionalPrice > 0 ? ` +$${c.additionalPrice.toFixed(2)}` : "")}
+                  onClick={() => pickColor(c)}
+                  className={
+                    "relative w-10 h-10 rounded-full overflow-hidden border-2 cursor-pointer " +
+                    "transition-[border-color,box-shadow,transform] duration-200 " +
+                    (active
+                      ? "border-pink shadow-[0_0_0_2px_rgba(255,79,163,0.18),0_0_18px_rgba(255,79,163,0.32)]"
+                      : "border-white/15 hover:border-blush hover:-translate-y-px") +
+                    (soldOut ? " opacity-40" : "")
+                  }
+                >
+                  {c.swatch ? (
+                    <span className="absolute inset-0" style={{ background: c.swatch }} />
+                  ) : (
+                    <Image src={c.imageUrl} alt="" fill sizes="40px" className="object-cover" />
+                  )}
+                  {soldOut && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute left-1/2 top-1/2 w-[130%] h-px bg-ink -translate-x-1/2 -translate-y-1/2 -rotate-45"
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {sizeOptions.length > 0 && (
         <div className="flex flex-col gap-2.5">
           <span className="font-sans text-[11px] font-medium tracking-[0.22em] uppercase text-ink-faint">
             {variantGroup ?? "Variant"}
           </span>
           <div role="radiogroup" aria-label={variantGroup ?? "Variant"} className="flex flex-wrap gap-2">
-            {variants.map((v) => {
-              const disabled = !isPreorder && v.inventory <= 0;
+            {sizeOptions.map((v) => {
+              const disabled = !inStock(v);
+              // The colour's extra is in the headline price already; a pill
+              // shows only what the size adds on top.
+              const extra = v.additionalPrice - (selectedColor?.additionalPrice ?? 0);
               const active = v.id === selectedVariantId;
               return (
                 <button
@@ -179,10 +274,10 @@ export function ProductBuyBox({
                       : "border-white/12 text-ink-dim hover:border-blush hover:text-ink")
                   }
                 >
-                  {v.value}
-                  {v.additionalPrice > 0 && (
+                  {colors.length > 0 ? v.size : v.value}
+                  {extra > 0 && (
                     <span className="ml-1.5 opacity-70 font-normal normal-case tracking-normal">
-                      +${v.additionalPrice.toFixed(2)}
+                      +${extra.toFixed(2)}
                     </span>
                   )}
                 </button>

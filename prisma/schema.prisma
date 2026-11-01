@@ -275,6 +275,7 @@ model Product {
   category   Category @relation(fields: [categoryId], references: [id])
 
   images         ProductImage[]
+  colors         ProductColor[]
   variants       ProductVariant[]
   reviews        Review[]
   wishlistItems  Wishlist[]
@@ -300,6 +301,37 @@ model ProductImage {
   @@index([productId])
 }
 
+/// One colour a product comes in, with the photo the PDP gallery jumps to when
+/// it is picked.
+///
+/// The photo lives here rather than as a link to a ProductImage row: the admin
+/// save only manages the position-0 image and overwrites it in place, so a
+/// link to it would break.
+model ProductColor {
+  id              String   @id @default(cuid())
+  productId       String
+  name            String
+  /// "#c9a96e". Optional: the swatch falls back to the photo.
+  swatch          String?
+  imageUrl        String
+  /// Added on top of the product price. Folded into each of its variants'
+  /// `additionalPrice` on save, which is what checkout actually reads.
+  additionalPrice Decimal? @db.Decimal(10, 2)
+  position        Int      @default(0)
+  createdAt       DateTime @default(now())
+
+  product  Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variants ProductVariant[]
+
+  @@index([productId])
+}
+
+/// One stock line: a colour, a size, or a colour × size combination.
+///
+/// `value` is the display label ("Gold · 8mm", "Gold" or "8mm"), derived from
+/// `colorId` and `size` on save, and `additionalPrice` is the size's extra
+/// plus the colour's. Cart, checkout, orders and emails read only those two,
+/// so they show the combination without knowing colours exist.
 model ProductVariant {
   id              String   @id @default(cuid())
   productId       String
@@ -308,13 +340,17 @@ model ProductVariant {
   sku             String   @unique
   inventory       Int      @default(0)
   additionalPrice Decimal? @db.Decimal(10, 2)
+  colorId         String?
+  size            String?
   createdAt       DateTime @default(now())
 
-  product    Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product    Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  color      ProductColor? @relation(fields: [colorId], references: [id], onDelete: SetNull)
   cartItems  CartItem[]
   orderItems OrderItem[]
 
   @@index([productId])
+  @@index([colorId])
 }
 
 model ProductTag {

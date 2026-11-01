@@ -11,6 +11,7 @@ import { ProductAccordion } from "@/components/product/product-accordion";
 import { ProductTrustBadges } from "@/components/product/product-trust-badges";
 import { RelatedProducts } from "@/components/product/related-products";
 import { PreorderTag } from "@/components/product/preorder-tag";
+import { ProductColorSync } from "@/components/product/product-color-sync";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -58,6 +59,17 @@ export default async function ProductPage({ params }: PageProps) {
   });
 
   const isBestseller = product.tags.includes("Bestseller");
+  // Every thumbnail stays visible; picking a colour only jumps to its photo.
+  // A colour photo that is also a product image is not shown twice.
+  const galleryImages = [
+    ...product.images,
+    ...product.colors
+      .filter((c, i, all) =>
+        !product.images.some((img) => img.imageUrl === c.imageUrl) &&
+        all.findIndex((o) => o.imageUrl === c.imageUrl) === i,
+      )
+      .map((c) => ({ id: `color-${c.id}`, imageUrl: c.imageUrl, altText: `${product.name} in ${c.name}` })),
+  ];
   return (
     <main className="pt-[110px] pb-20 max-[900px]:pt-[100px]">
       <nav
@@ -86,172 +98,175 @@ export default async function ProductPage({ params }: PageProps) {
         </ol>
       </nav>
 
-      <section
-        aria-labelledby="product-title"
-        className={
-          "grid grid-cols-[1.15fr_1fr] items-start gap-12 px-[8%] " +
-          "max-[1100px]:gap-8 max-[900px]:grid-cols-1 max-[900px]:px-[6%]"
-        }
-      >
-        <ProductGallery
-          images={product.images}
-          productName={product.name}
-          bestseller={isBestseller}
-        />
-
-        <div className="flex flex-col gap-7">
-          <div className="flex flex-col gap-3">
-            <span className="flex items-center gap-3">
-              <span className="font-sans text-[11px] font-medium tracking-[0.22em] uppercase text-pink">
-                {product.category.name}
-              </span>
-              {product.isPreorder && <PreorderTag />}
-            </span>
-            <h1
-              id="product-title"
-              className="font-display text-[clamp(36px,4.4vw,52px)] leading-[1.05] tracking-[-0.01em] text-ink m-0"
-            >
-              {product.name}
-            </h1>
-            <p className="font-serif italic text-[17px] leading-[1.55] text-ink-dim m-0">
-              {product.shortDescription}
-            </p>
-          </div>
-
-          <ProductBuyBox
-            productId={product.id}
+      <ProductColorSync>
+        <section
+          aria-labelledby="product-title"
+          className={
+            "grid grid-cols-[1.15fr_1fr] items-start gap-12 px-[8%] " +
+            "max-[1100px]:gap-8 max-[900px]:grid-cols-1 max-[900px]:px-[6%]"
+          }
+        >
+          <ProductGallery
+            images={galleryImages}
             productName={product.name}
-            basePrice={product.price}
-            compareAtPrice={product.compareAtPrice}
-            variants={product.variants}
-            inventory={product.inventory}
-            lowStockThreshold={product.lowStockThreshold}
-            isDigital={product.isDigital}
-            isPreorder={product.isPreorder}
+            bestseller={isBestseller}
           />
 
-          <div className="flex items-center gap-3 flex-wrap">
-            <ProductWishlistButton
+          <div className="flex flex-col gap-7">
+            <div className="flex flex-col gap-3">
+              <span className="flex items-center gap-3">
+                <span className="font-sans text-[11px] font-medium tracking-[0.22em] uppercase text-pink">
+                  {product.category.name}
+                </span>
+                {product.isPreorder && <PreorderTag />}
+              </span>
+              <h1
+                id="product-title"
+                className="font-display text-[clamp(36px,4.4vw,52px)] leading-[1.05] tracking-[-0.01em] text-ink m-0"
+              >
+                {product.name}
+              </h1>
+              <p className="font-serif italic text-[17px] leading-[1.55] text-ink-dim m-0">
+                {product.shortDescription}
+              </p>
+            </div>
+
+            <ProductBuyBox
               productId={product.id}
               productName={product.name}
+              basePrice={product.price}
+              compareAtPrice={product.compareAtPrice}
+              variants={product.variants}
+              colors={product.colors}
+              inventory={product.inventory}
+              lowStockThreshold={product.lowStockThreshold}
+              isDigital={product.isDigital}
+              isPreorder={product.isPreorder}
             />
-            {product.material && (
-              <span className="font-sans text-[11px] tracking-[0.16em] uppercase text-ink-faint">
-                Crafted from {product.material}
-              </span>
-            )}
-          </div>
 
-          <ProductTrustBadges categorySlug={product.category.slug} />
+            <div className="flex items-center gap-3 flex-wrap">
+              <ProductWishlistButton
+                productId={product.id}
+                productName={product.name}
+              />
+              {product.material && (
+                <span className="font-sans text-[11px] tracking-[0.16em] uppercase text-ink-faint">
+                  Crafted from {product.material}
+                </span>
+              )}
+            </div>
 
-          <ProductAccordion
-            sections={[
-              {
-                key: "description",
-                title: "Description",
-                body: <p className="m-0 whitespace-pre-line">{product.description}</p>,
-              },
-              {
-                key: "specifications",
-                title: "Specifications",
-                body: (
-                  <dl className="grid grid-cols-2 gap-y-2 gap-x-6 max-[520px]:grid-cols-1">
-                    <SpecRow label="Material" value={product.material} />
-                    <SpecRow label="SKU" value={product.sku} />
-                    <SpecRow
-                      label="In stock"
-                      value={product.isPreorder ? "Preorder" : product.inventory.toString()}
-                    />
-                    {product.healingStage && (
+            <ProductTrustBadges categorySlug={product.category.slug} />
+
+            <ProductAccordion
+              sections={[
+                {
+                  key: "description",
+                  title: "Description",
+                  body: <p className="m-0 whitespace-pre-line">{product.description}</p>,
+                },
+                {
+                  key: "specifications",
+                  title: "Specifications",
+                  body: (
+                    <dl className="grid grid-cols-2 gap-y-2 gap-x-6 max-[520px]:grid-cols-1">
+                      <SpecRow label="Material" value={product.material} />
+                      <SpecRow label="SKU" value={product.sku} />
                       <SpecRow
-                        label="Recommended for"
-                        value={product.healingStage
-                          .replace("_", " ")
-                          .toLowerCase()}
+                        label="In stock"
+                        value={product.isPreorder ? "Preorder" : product.inventory.toString()}
                       />
-                    )}
-                  </dl>
-                ),
-              },
-              {
-                key: "sizing",
-                title: "Sizing & fit",
-                body: (
-                  <p className="m-0">
-                    Pick the gauge that matches your current jewelry. Not sure? Reach
-                    out to our studio team on WhatsApp. We&apos;ll match you to the
-                    right size.
-                  </p>
-                ),
-              },
-              {
-                key: "care",
-                title: "Care & cleaning",
-                // The product's own advice when it has any, otherwise the house
-                // copy that was here before the field existed. A 14k gold piece
-                // and a titanium starter need different handling, but most
-                // products are covered by the general guidance.
-                body: (
-                  <p className="m-0 whitespace-pre-line">
-                    {product.careInstructions ?? DEFAULT_CARE_INSTRUCTIONS}
-                  </p>
-                ),
-              },
-              {
-                key: "shipping",
-                title: "Shipping & returns",
-                // Generated from the checkout's own rate table and the return
-                // window the policy publishes, so this can't drift from what a
-                // customer is actually charged or actually entitled to. The
-                // previous copy claimed "2–4 business days" (matching no
-                // method) and "store credit" (the policy refunds to the
-                // original payment method).
-                body: (
-                  <div className="flex flex-col gap-2.5">
+                      {product.healingStage && (
+                        <SpecRow
+                          label="Recommended for"
+                          value={product.healingStage
+                            .replace("_", " ")
+                            .toLowerCase()}
+                        />
+                      )}
+                    </dl>
+                  ),
+                },
+                {
+                  key: "sizing",
+                  title: "Sizing & fit",
+                  body: (
                     <p className="m-0">
-                      Delivery within Trinidad &amp; Tobago, by the method you choose at
-                      checkout:
+                      Pick the gauge that matches your current jewelry. Not sure? Reach
+                      out to our studio team on WhatsApp. We&apos;ll match you to the
+                      right size.
                     </p>
-                    <ul className="m-0 pl-4 flex flex-col gap-1">
-                      {SHIPPING_ORDER.map((key) => {
-                        const option = SHIPPING[key];
-                        return (
-                          <li key={option.key}>
-                            {option.label}: {option.fee === 0 ? "Free" : `$${option.fee.toFixed(2)}`}.{" "}
-                            {option.eta}.
-                          </li>
-                        );
-                      })}
-                    </ul>
-                    <p className="m-0">
-                      {isFinalSale(product.category.slug) ? (
-                        <>
-                          This is a <strong>final sale</strong> item: jewelry and aftercare
-                          cannot be returned or exchanged once an order has left us, opened
-                          or not. Anything that arrives damaged, defective, or incorrect is
-                          always put right at no cost to you.
-                        </>
-                      ) : (
-                        <>
-                          We don&apos;t accept returns for a change of mind. Anything that
-                          arrives damaged, defective, or incorrect is always put right at no
-                          cost to you, so please tell us within {RETURN_WINDOW_DAYS} days of
-                          delivery.
-                        </>
-                      )}{" "}
-                      See our{" "}
-                      <Link href="/help/returns" className="text-blush underline">
-                        Returns Policy
-                      </Link>
-                      .
+                  ),
+                },
+                {
+                  key: "care",
+                  title: "Care & cleaning",
+                  // The product's own advice when it has any, otherwise the house
+                  // copy that was here before the field existed. A 14k gold piece
+                  // and a titanium starter need different handling, but most
+                  // products are covered by the general guidance.
+                  body: (
+                    <p className="m-0 whitespace-pre-line">
+                      {product.careInstructions ?? DEFAULT_CARE_INSTRUCTIONS}
                     </p>
-                  </div>
-                ),
-              },
-            ]}
-          />
-        </div>
-      </section>
+                  ),
+                },
+                {
+                  key: "shipping",
+                  title: "Shipping & returns",
+                  // Generated from the checkout's own rate table and the return
+                  // window the policy publishes, so this can't drift from what a
+                  // customer is actually charged or actually entitled to. The
+                  // previous copy claimed "2–4 business days" (matching no
+                  // method) and "store credit" (the policy refunds to the
+                  // original payment method).
+                  body: (
+                    <div className="flex flex-col gap-2.5">
+                      <p className="m-0">
+                        Delivery within Trinidad &amp; Tobago, by the method you choose at
+                        checkout:
+                      </p>
+                      <ul className="m-0 pl-4 flex flex-col gap-1">
+                        {SHIPPING_ORDER.map((key) => {
+                          const option = SHIPPING[key];
+                          return (
+                            <li key={option.key}>
+                              {option.label}: {option.fee === 0 ? "Free" : `$${option.fee.toFixed(2)}`}.{" "}
+                              {option.eta}.
+                            </li>
+                          );
+                        })}
+                      </ul>
+                      <p className="m-0">
+                        {isFinalSale(product.category.slug) ? (
+                          <>
+                            This is a <strong>final sale</strong> item: jewelry and aftercare
+                            cannot be returned or exchanged once an order has left us, opened
+                            or not. Anything that arrives damaged, defective, or incorrect is
+                            always put right at no cost to you.
+                          </>
+                        ) : (
+                          <>
+                            We don&apos;t accept returns for a change of mind. Anything that
+                            arrives damaged, defective, or incorrect is always put right at no
+                            cost to you, so please tell us within {RETURN_WINDOW_DAYS} days of
+                            delivery.
+                          </>
+                        )}{" "}
+                        See our{" "}
+                        <Link href="/help/returns" className="text-blush underline">
+                          Returns Policy
+                        </Link>
+                        .
+                      </p>
+                    </div>
+                  ),
+                },
+              ]}
+            />
+          </div>
+        </section>
+      </ProductColorSync>
 
       <RelatedProducts products={related} />
     </main>

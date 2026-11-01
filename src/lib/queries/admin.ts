@@ -78,14 +78,31 @@ export type AdminOrder = {
 
 export type StockStatus = "In stock" | "Low stock" | "Out of stock" | "Digital" | "Preorder";
 
-/** One ProductVariant, as the admin screens see it. */
+/**
+ * One ProductVariant — a stock line — as the admin screens see it. Despite the
+ * name it may be a colour or a colour × size combination; `value` is its label
+ * either way ("Gold · 8mm").
+ */
 export type AdminSize = {
   id: string;
   value: string;
+  /** The ProductColor this line is, or null when the product has no colours. */
+  colorId: string | null;
+  /** The size this line is, or null when the product has no sizes. */
+  size: string | null;
   quantity: number;
   additionalPrice: number | null;
   /** Units of this size on live preorders. */
   preordered: number;
+};
+
+/** One ProductColor, as the admin screens see it. */
+export type AdminColor = {
+  id: string;
+  name: string;
+  swatch: string | null;
+  imageUrl: string;
+  additionalPrice: number | null;
 };
 
 export type AdminProduct = {
@@ -118,8 +135,10 @@ export type AdminProduct = {
    * Null when the product has no sizes.
    */
   sizeLabel: string | null;
-  /** Per-size stock. Empty for a product sold as a single item. */
+  /** Per-line stock. Empty for a product sold as a single item. */
   sizes: AdminSize[];
+  /** Colours in display order. Empty for a product in one colour. */
+  colors: AdminColor[];
   /** Sold before the stock exists; `stock` is 0 and means nothing. */
   isPreorder: boolean;
   /**
@@ -248,21 +267,56 @@ export type AdminData = {
 /** Variants in a stable order, so the modal's rows do not shuffle on save. */
 const SIZE_SELECT = {
   orderBy: { createdAt: "asc" },
-  select: { id: true, name: true, value: true, inventory: true, additionalPrice: true },
+  select: {
+    id: true,
+    name: true,
+    value: true,
+    colorId: true,
+    size: true,
+    inventory: true,
+    additionalPrice: true,
+  },
+} as const;
+
+const COLOR_SELECT = {
+  orderBy: { position: "asc" },
+  select: { id: true, name: true, swatch: true, imageUrl: true, additionalPrice: true },
 } as const;
 
 type SizeRowFromDb = {
   id: string;
   name: string;
   value: string;
+  colorId: string | null;
+  size: string | null;
   inventory: number;
   additionalPrice: unknown;
 };
+
+type ColorRowFromDb = {
+  id: string;
+  name: string;
+  swatch: string | null;
+  imageUrl: string;
+  additionalPrice: unknown;
+};
+
+function toColors(rows: ColorRowFromDb[]): AdminColor[] {
+  return rows.map((c) => ({
+    id: c.id,
+    name: c.name,
+    swatch: c.swatch,
+    imageUrl: c.imageUrl,
+    additionalPrice: c.additionalPrice == null ? null : Number(c.additionalPrice),
+  }));
+}
 
 function toSizes(rows: SizeRowFromDb[], preorders?: PreorderCount): AdminSize[] {
   return rows.map((v) => ({
     id: v.id,
     value: v.value,
+    colorId: v.colorId,
+    size: v.size,
     quantity: v.inventory,
     additionalPrice: v.additionalPrice == null ? null : Number(v.additionalPrice),
     preordered: preorders?.bySize.get(v.id) ?? 0,
@@ -463,6 +517,7 @@ export async function getAdminData(
       orderBy: { name: "asc" },
       select: {
         variants: SIZE_SELECT,
+        colors: COLOR_SELECT,
         id: true,
         name: true,
         sku: true,
@@ -758,8 +813,9 @@ export async function getAdminData(
       isDigital: p.isDigital,
       digitalFileKey: p.digitalFileKey,
       digitalFileName: p.digitalFileName,
-      sizeLabel: p.variants[0]?.name ?? null,
+      sizeLabel: p.variants[0]?.name || null,
       sizes: toSizes(p.variants, preorderCounts.get(p.id)),
+      colors: toColors(p.colors),
       isPreorder: p.isPreorder,
       preordered: preorderCounts.get(p.id)?.total ?? 0,
       preorderedPaid: preorderCounts.get(p.id)?.paid ?? 0,
@@ -963,6 +1019,7 @@ export async function getAdminProduct(id: string): Promise<AdminProduct | null> 
         category: { select: { name: true } },
         images: { orderBy: { position: "asc" }, take: 1, select: { imageUrl: true } },
         variants: SIZE_SELECT,
+        colors: COLOR_SELECT,
       },
     }),
     prisma.orderItem.aggregate({
@@ -1005,8 +1062,9 @@ export async function getAdminProduct(id: string): Promise<AdminProduct | null> 
     isDigital: p.isDigital,
     digitalFileKey: p.digitalFileKey,
     digitalFileName: p.digitalFileName,
-    sizeLabel: p.variants[0]?.name ?? null,
+    sizeLabel: p.variants[0]?.name || null,
     sizes: toSizes(p.variants, preorderCounts.get(p.id)),
+    colors: toColors(p.colors),
     isPreorder: p.isPreorder,
     preordered: preorderCounts.get(p.id)?.total ?? 0,
     preorderedPaid: preorderCounts.get(p.id)?.paid ?? 0,

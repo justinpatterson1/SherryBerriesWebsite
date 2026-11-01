@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useRef, useState } from "react";
+import { useColorSync, type ColorPick } from "@/components/product/product-color-sync";
 
 type GalleryImage = {
   id: string;
@@ -21,6 +22,16 @@ export function ProductGallery({
   const [active, setActive] = useState(0);
   const [zoom, setZoom] = useState({ on: false, x: 50, y: 50 });
   const stageRef = useRef<HTMLDivElement>(null);
+
+  // Jump to the chosen colour's photo. Adjusted during render rather than in
+  // an effect, so the new image paints in the same pass as the pick.
+  const pick = useColorSync()?.pick ?? null;
+  const [seenPick, setSeenPick] = useState<ColorPick | null>(pick);
+  if (pick !== seenPick) {
+    setSeenPick(pick);
+    const i = pick ? images.findIndex((img) => img.imageUrl === pick.imageUrl) : -1;
+    if (i >= 0) setActive(i);
+  }
 
   if (images.length === 0) {
     return (

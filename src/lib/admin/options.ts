@@ -26,12 +26,27 @@ export type CategoryFormData = {
   isJewelry: boolean;
 };
 
-/** One size row from the product modal. `id` is null for a row being added. */
+/** One size from the product modal. `previous` is null for a size being added. */
 export type ProductSizeInput = {
-  id: string | null;
+  previous: string | null;
   value: string;
-  quantity: number;
   additionalPrice: number | null;
+};
+
+/** One colour from the product modal. `id` is null for a colour being added. */
+export type ProductColorInput = {
+  id: string | null;
+  name: string;
+  swatch: string;
+  imageUrl: string;
+  additionalPrice: number | null;
+};
+
+/** Stock for one line, named by colour and size (null for an axis it lacks). */
+export type ProductStockInput = {
+  color: string | null;
+  size: string | null;
+  quantity: number;
 };
 
 export type ProductFormData = {
@@ -53,6 +68,9 @@ export type ProductFormData = {
   /** The axis the sizes measure — "Length", "Gauge". Empty when unsized. */
   sizeLabel: string;
   sizes: ProductSizeInput[];
+  colors: ProductColorInput[];
+  /** One entry per colour × size combination, or per colour or size alone. */
+  variantStock: ProductStockInput[];
   /** A downloadable product (a PDF) rather than something that ships. */
   isDigital: boolean;
   /** Private R2 object key from /api/admin/upload/digital. Empty when not digital. */
@@ -75,7 +93,7 @@ export type DigitalProductCheck =
  *
  * A download holds no stock — `inventory` is meaningless for a file and is
  * forced to 0 so the low-stock dashboard never flags it and the PDP never says
- * "out of stock". Sizes make no sense either.
+ * "out of stock". Sizes and colours make no sense either.
  *
  * The key is checked against the `digital/` prefix because it reaches the API
  * as a plain string from the browser: pointed at a `payments/` key instead, the
@@ -85,6 +103,7 @@ export type DigitalProductCheck =
 export function validateDigitalProduct(input: {
   isDigital: boolean;
   digitalFileKey: string;
+  /** Stock lines: sizes, colours, or their combinations. */
   sizeCount: number;
   stock: number;
   reorder: number;
@@ -93,7 +112,7 @@ export function validateDigitalProduct(input: {
     return { ok: true, digitalFileKey: null, stock: input.stock, reorder: input.reorder };
   }
   if (input.sizeCount > 0) {
-    return { ok: false, error: "A digital product can't have sizes." };
+    return { ok: false, error: "A digital product can't have sizes or colours." };
   }
   const key = input.digitalFileKey.trim();
   if (!key) {

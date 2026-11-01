@@ -250,9 +250,10 @@ export function InventoryView({
                       />
                     </span>
                     <span>
-                      {/* A sized product's stock is the sum of its sizes, so it is
-                          edited in the product modal rather than here — stepping it
-                          would be silently overwritten on the next save. */}
+                      {/* A sized or coloured product's stock is the sum of its
+                          lines, so it is edited in the product modal rather than
+                          here — stepping it would be silently overwritten on the
+                          next save. */}
                       {/* A preorder has no stock to edit; what matters is how
                           many have been ordered in, to know what to buy. */}
                       {p.isPreorder ? (
@@ -279,7 +280,11 @@ export function InventoryView({
                           )}
                           <span className="block mt-1 font-sans text-[10px] text-ink-faint">
                             {p.sizes.length > 0
-                              ? `${p.sizes.length} ${p.sizes.length === 1 ? "size" : "sizes"}`
+                              ? `${p.sizes.length} ${
+                                  p.colors.length === 0
+                                    ? p.sizes.length === 1 ? "size" : "sizes"
+                                    : p.sizes.length === 1 ? "line" : "lines"
+                                }`
                               : `reorder ≤ ${p.reorder}`}
                           </span>
                         </>
@@ -347,7 +352,7 @@ export function InventoryView({
           >
             <h3 className="font-display text-[20px] text-ink">Delete “{confirmDelete.name}”?</h3>
             <p className="mt-2 font-sans text-[13px] text-ink-dim leading-relaxed">
-              Its page, its sizes, its reviews and its uploaded images are all removed, and the
+              Its page, its sizes and colours, its reviews and its uploaded images are all removed, and the
               images from storage too. This cannot be undone.
             </p>
             <p className="mt-3 font-sans text-[13px] text-ink-dim leading-relaxed">

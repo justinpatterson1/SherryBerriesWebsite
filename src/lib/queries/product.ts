@@ -9,6 +9,7 @@ export async function getProductBySlug(slug: string) {
     include: {
       images: { orderBy: { position: "asc" } },
       variants: { orderBy: { value: "asc" } },
+      colors: { orderBy: { position: "asc" } },
       category: true,
       tags: { select: { name: true } },
     },
@@ -51,6 +52,15 @@ export async function getProductBySlug(slug: string) {
       sku: v.sku,
       inventory: v.inventory,
       additionalPrice: v.additionalPrice ? Number(v.additionalPrice) : 0,
+      colorId: v.colorId,
+      size: v.size,
+    })),
+    colors: row.colors.map((c) => ({
+      id: c.id,
+      name: c.name,
+      swatch: c.swatch,
+      imageUrl: c.imageUrl,
+      additionalPrice: c.additionalPrice ? Number(c.additionalPrice) : 0,
     })),
   };
 }

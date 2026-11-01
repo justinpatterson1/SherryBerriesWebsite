@@ -4,6 +4,8 @@ import { useRef, useState } from "react";
 import type { AdminProduct, AdminCategory } from "@/lib/queries/admin";
 import { type ProductFormData } from "@/lib/admin/options";
 import { DEFAULT_SIZE_LABEL, SIZES_MAX } from "@/lib/admin/sizes";
+import { COLORS_MAX } from "@/lib/admin/colors";
+import { validateVariants, variantLabel } from "@/lib/admin/variants";
 import { ProductThumb, btnSolid, btnOutline, ICONS } from "@/components/admin/shared";
 
 const fieldClass =
@@ -15,8 +17,29 @@ const labelClass =
 const numClass =
   fieldClass + " [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
 
-/** A size row while it is being edited — numbers stay strings until submit. */
-type SizeField = { id: string | null; value: string; quantity: string; additionalPrice: string };
+/**
+ * A size row while it is being edited — numbers stay strings until submit.
+ * `key` identifies the row in the stock grid, so a rename keeps its quantities.
+ */
+type SizeField = { key: string; previous: string | null; value: string; additionalPrice: string };
+
+/** A colour row while it is being edited. */
+type ColorField = {
+  key: string;
+  id: string | null;
+  name: string;
+  swatch: string;
+  imageUrl: string;
+  additionalPrice: string;
+};
+
+let lastKey = 0;
+const newKey = () => `new-${++lastKey}`;
+
+/** Where a stock line's quantity sits in `FormState.stock`. "" for a missing axis. */
+const cellKey = (colorKey: string, sizeKey: string) => `${colorKey}|${sizeKey}`;
+
+const money2 = (n: number) => Number(n.toFixed(2));
 
 type FormState = {
   name: string;
@@ -35,6 +58,9 @@ type FormState = {
   active: boolean;
   sizeLabel: string;
   sizes: SizeField[];
+  colors: ColorField[];
+  /** Quantity per stock line, by cellKey(). */
+  lineStock: Record<string, string>;
   isDigital: boolean;
   digitalFileKey: string;
   digitalFileName: string;
@@ -42,6 +68,36 @@ type FormState = {
 };
 
 function initialState(p: AdminProduct | null): FormState {
+  const colors: ColorField[] = (p?.colors ?? []).map((c) => ({
+    key: c.id,
+    id: c.id,
+    name: c.name,
+    swatch: c.swatch ?? "",
+    imageUrl: c.imageUrl,
+    additionalPrice: c.additionalPrice != null ? String(c.additionalPrice) : "",
+  }));
+  const colorExtra = new Map((p?.colors ?? []).map((c) => [c.id, c.additionalPrice ?? 0]));
+
+  // Sizes are not stored on their own: each is read off the first stock line
+  // that has it. A line's extra price is the size's plus the colour's, so the
+  // colour's is taken back off to recover what the admin typed for the size.
+  const sizes: SizeField[] = [];
+  for (const v of p?.sizes ?? []) {
+    if (v.size === null || sizes.some((s) => s.value === v.size)) continue;
+    const extra = v.additionalPrice === null ? 0 : v.additionalPrice - (colorExtra.get(v.colorId ?? "") ?? 0);
+    sizes.push({
+      key: `size-${v.size}`,
+      previous: v.size,
+      value: v.size,
+      additionalPrice: extra > 0 ? String(money2(extra)) : "",
+    });
+  }
+
+  const lineStock: Record<string, string> = {};
+  for (const v of p?.sizes ?? []) {
+    lineStock[cellKey(v.colorId ?? "", v.size === null ? "" : `size-${v.size}`)] = String(v.quantity);
+  }
+
   return {
     name: p?.name ?? "",
     sku: p?.sku ?? "",
@@ -62,12 +118,9 @@ function initialState(p: AdminProduct | null): FormState {
     digitalFileName: p?.digitalFileName ?? "",
     isPreorder: p?.isPreorder ?? false,
     sizeLabel: p?.sizeLabel ?? "",
-    sizes: (p?.sizes ?? []).map((v) => ({
-      id: v.id,
-      value: v.value,
-      quantity: String(v.quantity),
-      additionalPrice: v.additionalPrice != null ? String(v.additionalPrice) : "",
-    })),
+    sizes,
+    colors,
+    lineStock,
   };
 }
 
@@ -95,16 +148,41 @@ export function ProductForm({
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setF((prev) => ({ ...prev, [key]: value }));
 
-  // --- Sizes -----------------------------------------------------------
+  // --- Sizes, colours and stock -----------------------------------------
 
   const filledSizes = f.sizes.filter((r) => r.value.trim() !== "");
+  const filledColors = f.colors.filter((c) => c.name.trim() !== "");
   const hasSizes = filledSizes.length > 0;
-  // Mirrors stockFromSizes() on the server, so the number shown here is the
-  // number that will be saved. A row mid-edit counts as 0 rather than NaN.
-  const sizeTotal = filledSizes.reduce((sum, r) => {
-    const q = parseInt(r.quantity, 10);
-    return sum + (Number.isFinite(q) && q > 0 ? q : 0);
-  }, 0);
+  const hasColors = filledColors.length > 0;
+  const hasLines = hasSizes || hasColors;
+
+  // A product gaining an axis keeps its stock under that axis's first value,
+  // as matchVariants() does on save — so a sized piece that gains colours shows
+  // its sizes' quantities under the first colour rather than zeros that would
+  // wipe them.
+  // The colour whose photo becomes the cover when no main image is chosen.
+  const coverFallback = !f.isDigital && filledColors[0]?.imageUrl.trim() ? filledColors[0] : null;
+
+  const qtyOf = (colorKey: string, sizeKey: string) =>
+    f.lineStock[cellKey(colorKey, sizeKey)] ??
+    (colorKey !== "" && colorKey === filledColors[0]?.key ? f.lineStock[cellKey("", sizeKey)] : undefined) ??
+    (sizeKey !== "" && sizeKey === filledSizes[0]?.key ? f.lineStock[cellKey(colorKey, "")] : undefined) ??
+    "0";
+  const setQty = (colorKey: string, sizeKey: string, value: string) =>
+    setF((prev) => ({ ...prev, lineStock: { ...prev.lineStock, [cellKey(colorKey, sizeKey)]: value } }));
+
+  // Every stock line the product will have, mirroring validateVariants().
+  const lines = (hasColors ? filledColors : [null]).flatMap((c) =>
+    (hasSizes ? filledSizes : [null]).map((r) => ({ colorKey: c?.key ?? "", sizeKey: r?.key ?? "", color: c, size: r })),
+  );
+  // Mirrors stockFromVariants() on the server, so the number shown here is the
+  // number that will be saved. A line mid-edit counts as 0 rather than NaN.
+  const lineTotal = hasLines
+    ? lines.reduce((sum, l) => {
+        const q = parseInt(qtyOf(l.colorKey, l.sizeKey), 10);
+        return sum + (Number.isFinite(q) && q > 0 ? q : 0);
+      }, 0)
+    : 0;
 
   const addSize = () =>
     setF((prev) =>
@@ -115,30 +193,74 @@ export function ProductForm({
             // Naming the axis on the first row saves the admin a step; they
             // can still change it.
             sizeLabel: prev.sizeLabel || DEFAULT_SIZE_LABEL,
-            sizes: [...prev.sizes, { id: null, value: "", quantity: "0", additionalPrice: "" }],
+            sizes: [...prev.sizes, { key: newKey(), previous: null, value: "", additionalPrice: "" }],
           },
     );
 
   const removeSize = (i: number) =>
     setF((prev) => ({ ...prev, sizes: prev.sizes.filter((_, n) => n !== i) }));
 
-  const setSize = (i: number, key: keyof SizeField, value: string) =>
+  const setSize = (i: number, key: "value" | "additionalPrice", value: string) =>
     setF((prev) => ({
       ...prev,
       sizes: prev.sizes.map((r, n) => (n === i ? { ...r, [key]: value } : r)),
     }));
+
+  const addColor = () =>
+    setF((prev) =>
+      prev.colors.length >= COLORS_MAX
+        ? prev
+        : {
+            ...prev,
+            colors: [
+              ...prev.colors,
+              { key: newKey(), id: null, name: "", swatch: "", imageUrl: "", additionalPrice: "" },
+            ],
+          },
+    );
+
+  const removeColor = (i: number) =>
+    setF((prev) => ({ ...prev, colors: prev.colors.filter((_, n) => n !== i) }));
+
+  const setColor = (i: number, key: "name" | "swatch" | "imageUrl" | "additionalPrice", value: string) =>
+    setF((prev) => ({
+      ...prev,
+      colors: prev.colors.map((c, n) => (n === i ? { ...c, [key]: value } : c)),
+    }));
+
+  const [uploadingColor, setUploadingColor] = useState<string | null>(null);
+  const [colorUploadError, setColorUploadError] = useState<string | null>(null);
+
+  const uploadImage = async (file: File): Promise<string> => {
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+    const json = await res.json();
+    if (!res.ok || !json.url) throw new Error(json.error || "Upload failed.");
+    return json.url as string;
+  };
+
+  const handleColorFile = async (i: number, colorKey: string, input: HTMLInputElement) => {
+    const file = input.files?.[0];
+    if (!file) return;
+    setColorUploadError(null);
+    setUploadingColor(colorKey);
+    try {
+      setColor(i, "imageUrl", await uploadImage(file));
+    } catch (e) {
+      setColorUploadError(e instanceof Error ? e.message : "Upload failed. Please try again.");
+    } finally {
+      setUploadingColor(null);
+      input.value = "";
+    }
+  };
 
   const handleFile = async (file: File | undefined) => {
     if (!file) return;
     setUploadError(null);
     setUploading(true);
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
-      const json = await res.json();
-      if (!res.ok || !json.url) throw new Error(json.error || "Upload failed.");
-      set("imageUrl", json.url as string);
+      set("imageUrl", await uploadImage(file));
     } catch (e) {
       setUploadError(e instanceof Error ? e.message : "Upload failed. Please try again.");
     } finally {
@@ -188,25 +310,36 @@ export function ProductForm({
       return setError("Compare-at price must be a valid number.");
     if (f.isDigital && !f.digitalFileKey.trim())
       return setError("Upload the PDF before saving a digital product.");
-    if (f.isDigital && hasSizes) return setError("A digital product can't have sizes.");
+    if (f.isDigital && hasLines) return setError("A digital product can't have sizes or colours.");
     if (f.isDigital && f.isPreorder) return setError("A digital product can't be a preorder.");
-    if (!f.isDigital && !f.isPreorder && !hasSizes && (!Number.isInteger(stock) || stock < 0))
+    if (!f.isDigital && !f.isPreorder && !hasLines && (!Number.isInteger(stock) || stock < 0))
       return setError("Stock must be a whole number ≥ 0.");
 
-    const seen = new Set<string>();
-    for (const r of filledSizes) {
-      const key = r.value.trim().toLowerCase();
-      if (seen.has(key)) return setError(`“${r.value.trim()}” is listed twice.`);
-      seen.add(key);
-      const q = parseInt(r.quantity, 10);
-      if (!f.isPreorder && (!Number.isInteger(q) || q < 0))
-        return setError(`The quantity for “${r.value.trim()}” must be a whole number ≥ 0.`);
-      if (r.additionalPrice.trim() !== "") {
-        const extra = parseFloat(r.additionalPrice);
-        if (!Number.isFinite(extra) || extra < 0)
-          return setError(`The extra price for “${r.value.trim()}” must be 0 or more.`);
-      }
-    }
+    const priceOf = (v: string) => (v.trim() === "" ? null : parseFloat(v));
+    const sizes = filledSizes.map((r) => ({
+      previous: r.previous,
+      value: r.value.trim(),
+      additionalPrice: priceOf(r.additionalPrice),
+    }));
+    const colors = filledColors.map((c) => ({
+      id: c.id,
+      name: c.name.trim(),
+      swatch: c.swatch.trim(),
+      imageUrl: c.imageUrl.trim(),
+      additionalPrice: priceOf(c.additionalPrice),
+    }));
+    // A preorder has no stock; the server pins every line to 0 anyway.
+    const variantStock = f.isDigital
+      ? []
+      : lines.map((l) => ({
+          color: l.color?.name.trim() ?? null,
+          size: l.size?.value.trim() ?? null,
+          quantity: f.isPreorder ? 0 : Number(qtyOf(l.colorKey, l.sizeKey).trim() || NaN),
+        }));
+    // The same checks the server runs, so the admin hears about a duplicate
+    // or a missing colour photo before the round trip.
+    const checked = validateVariants({ sizeLabel: f.sizeLabel, sizes, colors, stock: variantStock });
+    if (!checked.ok) return setError(checked.error);
     if (!f.isDigital && (!Number.isInteger(reorder) || reorder < 0))
       return setError("Reorder threshold must be a whole number ≥ 0.");
     if (!f.categoryId) return setError("Please choose a category.");
@@ -232,13 +365,9 @@ export function ProductForm({
       digitalFileName: f.isDigital ? f.digitalFileName.trim() : "",
       isPreorder: f.isPreorder,
       sizeLabel: hasSizes ? f.sizeLabel.trim() || DEFAULT_SIZE_LABEL : "",
-      sizes: filledSizes.map((r) => ({
-        id: r.id,
-        value: r.value.trim(),
-        quantity: f.isPreorder ? 0 : parseInt(r.quantity, 10),
-        additionalPrice:
-          r.additionalPrice.trim() === "" ? null : parseFloat(r.additionalPrice),
-      })),
+      sizes: f.isDigital ? [] : sizes,
+      colors: f.isDigital ? [] : colors,
+      variantStock,
     });
   };
 
@@ -347,16 +476,16 @@ export function ProductForm({
                 {!f.isPreorder && (
                 <div>
                   <label className={labelClass}>Stock</label>
-                  {/* Derived once sizes exist — editing it would just be overwritten
+                  {/* Derived once sizes or colours exist — editing it would just be overwritten
                       by their sum on save, so it is shown rather than offered. */}
                   <input
                     type="number"
                     min={0}
                     step="1"
-                    className={numClass + (hasSizes ? " opacity-60 cursor-not-allowed" : "")}
-                    value={hasSizes ? String(sizeTotal) : f.stock}
-                    readOnly={hasSizes}
-                    title={hasSizes ? "Total of the sizes below" : undefined}
+                    className={numClass + (hasLines ? " opacity-60 cursor-not-allowed" : "")}
+                    value={hasLines ? String(lineTotal) : f.stock}
+                    readOnly={hasLines}
+                    title={hasLines ? "Total of the stock lines below" : undefined}
                     onChange={(e) => set("stock", e.target.value)}
                   />
                 </div>
@@ -462,109 +591,293 @@ export function ProductForm({
             </div>
           </div>
 
-          {/* --- Sizes --- (a download has none) */}
+          {/* --- Colours, sizes and stock --- (a download has none) */}
           {!f.isDigital && (
           <div className="rounded-xl border border-white/10 p-4 flex flex-col gap-3.5 light:border-[rgba(26,13,18,0.1)]">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <span className={labelClass + " mb-0"}>Sizes &amp; stock</span>
-                <p className="font-sans text-[11px] leading-[1.5] text-ink-faint mt-1">
-                  {f.isPreorder
-                    ? "On preorder, customers pick a size but there is no stock. Enter quantities when it comes off preorder."
-                    : hasSizes
-                    ? `Stock is the total of these rows: ${sizeTotal} in all.`
-                    : "Leave empty for a product sold in one size only."}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={addSize}
-                disabled={f.sizes.length >= SIZES_MAX}
-                className={btnOutline}
-              >
-                <span className="inline-flex items-center gap-2 [&_svg]:w-4 [&_svg]:h-4">
-                  {ICONS.plus} Add size
-                </span>
-              </button>
+            <div>
+              <span className={labelClass + " mb-0"}>Colours, sizes &amp; stock</span>
+              <p className="font-sans text-[11px] leading-[1.5] text-ink-faint mt-1">
+                {f.isPreorder
+                  ? "On preorder, customers pick a colour and size but there is no stock. Enter quantities when it comes off preorder."
+                  : hasLines
+                  ? `Stock is the total of the lines below: ${lineTotal} in all.`
+                  : "Leave both empty for a product sold in one colour and size only."}
+              </p>
             </div>
 
-            {f.sizes.length > 0 && (
-              <>
-                <div className="max-w-[220px]">
-                  <label className={labelClass} htmlFor="size-label">
-                    What the sizes measure
-                  </label>
-                  <input
-                    id="size-label"
-                    className={fieldClass}
-                    value={f.sizeLabel}
-                    onChange={(e) => set("sizeLabel", e.target.value)}
-                    placeholder={DEFAULT_SIZE_LABEL}
-                  />
-                </div>
+            {/* Colours */}
+            <div className="flex flex-col gap-2.5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <span className={labelClass + " mb-0"}>Colours</span>
+                <button type="button" onClick={addColor} disabled={f.colors.length >= COLORS_MAX} className={btnOutline}>
+                  <span className="inline-flex items-center gap-2 [&_svg]:w-4 [&_svg]:h-4">
+                    {ICONS.plus} Add colour
+                  </span>
+                </button>
+              </div>
 
-                <div className="flex flex-col gap-2.5">
-                  {f.sizes.map((r, i) => (
+              {f.colors.map((c, i) => {
+                const swatchOk = /^#[0-9a-f]{6}$/i.test(c.swatch.trim());
+                return (
+                  <div
+                    key={c.key}
+                    className="flex flex-col gap-2.5 rounded-xl border border-white/[0.08] p-3 light:border-[rgba(26,13,18,0.08)]"
+                  >
                     <div
-                      key={r.id ?? `new-${i}`}
-                      className="grid grid-cols-[1fr_92px_104px_36px] gap-2.5 items-end max-[600px]:grid-cols-[1fr_72px_36px]"
+                      className={
+                        "grid gap-2.5 items-end " +
+                        (hasSizes
+                          ? "grid-cols-[1fr_104px_36px]"
+                          : "grid-cols-[1fr_92px_104px_36px] max-[600px]:grid-cols-[1fr_72px_36px]")
+                      }
                     >
                       <div>
-                        {i === 0 && <span className={labelClass}>{f.sizeLabel || DEFAULT_SIZE_LABEL}</span>}
+                        {i === 0 && <span className={labelClass}>Colour</span>}
                         <input
                           className={fieldClass}
-                          value={r.value}
-                          onChange={(e) => setSize(i, "value", e.target.value)}
-                          placeholder="8mm"
-                          aria-label={`Size ${i + 1}`}
+                          value={c.name}
+                          onChange={(e) => setColor(i, "name", e.target.value)}
+                          placeholder="Gold"
+                          aria-label={`Colour ${i + 1}`}
                         />
                       </div>
-                      <div>
-                        {i === 0 && <span className={labelClass}>Qty</span>}
-                        <input
-                          type="number"
-                          min={0}
-                          step="1"
-                          className={numClass + (f.isPreorder ? " opacity-60 cursor-not-allowed" : "")}
-                          value={f.isPreorder ? "" : r.quantity}
-                          disabled={f.isPreorder}
-                          placeholder={f.isPreorder ? "—" : undefined}
-                          onChange={(e) => setSize(i, "quantity", e.target.value)}
-                          aria-label={`Quantity for size ${i + 1}`}
-                        />
-                      </div>
-                      <div className="max-[600px]:hidden">
+                      {!hasSizes && (
+                        <div>
+                          {i === 0 && <span className={labelClass}>Qty</span>}
+                          <input
+                            type="number"
+                            min={0}
+                            step="1"
+                            className={numClass + (f.isPreorder ? " opacity-60 cursor-not-allowed" : "")}
+                            value={f.isPreorder ? "" : qtyOf(c.key, "")}
+                            disabled={f.isPreorder}
+                            placeholder={f.isPreorder ? "—" : undefined}
+                            onChange={(e) => setQty(c.key, "", e.target.value)}
+                            aria-label={`Quantity for colour ${i + 1}`}
+                          />
+                        </div>
+                      )}
+                      <div className={hasSizes ? "" : "max-[600px]:hidden"}>
                         {i === 0 && <span className={labelClass}>+ Price</span>}
                         <input
                           type="number"
                           min={0}
                           step="0.01"
                           className={numClass}
-                          value={r.additionalPrice}
-                          onChange={(e) => setSize(i, "additionalPrice", e.target.value)}
+                          value={c.additionalPrice}
+                          onChange={(e) => setColor(i, "additionalPrice", e.target.value)}
                           placeholder="0.00"
-                          aria-label={`Extra price for size ${i + 1}`}
+                          aria-label={`Extra price for colour ${i + 1}`}
                         />
                       </div>
                       <button
                         type="button"
-                        onClick={() => removeSize(i)}
-                        aria-label={`Remove size ${i + 1}`}
+                        onClick={() => removeColor(i)}
+                        aria-label={`Remove colour ${i + 1}`}
                         className="w-9 h-11 grid place-items-center rounded-xl border border-white/12 text-ink-faint cursor-pointer transition-colors hover:text-[#ff8d8d] hover:border-[rgba(255,141,141,0.4)] [&_svg]:w-4 [&_svg]:h-4 light:border-[rgba(26,13,18,0.12)]"
                       >
                         {ICONS.close}
                       </button>
                     </div>
-                  ))}
-                </div>
 
-                {product && (
-                  <p className="font-sans text-[11px] leading-[1.5] text-ink-faint m-0">
-                    A size that has already been ordered can&apos;t be removed. Set its
-                    quantity to 0 instead, so those orders keep a record of what was bought.
-                  </p>
-                )}
-              </>
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      <span className="relative w-11 h-11 rounded-lg overflow-hidden bg-canvas-2 border border-white/10 shrink-0 light:border-[rgba(26,13,18,0.1)]">
+                        <ProductThumb src={c.imageUrl.trim() || null} alt="" />
+                      </span>
+                      <label
+                        className={
+                          btnOutline +
+                          (uploadingColor === c.key ? " opacity-60 pointer-events-none" : "")
+                        }
+                      >
+                        {uploadingColor === c.key ? "Uploading…" : c.imageUrl ? "Replace photo" : "Upload photo"}
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp,image/gif"
+                          className="hidden"
+                          onChange={(e) => handleColorFile(i, c.key, e.currentTarget)}
+                        />
+                      </label>
+                      {!c.imageUrl.trim() && uploadingColor !== c.key && (
+                        <span className="font-sans text-[11px] font-semibold text-[#ff8d8d]">Photo required</span>
+                      )}
+                      <span className="inline-flex items-center gap-2">
+                        <span
+                          aria-hidden="true"
+                          className="w-5 h-5 rounded-full border border-white/20 shrink-0 light:border-[rgba(26,13,18,0.2)]"
+                          style={{ background: swatchOk ? c.swatch.trim() : "transparent" }}
+                        />
+                        <input
+                          className={fieldClass + " w-[112px]"}
+                          value={c.swatch}
+                          onChange={(e) => setColor(i, "swatch", e.target.value)}
+                          placeholder="#c9a96e"
+                          aria-label={`Swatch colour for colour ${i + 1}`}
+                        />
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+              {f.colors.length > 0 && (
+                <p className="font-sans text-[11px] leading-[1.5] text-ink-faint m-0">
+                  Each colour needs a photo: picking it on the product page shows that photo. The
+                  swatch is optional; without one, the photo is used.
+                </p>
+              )}
+              {colorUploadError && (
+                <p className="font-sans text-[12px] text-[#ff8d8d] m-0">{colorUploadError}</p>
+              )}
+            </div>
+
+            {/* Sizes */}
+            <div className="flex flex-col gap-2.5 pt-3.5 border-t border-white/[0.08] light:border-[rgba(26,13,18,0.08)]">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <span className={labelClass + " mb-0"}>Sizes</span>
+                <button type="button" onClick={addSize} disabled={f.sizes.length >= SIZES_MAX} className={btnOutline}>
+                  <span className="inline-flex items-center gap-2 [&_svg]:w-4 [&_svg]:h-4">
+                    {ICONS.plus} Add size
+                  </span>
+                </button>
+              </div>
+
+              {f.sizes.length > 0 && (
+                <>
+                  <div className="max-w-[220px]">
+                    <label className={labelClass} htmlFor="size-label">
+                      What the sizes measure
+                    </label>
+                    <input
+                      id="size-label"
+                      className={fieldClass}
+                      value={f.sizeLabel}
+                      onChange={(e) => set("sizeLabel", e.target.value)}
+                      placeholder={DEFAULT_SIZE_LABEL}
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-2.5">
+                    {f.sizes.map((r, i) => (
+                      <div
+                        key={r.key}
+                        className={
+                          "grid gap-2.5 items-end " +
+                          (hasColors
+                            ? "grid-cols-[1fr_104px_36px]"
+                            : "grid-cols-[1fr_92px_104px_36px] max-[600px]:grid-cols-[1fr_72px_36px]")
+                        }
+                      >
+                        <div>
+                          {i === 0 && <span className={labelClass}>{f.sizeLabel || DEFAULT_SIZE_LABEL}</span>}
+                          <input
+                            className={fieldClass}
+                            value={r.value}
+                            onChange={(e) => setSize(i, "value", e.target.value)}
+                            placeholder="8mm"
+                            aria-label={`Size ${i + 1}`}
+                          />
+                        </div>
+                        {/* With colours too, quantities move to the grid below. */}
+                        {!hasColors && (
+                          <div>
+                            {i === 0 && <span className={labelClass}>Qty</span>}
+                            <input
+                              type="number"
+                              min={0}
+                              step="1"
+                              className={numClass + (f.isPreorder ? " opacity-60 cursor-not-allowed" : "")}
+                              value={f.isPreorder ? "" : qtyOf("", r.key)}
+                              disabled={f.isPreorder}
+                              placeholder={f.isPreorder ? "—" : undefined}
+                              onChange={(e) => setQty("", r.key, e.target.value)}
+                              aria-label={`Quantity for size ${i + 1}`}
+                            />
+                          </div>
+                        )}
+                        <div className={hasColors ? "" : "max-[600px]:hidden"}>
+                          {i === 0 && <span className={labelClass}>+ Price</span>}
+                          <input
+                            type="number"
+                            min={0}
+                            step="0.01"
+                            className={numClass}
+                            value={r.additionalPrice}
+                            onChange={(e) => setSize(i, "additionalPrice", e.target.value)}
+                            placeholder="0.00"
+                            aria-label={`Extra price for size ${i + 1}`}
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeSize(i)}
+                          aria-label={`Remove size ${i + 1}`}
+                          className="w-9 h-11 grid place-items-center rounded-xl border border-white/12 text-ink-faint cursor-pointer transition-colors hover:text-[#ff8d8d] hover:border-[rgba(255,141,141,0.4)] [&_svg]:w-4 [&_svg]:h-4 light:border-[rgba(26,13,18,0.12)]"
+                        >
+                          {ICONS.close}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Stock grid: one cell per colour × size combination. */}
+            {hasColors && hasSizes && !f.isPreorder && (
+              <div className="flex flex-col gap-2.5 pt-3.5 border-t border-white/[0.08] light:border-[rgba(26,13,18,0.08)]">
+                <span className={labelClass + " mb-0"}>Stock</span>
+                <div className="overflow-x-auto">
+                  <table className="border-separate border-spacing-1.5 -m-1.5">
+                    <thead>
+                      <tr>
+                        <th />
+                        {filledSizes.map((r) => (
+                          <th
+                            key={r.key}
+                            scope="col"
+                            className="font-sans text-[11px] font-bold tracking-[0.08em] uppercase text-ink-faint text-left whitespace-nowrap"
+                          >
+                            {r.value.trim()}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filledColors.map((c) => (
+                        <tr key={c.key}>
+                          <th
+                            scope="row"
+                            className="font-sans text-[13px] font-normal text-ink-dim text-left pr-2 whitespace-nowrap"
+                          >
+                            {c.name.trim()}
+                          </th>
+                          {filledSizes.map((r) => (
+                            <td key={r.key}>
+                              <input
+                                type="number"
+                                min={0}
+                                step="1"
+                                className={numClass + " w-[76px]"}
+                                value={qtyOf(c.key, r.key)}
+                                onChange={(e) => setQty(c.key, r.key, e.target.value)}
+                                aria-label={`Quantity for ${variantLabel(c.name.trim(), r.value.trim())}`}
+                              />
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {product && hasLines && (
+              <p className="font-sans text-[11px] leading-[1.5] text-ink-faint m-0">
+                A size, colour or combination that has already been ordered can&apos;t be
+                removed. Set its quantity to 0 instead, so those orders keep a record of what
+                was bought.
+              </p>
             )}
           </div>
           )}
@@ -573,7 +886,7 @@ export function ProductForm({
             <label className={labelClass}>Product image</label>
             <div className="flex items-center gap-3">
               <span className="relative w-14 h-14 rounded-xl overflow-hidden bg-canvas-2 border border-white/10 shrink-0 light:border-[rgba(26,13,18,0.1)]">
-                <ProductThumb src={f.imageUrl.trim() || null} alt="" />
+                <ProductThumb src={f.imageUrl.trim() || coverFallback?.imageUrl.trim() || null} alt="" />
               </span>
               <div className="flex-1 flex flex-col gap-2">
                 <div className="flex items-center gap-2.5">
@@ -602,6 +915,13 @@ export function ProductForm({
                   onChange={(e) => set("imageUrl", e.target.value)}
                   placeholder="…or paste an image URL (https://…)"
                 />
+                {/* Mirrors the API: with no image of its own, a product takes
+                    its first colour's photo as the cover. */}
+                {!f.imageUrl.trim() && coverFallback && (
+                  <p className="font-sans text-[11px] leading-[1.5] text-ink-faint m-0">
+                    No image chosen, so the {coverFallback.name.trim()} photo will be used as the cover.
+                  </p>
+                )}
               </div>
             </div>
             {uploadError && (
@@ -628,7 +948,7 @@ export function ProductForm({
           <button type="button" onClick={onCancel} disabled={busy} className={btnOutline}>
             Cancel
           </button>
-          <button type="button" onClick={handleSubmit} disabled={busy || uploading} className={btnSolid}>
+          <button type="button" onClick={handleSubmit} disabled={busy || uploading || uploadingColor !== null} className={btnSolid}>
             {busy ? "Saving…" : product ? "Save product" : "Create product"}
           </button>
         </div>

@@ -13,13 +13,17 @@ import { prisma } from "@/lib/db";
 import { revalidateCatalog } from "@/lib/admin/revalidate";
 import { deleteProductImages } from "@/lib/storage/r2";
 import { validateDigitalProduct } from "@/lib/admin/options";
+import { colorsSummary, type ColorRow } from "@/lib/admin/colors";
+import type { SizeRow } from "@/lib/admin/sizes";
 import {
-  sizesSummary,
-  stockFromSizes,
-  validateSizes,
+  matchVariants,
+  stockFromVariants,
+  validateVariants,
+  variantLabel,
   variantSku,
-  type SizeRow,
-} from "@/lib/admin/sizes";
+  variantsSummary,
+  type VariantRow,
+} from "@/lib/admin/variants";
 import type { Prisma } from "@/generated/prisma/client";
 
 type Parsed = {
@@ -40,6 +44,9 @@ type Parsed = {
   /** Null when the product has no sizes. */
   sizeLabel: string | null;
   sizes: SizeRow[];
+  colors: ColorRow[];
+  /** One per stock line; empty with neither sizes nor colours. */
+  variants: VariantRow[];
   isDigital: boolean;
   digitalFileKey: string | null;
   digitalFileName: string | null;
@@ -73,20 +80,25 @@ function parseBody(body: unknown): { data: Parsed } | { error: string } {
     compareAtPrice = Number(c.toFixed(2));
   }
 
-  const sized = validateSizes(b.sizeLabel, b.sizes);
-  if (!sized.ok) return { error: sized.error };
+  const lines = validateVariants({
+    sizeLabel: b.sizeLabel,
+    sizes: b.sizes,
+    colors: b.colors,
+    stock: b.variantStock,
+  });
+  if (!lines.ok) return { error: lines.error };
 
   const isDigital = b.isDigital === true;
   const isPreorder = b.isPreorder === true;
   // A file never runs short, so there is nothing to preorder.
   if (isPreorder && isDigital) return { error: "A digital product can't be a preorder." };
 
-  // Only meaningful with no sizes — otherwise the total comes from them, and
+  // Only meaningful with no stock lines — otherwise the total comes from them, and
   // rejecting a figure the client never uses produces a baffling error about
   // a field the modal shows as read-only. A download has no stock at all, so
   // neither figure is required of it, and a preorder has none yet.
   const stock = typeof b.stock === "number" ? b.stock : NaN;
-  if (!isDigital && !isPreorder && sized.sizes.length === 0 && (!Number.isInteger(stock) || stock < 0)) {
+  if (!isDigital && !isPreorder && lines.variants.length === 0 && (!Number.isInteger(stock) || stock < 0)) {
     return { error: "Stock must be a non-negative whole number." };
   }
   const reorder = typeof b.reorder === "number" ? b.reorder : NaN;
@@ -96,8 +108,8 @@ function parseBody(body: unknown): { data: Parsed } | { error: string } {
   const digital = validateDigitalProduct({
     isDigital,
     digitalFileKey: str(b.digitalFileKey),
-    sizeCount: sized.sizes.length,
-    stock: stockFromSizes(sized.sizes, stock),
+    sizeCount: lines.variants.length,
+    stock: stockFromVariants(lines.variants, stock),
     reorder,
   });
   if (!digital.ok) return { error: digital.error };
@@ -113,7 +125,7 @@ function parseBody(body: unknown): { data: Parsed } | { error: string } {
       description,
       price: Number(price.toFixed(2)),
       compareAtPrice,
-      // A product with sizes carries the sum of them: both numbers are live
+      // A product with stock lines carries the sum of them: both numbers are live
       // in checkout (an order line with a variantId decrements the variant,
       // one without decrements the product), so letting them drift is how a
       // shop oversells. The typed-in figure only survives with no sizes, and
@@ -128,8 +140,10 @@ function parseBody(body: unknown): { data: Parsed } | { error: string } {
       featured: b.featured === true,
       active: b.active !== false,
       imageUrl: str(b.imageUrl),
-      sizeLabel: sized.label,
-      sizes: isPreorder ? sized.sizes.map((v) => ({ ...v, quantity: 0 })) : sized.sizes,
+      sizeLabel: lines.label,
+      sizes: lines.sizes,
+      colors: lines.colors,
+      variants: isPreorder ? lines.variants.map((v) => ({ ...v, quantity: 0 })) : lines.variants,
       isDigital,
       digitalFileKey: digital.digitalFileKey,
       digitalFileName: isDigital ? str(b.digitalFileName) || null : null,
@@ -160,39 +174,67 @@ async function uniqueSlug(base: string): Promise<string> {
 }
 
 /**
- * Raised when a size cannot be removed. Surfaced as a 409 so the admin gets
- * the reason rather than a generic failure.
+ * Raised when a size, colour or combination cannot be removed. Surfaced as a
+ * 409 so the admin gets the reason rather than a generic failure.
  */
 class SizeConflict extends Error {}
 
 /**
- * Bring a product's ProductVariant rows in line with the submitted sizes.
+ * Bring a product's ProductColor and ProductVariant rows in line with the
+ * submitted colours and stock lines.
  *
- * Runs inside the product's own transaction, so a product and its sizes
- * always commit together.
+ * Runs inside the product's own transaction, so a product, its colours and its
+ * stock lines always commit together.
  *
- * Removing a size DELETES the variant, and neither CartItem.variantId nor
+ * Removing a line DELETES the variant, and neither CartItem.variantId nor
  * OrderItem.variantId declares onDelete — Prisma defaults an optional
- * relation to SetNull. For an order that would silently erase which size the
- * customer actually bought, so a size that appears on any order is refused;
- * setting its quantity to 0 retires it while keeping the history. A size only
- * sitting in someone's cart is allowed to go: that line falls back to the
- * base product rather than losing a record of anything.
+ * relation to SetNull. For an order that would silently erase what the
+ * customer actually bought, so a line that appears on any order is refused —
+ * and with it, removing the size or colour it belongs to. Setting its quantity
+ * to 0 retires it while keeping the history. A line only sitting in someone's
+ * cart is allowed to go: that line falls back to the base product rather than
+ * losing a record of anything.
  */
-async function syncSizes(
+async function syncVariants(
   tx: Prisma.TransactionClient,
   productId: string,
   productSku: string,
   label: string | null,
   sizes: SizeRow[],
+  colors: ColorRow[],
+  variants: VariantRow[],
 ): Promise<void> {
-  const existing = await tx.productVariant.findMany({
-    where: { productId },
-    select: { id: true, value: true },
-  });
+  const [existingColors, existing] = await Promise.all([
+    tx.productColor.findMany({ where: { productId }, select: { id: true } }),
+    tx.productVariant.findMany({
+      where: { productId },
+      orderBy: { createdAt: "asc" },
+      select: { id: true, colorId: true, size: true, value: true },
+    }),
+  ]);
 
-  const kept = new Set(sizes.map((v) => v.id).filter((id): id is string => !!id));
-  const removed = existing.filter((v) => !kept.has(v.id));
+  // Colours first: the variants below point at their ids. A colour id from
+  // the request that is not this product's is treated as new rather than
+  // trusted, so it cannot move another product's colour.
+  const colorIds: string[] = [];
+  for (const [position, color] of colors.entries()) {
+    const data = {
+      name: color.name,
+      swatch: color.swatch,
+      imageUrl: color.imageUrl,
+      additionalPrice: color.additionalPrice,
+      position,
+    };
+    if (color.id && existingColors.some((c) => c.id === color.id)) {
+      await tx.productColor.update({ where: { id: color.id }, data });
+      colorIds.push(color.id);
+    } else {
+      const row = await tx.productColor.create({ data: { ...data, productId }, select: { id: true } });
+      colorIds.push(row.id);
+    }
+  }
+
+  const { ids, removed } = matchVariants(existing, variants, colorIds, sizes);
 
   if (removed.length > 0) {
     const ordered = await tx.orderItem.findMany({
@@ -211,32 +253,37 @@ async function syncSizes(
     await tx.productVariant.deleteMany({ where: { id: { in: removed.map((v) => v.id) } } });
   }
 
-  const updates = sizes.filter((v) => v.id && existing.some((e) => e.id === v.id));
-
   // Park every surviving row on a throwaway SKU first. SKUs are re-derived
   // from the product's own on each save, so swapping two sizes' values (8mm →
   // 10mm and 10mm → 8mm) would otherwise have the first update collide with
   // the second row's current SKU and fail the unique index mid-save.
-  for (const size of updates) {
-    await tx.productVariant.update({
-      where: { id: size.id as string },
-      data: { sku: `TMP-${size.id}` },
-    });
+  for (const id of ids) {
+    if (id) await tx.productVariant.update({ where: { id }, data: { sku: `TMP-${id}` } });
   }
 
-  for (const size of sizes) {
+  for (const [i, line] of variants.entries()) {
+    const color = line.colorIndex === null ? null : colors[line.colorIndex];
     const data = {
       name: label ?? "",
-      value: size.value,
-      inventory: size.quantity,
-      additionalPrice: size.additionalPrice,
-      sku: variantSku(productSku, size.value),
+      value: variantLabel(color?.name ?? null, line.size),
+      size: line.size,
+      colorId: line.colorIndex === null ? null : colorIds[line.colorIndex],
+      inventory: line.quantity,
+      additionalPrice: line.additionalPrice,
+      sku: variantSku(productSku, [color?.name ?? null, line.size]),
     };
-    if (size.id && existing.some((v) => v.id === size.id)) {
-      await tx.productVariant.update({ where: { id: size.id }, data });
+    const id = ids[i];
+    if (id) {
+      await tx.productVariant.update({ where: { id }, data });
     } else {
       await tx.productVariant.create({ data: { ...data, productId } });
     }
+  }
+
+  // Last, once nothing points at them.
+  const droppedColors = existingColors.filter((c) => !colorIds.includes(c.id));
+  if (droppedColors.length > 0) {
+    await tx.productColor.deleteMany({ where: { id: { in: droppedColors.map((c) => c.id) } } });
   }
 }
 
@@ -273,6 +320,9 @@ export async function POST(request: Request) {
   if (skuClash) return bad("That SKU is already in use.", 409);
 
   const slug = await uniqueSlug(slugify(d.name));
+  // With no main image chosen, the first colour's photo becomes the cover, so
+  // the shop grid and cart do not show a coloured product as a blank tile.
+  const cover = d.imageUrl || d.colors[0]?.imageUrl || "";
 
   let created: { id: string };
   try {
@@ -297,12 +347,12 @@ export async function POST(request: Request) {
           digitalFileName: d.digitalFileName,
           isPreorder: d.isPreorder,
           categoryId: d.categoryId,
-          images: d.imageUrl ? { create: [{ imageUrl: d.imageUrl, position: 0 }] } : undefined,
+          images: cover ? { create: [{ imageUrl: cover, position: 0 }] } : undefined,
         },
         select: { id: true },
       });
 
-      await syncSizes(tx, row.id, d.sku, d.sizeLabel, d.sizes);
+      await syncVariants(tx, row.id, d.sku, d.sizeLabel, d.sizes, d.colors, d.variants);
 
       await writeAuditLog(tx, {
         actor: admin,
@@ -311,7 +361,8 @@ export async function POST(request: Request) {
         entityId: row.id,
         summary:
           `Created “${d.name}” (${d.sku}) at $${d.price.toFixed(2)}` +
-          (d.sizes.length > 0 ? `: ${sizesSummary(d.sizeLabel, d.sizes)}` : ""),
+          (d.variants.length > 0 ? `: ${variantsSummary(d.sizeLabel, d.variants)}` : "") +
+          (d.colors.length > 0 ? `. Colours: ${colorsSummary(d.colors)}` : ""),
         ip: auditIp(request),
       });
 
@@ -321,7 +372,7 @@ export async function POST(request: Request) {
     if (e instanceof SizeConflict) return bad(e.message, 409);
     if (isDuplicateSku(e)) {
       return bad(
-        "One of these sizes produces a SKU that is already in use. Change the product SKU or the size value.",
+        "One of these sizes or colours produces a SKU that is already in use. Change the product SKU, the size or the colour name.",
         409,
       );
     }
@@ -384,21 +435,28 @@ export async function PATCH(request: Request) {
   const skuClash = await prisma.product.findUnique({ where: { sku: d.sku }, select: { id: true } });
   if (skuClash && skuClash.id !== id) return bad("That SKU is already in use.", 409);
 
-  const sizesBefore = await prisma.productVariant.findMany({
-    where: { productId: id },
-    orderBy: { createdAt: "asc" },
-    select: { id: true, name: true, value: true, inventory: true, additionalPrice: true },
-  });
-  const beforeSummary = sizesSummary(
-    sizesBefore[0]?.name ?? null,
-    sizesBefore.map((v) => ({
-      id: v.id,
-      value: v.value,
-      quantity: v.inventory,
-      additionalPrice: v.additionalPrice == null ? null : Number(v.additionalPrice),
-    })),
+  const [linesBefore, colorsBefore] = await Promise.all([
+    prisma.productVariant.findMany({
+      where: { productId: id },
+      orderBy: { createdAt: "asc" },
+      select: { name: true, value: true, inventory: true, additionalPrice: true },
+    }),
+    prisma.productColor.findMany({
+      where: { productId: id },
+      orderBy: { position: "asc" },
+      select: { name: true, swatch: true, imageUrl: true, additionalPrice: true },
+    }),
+  ]);
+  const price = (p: unknown) => (p == null ? null : Number(p));
+  const beforeSummary = variantsSummary(
+    linesBefore[0]?.name || null,
+    linesBefore.map((v) => ({ value: v.value, quantity: v.inventory, additionalPrice: price(v.additionalPrice) })),
   );
-  const afterSummary = sizesSummary(d.sizeLabel, d.sizes);
+  const afterSummary = variantsSummary(d.sizeLabel, d.variants);
+  const colorsBeforeSummary = colorsSummary(
+    colorsBefore.map((c) => ({ ...c, additionalPrice: price(c.additionalPrice) })),
+  );
+  const colorsAfterSummary = colorsSummary(d.colors);
 
   const data = {
     name: d.name,
@@ -445,18 +503,29 @@ export async function PATCH(request: Request) {
   try {
     await prisma.$transaction(async (tx) => {
       await tx.product.update({ where: { id }, data });
-      await syncSizes(tx, id, d.sku, d.sizeLabel, d.sizes);
+      await syncVariants(tx, id, d.sku, d.sizeLabel, d.sizes, d.colors, d.variants);
 
-      // Logged apart from the product edit: a stock change is a different
-      // kind of event from a price or copy change, and worth filtering for.
-      if (beforeSummary !== afterSummary) {
+      // Logged apart from the product edit: a change to the stock lines or
+      // the colours is a different kind of event from a price or copy
+      // change, and worth filtering for.
+      const linesChanged = beforeSummary !== afterSummary;
+      const colorsChanged = colorsBeforeSummary !== colorsAfterSummary;
+      if (linesChanged || colorsChanged) {
         await writeAuditLog(tx, {
           actor: admin,
           action: AUDIT_ACTIONS.productSizesUpdate,
           entityType: "Product",
           entityId: id,
-          summary: `${d.name} sizes: ${beforeSummary} → ${afterSummary}`,
-          changes: { sizes: { from: beforeSummary, to: afterSummary } },
+          summary: [
+            linesChanged && `${d.name} sizes: ${beforeSummary} → ${afterSummary}`,
+            colorsChanged && `${d.name} colours: ${colorsBeforeSummary} → ${colorsAfterSummary}`,
+          ]
+            .filter(Boolean)
+            .join(". "),
+          changes: {
+            ...(linesChanged && { sizes: { from: beforeSummary, to: afterSummary } }),
+            ...(colorsChanged && { colors: { from: colorsBeforeSummary, to: colorsAfterSummary } }),
+          },
           ip: auditIp(request),
         });
       }
@@ -481,7 +550,7 @@ export async function PATCH(request: Request) {
     if (e instanceof SizeConflict) return bad(e.message, 409);
     if (isDuplicateSku(e)) {
       return bad(
-        "One of these sizes produces a SKU that is already in use. Change the product SKU or the size value.",
+        "One of these sizes or colours produces a SKU that is already in use. Change the product SKU, the size or the colour name.",
         409,
       );
     }
@@ -491,17 +560,19 @@ export async function PATCH(request: Request) {
   revalidateCatalog();
 
   // Manage the primary (position 0) image only; an empty URL leaves it as-is.
-  if (d.imageUrl) {
-    const first = await prisma.productImage.findFirst({
-      where: { productId: id },
-      orderBy: { position: "asc" },
-      select: { id: true },
+  // A product with no image at all takes the first colour's photo as its
+  // cover, as on create — but an existing cover is never swapped for one.
+  const first = await prisma.productImage.findFirst({
+    where: { productId: id },
+    orderBy: { position: "asc" },
+    select: { id: true },
+  });
+  if (d.imageUrl && first) {
+    await prisma.productImage.update({ where: { id: first.id }, data: { imageUrl: d.imageUrl } });
+  } else if (!first && (d.imageUrl || d.colors[0])) {
+    await prisma.productImage.create({
+      data: { productId: id, imageUrl: d.imageUrl || d.colors[0].imageUrl, position: 0 },
     });
-    if (first) {
-      await prisma.productImage.update({ where: { id: first.id }, data: { imageUrl: d.imageUrl } });
-    } else {
-      await prisma.productImage.create({ data: { productId: id, imageUrl: d.imageUrl, position: 0 } });
-    }
   }
 
   const product = await getAdminProduct(id);
@@ -525,6 +596,7 @@ export async function DELETE(request: Request) {
       sku: true,
       active: true,
       images: { select: { imageUrl: true } },
+      colors: { select: { imageUrl: true } },
       _count: { select: { orderItems: true, variants: true } },
     },
   });
@@ -545,9 +617,12 @@ export async function DELETE(request: Request) {
   }
 
   const imageUrls = existing.images.map((i) => i.imageUrl);
+  // Colour photos are uploaded to the same bucket and would otherwise be left
+  // behind with nothing pointing at them.
+  const colorUrls = existing.colors.map((c) => c.imageUrl);
 
   await prisma.$transaction(async (tx) => {
-    // Images, sizes, reviews and wishlist entries cascade. Cart lines do not
+    // Images, colours, sizes, reviews and wishlist entries cascade. Cart lines do not
     // (CartItem.productId is required and declares no rule), so they go first:
     // a line pointing at a product nobody can buy is dead weight, and leaving
     // it would block the delete outright.
@@ -568,7 +643,7 @@ export async function DELETE(request: Request) {
           ? `: ${imageUrls.length} image${imageUrls.length === 1 ? "" : "s"}`
           : "") +
         (existing._count.variants > 0
-          ? `, ${existing._count.variants} size${existing._count.variants === 1 ? "" : "s"}`
+          ? `, ${existing._count.variants} stock line${existing._count.variants === 1 ? "" : "s"}`
           : ""),
       changes: { name: { from: existing.name, to: null }, sku: { from: existing.sku, to: null } },
       ip: auditIp(request),
@@ -580,7 +655,7 @@ export async function DELETE(request: Request) {
   // After the row is gone, and never fatal: the product is already deleted, so
   // a storage hiccup must not be reported as a failed delete. Only images this
   // bucket actually owns are touched — a pasted external URL is left alone.
-  await deleteProductImages(imageUrls);
+  await deleteProductImages([...imageUrls, ...colorUrls]);
 
   return NextResponse.json({ ok: true, id });
 }
