@@ -6,6 +6,7 @@ import type { AdminOrder } from "@/lib/queries/admin";
 import {
   AdminCard,
   OrderStatusBadge,
+  PreorderBadge,
   ProductThumb,
   money,
   btnSolid,
@@ -87,7 +88,10 @@ export function OrderDetailView({
                   <ProductThumb src={it.img} alt={it.name} />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block font-sans text-[14px] font-medium text-ink truncate">{it.name}</span>
+                  <span className="flex items-center gap-2 min-w-0">
+                    <span className="font-sans text-[14px] font-medium text-ink truncate">{it.name}</span>
+                    {it.isPreorder && <PreorderBadge />}
+                  </span>
                   <span className="block font-sans text-[12px] text-ink-faint">
                     {it.variant ? `${it.variant} · ` : ""}
                     {it.qty} × {money(it.price)}

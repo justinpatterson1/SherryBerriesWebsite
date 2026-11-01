@@ -259,6 +259,15 @@ model Product {
   /// Original upload filename, used for the download's Content-Disposition.
   digitalFileName   String?
 
+  /// Sold before the stock exists. While set, `inventory` is ignored — never
+  /// checked, never decremented, forced to 0 on save — and the order can only
+  /// be paid by card or bank transfer. Turning it off makes the product an
+  /// ordinary piece again, with whatever stock the admin then enters.
+  ///
+  /// Orders snapshot this on `OrderItem.isPreorder`; read that, not this, for
+  /// anything about an order already placed.
+  isPreorder        Boolean       @default(false)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -448,6 +457,12 @@ model OrderItem {
   variantId String?
   quantity  Int
   price     Decimal @db.Decimal(10, 2)
+
+  /// Whether the product was on preorder when this line was bought. A snapshot,
+  /// because the product flips back to a regular piece once stock lands: stock
+  /// release must not give back units this line never took, and the order
+  /// should still read as a preorder afterwards.
+  isPreorder Boolean @default(false)
 
   order   Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product Product         @relation(fields: [productId], references: [id])

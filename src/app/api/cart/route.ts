@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
+import { isMixedPreorderCart } from "@/lib/checkout/preorder";
 
 export async function GET() {
   const session = await auth();
@@ -64,7 +65,7 @@ export async function POST(request: Request) {
 
   const product = await prisma.product.findUnique({
     where: { id: productId },
-    select: { id: true, active: true, inventory: true },
+    select: { id: true, active: true, inventory: true, isPreorder: true },
   });
   if (!product || !product.active) {
     return NextResponse.json({ error: "Product not available." }, { status: 404 });
@@ -75,6 +76,24 @@ export async function POST(request: Request) {
     update: {},
     create: { userId: session.user.id },
   });
+
+  // Preorders are checked out on their own (see lib/checkout/preorder.ts).
+  // Refused here so the customer hears it at the moment they add the piece,
+  // not later at checkout, which refuses it too.
+  const inCart = await prisma.cartItem.findMany({
+    where: { cartId: cart.id },
+    select: { product: { select: { isPreorder: true } } },
+  });
+  if (isMixedPreorderCart([...inCart.map((it) => it.product), product])) {
+    return NextResponse.json(
+      {
+        error: product.isPreorder
+          ? "Preorder items are checked out on their own. Check out the pieces in your bag first, then add this one."
+          : "Your bag has a preorder in it, which is checked out on its own. Check that out first, then add this piece.",
+      },
+      { status: 409 },
+    );
+  }
 
   const existing = await prisma.cartItem.findFirst({
     where: { cartId: cart.id, productId, variantId: variant },

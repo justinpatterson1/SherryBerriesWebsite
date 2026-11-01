@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { CartSnapshotLine } from "@/app/api/cart/snapshot/route";
+import { ignoresStock } from "@/lib/checkout/preorder";
 
 const cardClass =
   "relative grid grid-cols-[140px_1fr_auto] gap-5 p-5 pr-12 rounded-[20px] border border-white/[0.06] " +
@@ -25,10 +26,11 @@ export function CartRow({
 }) {
   const inv =
     line.variantInventory != null ? line.variantInventory : line.productInventory;
-  // A download holds no stock, so the usual thresholds would read "Out of
-  // stock" on something that can never run out.
-  const low = !line.isDigital && inv > 0 && inv <= line.lowStockThreshold;
-  const out = !line.isDigital && inv <= 0;
+  // Neither a download nor a preorder holds stock, so the usual thresholds
+  // would read "Out of stock" on something that cannot run out.
+  const skipStock = ignoresStock(line);
+  const low = !skipStock && inv > 0 && inv <= line.lowStockThreshold;
+  const out = !skipStock && inv <= 0;
 
   const unit = line.unitPrice;
   const baseCompare = line.compareAtPrice;
@@ -120,7 +122,7 @@ export function CartRow({
               "inline-flex h-[6px] w-[6px] rounded-full " +
               (out
                 ? "bg-[#d63a3a]"
-                : low
+                : low || line.isPreorder
                 ? "bg-gold-soft shadow-[0_0_10px_rgba(212,175,55,0.6)]"
                 : "bg-[#3aa86b] shadow-[0_0_10px_rgba(58,168,107,0.6)]")
             }
@@ -129,7 +131,7 @@ export function CartRow({
             className={
               out
                 ? "text-[#d63a3a]"
-                : low
+                : low || line.isPreorder
                 ? "text-gold-soft"
                 : "text-ink-dim"
             }
@@ -140,6 +142,8 @@ export function CartRow({
               ? `Only ${inv} left, last chance`
               : line.isDigital
               ? "Instant download"
+              : line.isPreorder
+              ? "Preorder · card or bank transfer"
               : "In stock · ships in 2 days"}
           </span>
         </div>

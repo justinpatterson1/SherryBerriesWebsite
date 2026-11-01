@@ -12,6 +12,7 @@ import {
   type ShippingKey,
 } from "@/lib/checkout/shipping";
 import { cartNeedsShipping } from "@/lib/checkout/digital";
+import { hasPreorder, ignoresStock, isMixedPreorderCart } from "@/lib/checkout/preorder";
 import { applyPromo } from "@/lib/checkout/promo";
 import { loadUsablePromo } from "@/lib/checkout/promo-server";
 import { getWipayConfig, requestHostedPage } from "@/lib/checkout/wipay";
@@ -125,6 +126,7 @@ export async function POST(request: Request) {
               inventory: true,
               material: true,
               isDigital: true,
+              isPreorder: true,
               // Decides whether a promo with category exclusions discounts
               // this line (see lib/checkout/promo.ts).
               categoryId: true,
@@ -162,6 +164,7 @@ export async function POST(request: Request) {
       unitPrice,
       available,
       isDigital: it.product.isDigital,
+      isPreorder: it.product.isPreorder,
       imageUrl: it.product.images[0]?.imageUrl ?? null,
     };
   });
@@ -172,6 +175,19 @@ export async function POST(request: Request) {
   // charge. Anything physical in it — including one item alongside a download —
   // and the usual rules apply in full.
   const needsShipping = cartNeedsShipping(lines);
+
+  // The cart API refuses to mix the two, but a product can flip to or from
+  // preorder after it was added.
+  if (isMixedPreorderCart(lines)) {
+    return NextResponse.json(
+      {
+        error:
+          "Preorder items need to be checked out on their own. Please remove the in-stock pieces from your bag, or the preorders.",
+      },
+      { status: 400 },
+    );
+  }
+  const preorder = hasPreorder(lines);
 
   let shipKey: ShippingKey;
   let shipFee: number;
@@ -206,9 +222,13 @@ export async function POST(request: Request) {
   // the settled shipping key, which depends on the cart. The form greys the
   // option out; this is what makes the rule true regardless of what the
   // browser sends.
-  if (!isPaymentAllowedFor(paymentKey, shipKey)) {
+  if (!isPaymentAllowedFor(paymentKey, shipKey, preorder)) {
     return NextResponse.json(
-      { error: `${PAYMENT_LABEL[paymentKey]} isn't available with ${shipping.label}.` },
+      {
+        error: preorder
+          ? `${PAYMENT_LABEL[paymentKey]} isn't available for preorders.`
+          : `${PAYMENT_LABEL[paymentKey]} isn't available with ${shipping.label}.`,
+      },
       { status: 400 },
     );
   }
@@ -216,8 +236,8 @@ export async function POST(request: Request) {
   // Fast, friendly pre-check for the common case. This is NOT the correctness
   // gate — the authoritative guard is the atomic conditional decrement inside
   // the transaction below (this read can go stale under concurrent orders).
-  // Downloads are skipped: a file cannot sell out.
-  const oversold = lines.filter((l) => !l.isDigital).find((l) => l.quantity > l.available);
+  // Downloads and preorders are skipped: neither holds stock.
+  const oversold = lines.filter((l) => !ignoresStock(l)).find((l) => l.quantity > l.available);
   if (oversold) {
     return NextResponse.json(
       {
@@ -284,10 +304,10 @@ export async function POST(request: Request) {
   if (paymentKey === "bank" && !bankDetails()) {
     return NextResponse.json(
       {
-        // A download-only order has no Cash on Delivery to fall back on, so
-        // offering it would send the customer at a method this same route
-        // refuses two checks above.
-        error: needsShipping
+        // A download-only order or a preorder has no Cash on Delivery to fall
+        // back on, so offering it would send the customer at a method this
+        // same route refuses above.
+        error: needsShipping && !preorder
           ? "Bank transfer is temporarily unavailable. Please use Cash on Delivery or a card."
           : "Bank transfer is temporarily unavailable. Please pay by card instead.",
       },
@@ -306,7 +326,7 @@ export async function POST(request: Request) {
     } catch {
       return NextResponse.json(
         {
-          error: needsShipping
+          error: needsShipping && !preorder
             ? "Card payments are temporarily unavailable. Please use Cash on Delivery."
             : "Card payments are temporarily unavailable. Please use bank transfer instead.",
         },
@@ -364,6 +384,7 @@ export async function POST(request: Request) {
             variantId: l.variantId,
             quantity: l.quantity,
             price: round2(l.unitPrice),
+            isPreorder: l.isPreorder,
           })),
         },
       },
@@ -374,12 +395,12 @@ export async function POST(request: Request) {
     // decrement is a single statement, so concurrent orders for the last unit
     // can't both succeed — `count === 0` means it sold out under us; roll back.
     //
-    // Downloads hold no stock and are skipped. releaseOrderStock() skips them
-    // on the way back too: decrementing nothing but incrementing on a failed
-    // payment would inflate a digital product's inventory on every abandoned
-    // order.
+    // Downloads and preorders hold no stock and are skipped.
+    // releaseOrderStock() skips them on the way back too: decrementing nothing
+    // but incrementing on a failed payment would inflate inventory on every
+    // abandoned order.
     for (const l of lines) {
-      if (l.isDigital) continue;
+      if (ignoresStock(l)) continue;
       const res = l.variantId
         ? await tx.productVariant.updateMany({
             where: { id: l.variantId, inventory: { gte: l.quantity } },

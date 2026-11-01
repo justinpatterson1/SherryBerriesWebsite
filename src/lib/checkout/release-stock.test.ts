@@ -39,13 +39,22 @@ const physicalLine = {
   productId: "p-ring",
   variantId: null,
   quantity: 2,
+  isPreorder: false,
   product: { isDigital: false },
 };
 const digitalLine = {
   productId: "p-manual",
   variantId: null,
   quantity: 1,
+  isPreorder: false,
   product: { isDigital: true },
+};
+const preorderLine = {
+  productId: "p-opal",
+  variantId: "v-6mm",
+  quantity: 1,
+  isPreorder: true,
+  product: { isDigital: false },
 };
 
 describe("promoFromNotes", () => {
@@ -86,6 +95,16 @@ describe("releaseOrderStock", () => {
   it("does not give back stock for a download", async () => {
     const r = recorder();
     const order: ReleasableItems = { notes: null, orderItems: [digitalLine] };
+    await releaseOrderStock(r.tx, order);
+    expect(r.productIncrements).toEqual([]);
+    expect(r.variantIncrements).toEqual([]);
+  });
+
+  // Checkout never decrements a preorder. The line's own flag decides, since
+  // the product may be back to a regular piece by the time this runs.
+  it("does not give back stock for a preorder", async () => {
+    const r = recorder();
+    const order: ReleasableItems = { notes: null, orderItems: [preorderLine] };
     await releaseOrderStock(r.tx, order);
     expect(r.productIncrements).toEqual([]);
     expect(r.variantIncrements).toEqual([]);

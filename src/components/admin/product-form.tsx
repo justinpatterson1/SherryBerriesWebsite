@@ -38,6 +38,7 @@ type FormState = {
   isDigital: boolean;
   digitalFileKey: string;
   digitalFileName: string;
+  isPreorder: boolean;
 };
 
 function initialState(p: AdminProduct | null): FormState {
@@ -59,6 +60,7 @@ function initialState(p: AdminProduct | null): FormState {
     isDigital: p?.isDigital ?? false,
     digitalFileKey: p?.digitalFileKey ?? "",
     digitalFileName: p?.digitalFileName ?? "",
+    isPreorder: p?.isPreorder ?? false,
     sizeLabel: p?.sizeLabel ?? "",
     sizes: (p?.sizes ?? []).map((v) => ({
       id: v.id,
@@ -173,7 +175,8 @@ export function ProductForm({
     const price = parseFloat(f.price);
     const compare = f.compareAtPrice.trim() === "" ? null : parseFloat(f.compareAtPrice);
     // A download has no stock and no reorder point; the server pins both to 0.
-    const stock = f.isDigital ? 0 : parseInt(f.stock, 10);
+    // A preorder has no stock yet, and the server pins that to 0 too.
+    const stock = f.isDigital || f.isPreorder ? 0 : parseInt(f.stock, 10);
     const reorder = f.isDigital ? 0 : parseInt(f.reorder, 10);
 
     if (!f.name.trim()) return setError("Name is required.");
@@ -186,7 +189,8 @@ export function ProductForm({
     if (f.isDigital && !f.digitalFileKey.trim())
       return setError("Upload the PDF before saving a digital product.");
     if (f.isDigital && hasSizes) return setError("A digital product can't have sizes.");
-    if (!f.isDigital && !hasSizes && (!Number.isInteger(stock) || stock < 0))
+    if (f.isDigital && f.isPreorder) return setError("A digital product can't be a preorder.");
+    if (!f.isDigital && !f.isPreorder && !hasSizes && (!Number.isInteger(stock) || stock < 0))
       return setError("Stock must be a whole number ≥ 0.");
 
     const seen = new Set<string>();
@@ -195,7 +199,7 @@ export function ProductForm({
       if (seen.has(key)) return setError(`“${r.value.trim()}” is listed twice.`);
       seen.add(key);
       const q = parseInt(r.quantity, 10);
-      if (!Number.isInteger(q) || q < 0)
+      if (!f.isPreorder && (!Number.isInteger(q) || q < 0))
         return setError(`The quantity for “${r.value.trim()}” must be a whole number ≥ 0.`);
       if (r.additionalPrice.trim() !== "") {
         const extra = parseFloat(r.additionalPrice);
@@ -226,11 +230,12 @@ export function ProductForm({
       isDigital: f.isDigital,
       digitalFileKey: f.isDigital ? f.digitalFileKey.trim() : "",
       digitalFileName: f.isDigital ? f.digitalFileName.trim() : "",
+      isPreorder: f.isPreorder,
       sizeLabel: hasSizes ? f.sizeLabel.trim() || DEFAULT_SIZE_LABEL : "",
       sizes: filledSizes.map((r) => ({
         id: r.id,
         value: r.value.trim(),
-        quantity: parseInt(r.quantity, 10),
+        quantity: f.isPreorder ? 0 : parseInt(r.quantity, 10),
         additionalPrice:
           r.additionalPrice.trim() === "" ? null : parseFloat(r.additionalPrice),
       })),
@@ -321,7 +326,12 @@ export function ProductForm({
             </p>
           </div>
 
-          <div className={"grid gap-4 " + (f.isDigital ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-4")}>
+          <div
+            className={
+              "grid gap-4 " +
+              (f.isDigital ? "grid-cols-2" : f.isPreorder ? "grid-cols-2 sm:grid-cols-3" : "grid-cols-2 sm:grid-cols-4")
+            }
+          >
             <div>
               <label className={labelClass}>Price</label>
               <input type="number" min={0} step="0.01" className={numClass} value={f.price} onChange={(e) => set("price", e.target.value)} placeholder="0.00" />
@@ -331,8 +341,10 @@ export function ProductForm({
               <input type="number" min={0} step="0.01" className={numClass} value={f.compareAtPrice} onChange={(e) => set("compareAtPrice", e.target.value)} placeholder="0.00" />
             </div>
             {/* A download cannot run out, so it has no stock or reorder point. */}
+            {/* A preorder has no stock until it comes off preorder. */}
             {!f.isDigital && (
               <>
+                {!f.isPreorder && (
                 <div>
                   <label className={labelClass}>Stock</label>
                   {/* Derived once sizes exist — editing it would just be overwritten
@@ -348,6 +360,7 @@ export function ProductForm({
                     onChange={(e) => set("stock", e.target.value)}
                   />
                 </div>
+                )}
                 <div>
                   <label className={labelClass}>Reorder ≤</label>
                   <input type="number" min={0} step="1" className={numClass} value={f.reorder} onChange={(e) => set("reorder", e.target.value)} />
@@ -364,7 +377,12 @@ export function ProductForm({
                 type="checkbox"
                 className="mt-0.5 accent-pink cursor-pointer"
                 checked={f.isDigital}
-                onChange={(e) => set("isDigital", e.target.checked)}
+                // The Preorder toggle hides for a download, so clear it here
+                // rather than leave a flag set that nothing on screen can unset.
+                onChange={(e) => {
+                  const isDigital = e.target.checked;
+                  setF((prev) => ({ ...prev, isDigital, isPreorder: isDigital ? false : prev.isPreorder }));
+                }}
               />
               <label htmlFor="prod-digital" className="cursor-pointer">
                 <span className="font-sans text-[14px] text-ink">Digital product (PDF download)</span>
@@ -451,7 +469,9 @@ export function ProductForm({
               <div>
                 <span className={labelClass + " mb-0"}>Sizes &amp; stock</span>
                 <p className="font-sans text-[11px] leading-[1.5] text-ink-faint mt-1">
-                  {hasSizes
+                  {f.isPreorder
+                    ? "On preorder, customers pick a size but there is no stock. Enter quantities when it comes off preorder."
+                    : hasSizes
                     ? `Stock is the total of these rows: ${sizeTotal} in all.`
                     : "Leave empty for a product sold in one size only."}
                 </p>
@@ -505,8 +525,10 @@ export function ProductForm({
                           type="number"
                           min={0}
                           step="1"
-                          className={numClass}
-                          value={r.quantity}
+                          className={numClass + (f.isPreorder ? " opacity-60 cursor-not-allowed" : "")}
+                          value={f.isPreorder ? "" : r.quantity}
+                          disabled={f.isPreorder}
+                          placeholder={f.isPreorder ? "—" : undefined}
                           onChange={(e) => setSize(i, "quantity", e.target.value)}
                           aria-label={`Quantity for size ${i + 1}`}
                         />
@@ -589,6 +611,14 @@ export function ProductForm({
 
           <div className="flex flex-wrap gap-5 pt-1">
             <Toggle label="Featured" checked={f.featured} onChange={(v) => set("featured", v)} />
+            {/* A download never runs short, so it is never a preorder. */}
+            {!f.isDigital && (
+              <Toggle
+                label="Preorder (card or bank transfer only)"
+                checked={f.isPreorder}
+                onChange={(v) => set("isPreorder", v)}
+              />
+            )}
             <Toggle label="Active (visible in store)" checked={f.active} onChange={(v) => set("active", v)} />
           </div>
         </div>

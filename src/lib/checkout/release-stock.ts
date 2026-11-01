@@ -25,6 +25,12 @@ export type ReleasableItems = {
     variantId: string | null;
     quantity: number;
     /**
+     * Snapshot from checkout. A preorder line never decremented anything, and
+     * the product may since have come off preorder, so this — not the
+     * product's current flag — decides whether to skip it.
+     */
+    isPreorder: boolean;
+    /**
      * Digital lines never decremented anything at checkout, so they must not
      * be incremented here. Both callers select it; optional only so a caller
      * that has not been updated fails loudly in review rather than silently
@@ -59,6 +65,8 @@ export async function releaseOrderStock(
     // back. Incrementing here would add phantom inventory to a digital product
     // on every failed payment and every expired bank transfer.
     if (item.product?.isDigital) continue;
+    // Nor was a preorder, which is sold before the stock exists.
+    if (item.isPreorder) continue;
 
     // Variant stock when the line chose one, product stock otherwise — the same
     // split the checkout decrement uses.

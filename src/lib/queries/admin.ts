@@ -42,6 +42,8 @@ export type AdminOrderItem = {
   price: number;
   lineTotal: number;
   img: string | null;
+  /** Bought on preorder — snapshotted at checkout, so it outlasts the flag. */
+  isPreorder: boolean;
 };
 
 export type AdminOrder = {
@@ -70,9 +72,11 @@ export type AdminOrder = {
   paymentStatus: PaymentStatus;
   /** The order holds at least one downloadable item. */
   hasDigital: boolean;
+  /** The order is a preorder (preorders are never mixed with other items). */
+  hasPreorder: boolean;
 };
 
-export type StockStatus = "In stock" | "Low stock" | "Out of stock" | "Digital";
+export type StockStatus = "In stock" | "Low stock" | "Out of stock" | "Digital" | "Preorder";
 
 /** One ProductVariant, as the admin screens see it. */
 export type AdminSize = {
@@ -80,6 +84,8 @@ export type AdminSize = {
   value: string;
   quantity: number;
   additionalPrice: number | null;
+  /** Units of this size on live preorders. */
+  preordered: number;
 };
 
 export type AdminProduct = {
@@ -114,6 +120,16 @@ export type AdminProduct = {
   sizeLabel: string | null;
   /** Per-size stock. Empty for a product sold as a single item. */
   sizes: AdminSize[];
+  /** Sold before the stock exists; `stock` is 0 and means nothing. */
+  isPreorder: boolean;
+  /**
+   * Units on live preorder lines — not failed, expired, rejected, refunded or
+   * cancelled. Counted from the order lines, so it holds after the product
+   * comes off preorder too.
+   */
+  preordered: number;
+  /** The part of `preordered` that has been paid for. */
+  preorderedPaid: number;
 };
 
 export type AdminPromo = {
@@ -243,13 +259,47 @@ type SizeRowFromDb = {
   additionalPrice: unknown;
 };
 
-function toSizes(rows: SizeRowFromDb[]): AdminSize[] {
+function toSizes(rows: SizeRowFromDb[], preorders?: PreorderCount): AdminSize[] {
   return rows.map((v) => ({
     id: v.id,
     value: v.value,
     quantity: v.inventory,
     additionalPrice: v.additionalPrice == null ? null : Number(v.additionalPrice),
+    preordered: preorders?.bySize.get(v.id) ?? 0,
   }));
+}
+
+type PreorderCount = { total: number; paid: number; bySize: Map<string, number> };
+
+/**
+ * Units on live preorder lines, per product and per size.
+ *
+ * Read off OrderItem.isPreorder, the snapshot taken at checkout, so the count
+ * survives the product coming off preorder. A line whose payment failed,
+ * lapsed or was refused, or whose order was cancelled, is not a preorder
+ * anyone is waiting on.
+ */
+async function loadPreorderCounts(productId?: string): Promise<Map<string, PreorderCount>> {
+  const rows = await prisma.orderItem.findMany({
+    where: {
+      isPreorder: true,
+      ...(productId ? { productId } : {}),
+      order: {
+        paymentStatus: { notIn: ["FAILED", "EXPIRED", "REJECTED", "REFUNDED"] },
+        fulfillmentStatus: { not: "CANCELLED" },
+      },
+    },
+    select: { productId: true, variantId: true, quantity: true, order: { select: { paymentStatus: true } } },
+  });
+  const counts = new Map<string, PreorderCount>();
+  for (const r of rows) {
+    let c = counts.get(r.productId);
+    if (!c) counts.set(r.productId, (c = { total: 0, paid: 0, bySize: new Map() }));
+    c.total += r.quantity;
+    if (r.order.paymentStatus === "PAID") c.paid += r.quantity;
+    if (r.variantId) c.bySize.set(r.variantId, (c.bySize.get(r.variantId) ?? 0) + r.quantity);
+  }
+  return counts;
 }
 
 // -----------------------------------------------------------------------------
@@ -359,6 +409,7 @@ export async function getAdminData(
     subscriberRows,
     auditRows,
     returnRows,
+    preorderCounts,
   ] = await Promise.all([
     // Light pass over every order — powers all-time totals + the monthly trend.
     prisma.order.findMany({
@@ -426,6 +477,7 @@ export async function getAdminData(
         isDigital: true,
         digitalFileKey: true,
         digitalFileName: true,
+        isPreorder: true,
         shortDescription: true,
         description: true,
         categoryId: true,
@@ -522,6 +574,7 @@ export async function getAdminData(
         },
       },
     }),
+    loadPreorderCounts(),
   ]);
 
   // --- All-time + monthly trend ---------------------------------------------
@@ -669,11 +722,13 @@ export async function getAdminData(
     const stock = p.inventory;
     const reorder = p.lowStockThreshold;
     const price = Number(p.price);
-    // A download has no stock to run out of, so the usual thresholds would
-    // brand it "Out of stock" forever.
+    // Neither a download nor a preorder has stock to run out of, so the usual
+    // thresholds would brand it "Out of stock" forever.
     const status: StockStatus = p.isDigital
       ? "Digital"
-      : stock <= 0
+      : p.isPreorder
+        ? "Preorder"
+        : stock <= 0
         ? "Out of stock"
         : stock <= reorder
           ? "Low stock"
@@ -704,7 +759,10 @@ export async function getAdminData(
       digitalFileKey: p.digitalFileKey,
       digitalFileName: p.digitalFileName,
       sizeLabel: p.variants[0]?.name ?? null,
-      sizes: toSizes(p.variants),
+      sizes: toSizes(p.variants, preorderCounts.get(p.id)),
+      isPreorder: p.isPreorder,
+      preordered: preorderCounts.get(p.id)?.total ?? 0,
+      preorderedPaid: preorderCounts.get(p.id)?.paid ?? 0,
     };
   });
 
@@ -761,6 +819,7 @@ export async function getAdminData(
       needsAction: status === "Pending" || status === "Processing",
       paymentStatus: o.paymentStatus,
       hasDigital: o.orderItems.some((it) => it.product.isDigital),
+      hasPreorder: o.orderItems.some((it) => it.isPreorder),
       items: o.orderItems.map((it) => {
         const price = Number(it.price);
         return {
@@ -772,6 +831,7 @@ export async function getAdminData(
           price,
           lineTotal: Number((price * it.quantity).toFixed(2)),
           img: it.product.images[0]?.imageUrl ?? null,
+          isPreorder: it.isPreorder,
         };
       }),
     };
@@ -878,7 +938,7 @@ export async function getAdminData(
 
 export async function getAdminProduct(id: string): Promise<AdminProduct | null> {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 864e5);
-  const [p, sold] = await Promise.all([
+  const [p, sold, preorderCounts] = await Promise.all([
     prisma.product.findUnique({
       where: { id },
       select: {
@@ -896,6 +956,7 @@ export async function getAdminProduct(id: string): Promise<AdminProduct | null> 
         isDigital: true,
         digitalFileKey: true,
         digitalFileName: true,
+        isPreorder: true,
         shortDescription: true,
         description: true,
         categoryId: true,
@@ -908,14 +969,16 @@ export async function getAdminProduct(id: string): Promise<AdminProduct | null> 
       where: { productId: id, order: { createdAt: { gte: thirtyDaysAgo } } },
       _sum: { quantity: true },
     }),
+    loadPreorderCounts(id),
   ]);
   if (!p) return null;
 
   const stock = p.inventory;
   const reorder = p.lowStockThreshold;
   let status: StockStatus;
-  // A download has no stock to run out of.
+  // Neither a download nor a preorder has stock to run out of.
   if (p.isDigital) status = "Digital";
+  else if (p.isPreorder) status = "Preorder";
   else if (stock <= 0) status = "Out of stock";
   else if (stock <= reorder) status = "Low stock";
   else status = "In stock";
@@ -943,6 +1006,9 @@ export async function getAdminProduct(id: string): Promise<AdminProduct | null> 
     digitalFileKey: p.digitalFileKey,
     digitalFileName: p.digitalFileName,
     sizeLabel: p.variants[0]?.name ?? null,
-    sizes: toSizes(p.variants),
+    sizes: toSizes(p.variants, preorderCounts.get(p.id)),
+    isPreorder: p.isPreorder,
+    preordered: preorderCounts.get(p.id)?.total ?? 0,
+    preorderedPaid: preorderCounts.get(p.id)?.paid ?? 0,
   };
 }

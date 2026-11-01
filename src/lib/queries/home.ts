@@ -76,6 +76,7 @@ export type BestsellerProduct = {
   priceOld?: number;
   chips: string[];
   pin?: BestsellerPin;
+  isPreorder: boolean;
 };
 
 const PIN_PRIORITY: Array<{ tag: string; pin: BestsellerPin }> = [
@@ -116,6 +117,7 @@ export async function getBestsellers(limit = 8): Promise<BestsellerProduct[]> {
       priceOld: p.compareAtPrice ? Number(p.compareAtPrice) : undefined,
       chips,
       pin: pinMatch?.pin,
+      isPreorder: p.isPreorder,
     };
   });
 }

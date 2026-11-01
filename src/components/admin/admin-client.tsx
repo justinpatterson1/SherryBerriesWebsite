@@ -18,7 +18,7 @@ import type { CategoryFormData, ProductFormData } from "@/lib/admin/options";
 import type { PromoFormData } from "@/lib/admin/promo-validate";
 import { ICONS } from "@/components/admin/shared";
 import { OverviewView } from "@/components/admin/overview-view";
-import { OrdersView } from "@/components/admin/orders-view";
+import { OrdersView, type OrdersTab } from "@/components/admin/orders-view";
 import { OrderDetailView } from "@/components/admin/order-detail-view";
 import { InventoryView } from "@/components/admin/inventory-view";
 import { CategoriesView } from "@/components/admin/categories-view";
@@ -104,7 +104,11 @@ export function AdminClient({
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [view]);
 
-  const goto = useCallback((v: View) => {
+  // Which tab Orders opens on. Every way into Orders goes through goto, so a
+  // link that asked for Preorders does not leave the next visit filtered.
+  const [ordersTab, setOrdersTab] = useState<OrdersTab>("All");
+  const goto = useCallback((v: View, tab: OrdersTab = "All") => {
+    setOrdersTab(tab);
     setView(v);
   }, []);
 
@@ -558,7 +562,13 @@ export function AdminClient({
 
   const sidebarActive: View = view === "order-detail" ? "orders" : view;
   const ordersBadge = orders.filter((o) => o.needsAction).length;
-  const lowStockBadge = products.filter((p) => p.status !== "In stock").length;
+  // Only what needs restocking: preorder and digital products hold no stock.
+  const lowStockBadge = products.filter(
+    (p) => p.status === "Low stock" || p.status === "Out of stock",
+  ).length;
+  // Receipts a customer has uploaded and an admin has not yet checked against
+  // the bank account — the same set the Payments view's "review" filter shows.
+  const paymentsBadge = payments.filter((p) => p.paymentStatus === "PAYMENT_SUBMITTED").length;
   const returnsBadge = returns.filter(
     (r) => r.status === "REQUESTED" || r.status === "APPROVED",
   ).length;
@@ -632,7 +642,9 @@ export function AdminClient({
                         ? lowStockBadge
                         : item.view === "returns"
                           ? returnsBadge
-                          : undefined
+                          : item.view === "payments"
+                            ? paymentsBadge
+                            : undefined
                   }
                 />
               ))}
@@ -650,9 +662,15 @@ export function AdminClient({
         {/* Content */}
         <main className="min-w-0">
           {view === "overview" && (
-            <OverviewView data={data} orders={orders} onOpenOrder={openOrder} onSeeAll={() => goto("orders")} />
+            <OverviewView
+              data={data}
+              orders={orders}
+              onOpenOrder={openOrder}
+              onSeeAll={() => goto("orders")}
+              onSeePreorders={() => goto("orders", "Preorders")}
+            />
           )}
-          {view === "orders" && <OrdersView orders={orders} onOpenOrder={openOrder} />}
+          {view === "orders" && <OrdersView orders={orders} onOpenOrder={openOrder} initialTab={ordersTab} />}
           {view === "order-detail" && (
             <OrderDetailView
               order={selectedOrder}

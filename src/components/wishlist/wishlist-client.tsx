@@ -158,12 +158,23 @@ export function WishlistClient({ recPool }: { recPool: RecProduct[] }) {
       showToast("Everything's already in your bag");
       return;
     }
-    await Promise.all(
-      toAdd.map((s) =>
-        addItem({ productId: s.productId, variantId: null, quantity: 1 }),
-      ),
-    );
-    showToast(`${toAdd.length} piece${toAdd.length === 1 ? "" : "s"} added to bag ✦`);
+    // One at a time, not in parallel: the cart API refuses to mix preorders
+    // with in-stock pieces by looking at what the bag already holds, and
+    // concurrent adds would each see the bag before the others landed.
+    let added = 0;
+    let firstError: string | null = null;
+    for (const s of toAdd) {
+      const result = await addItem({ productId: s.productId, variantId: null, quantity: 1 });
+      if (result.ok) added += 1;
+      else firstError ??= result.error ?? "Couldn't add to bag";
+    }
+    if (added === 0) {
+      showToast(firstError ?? "Couldn't add to bag");
+    } else if (added < toAdd.length) {
+      showToast(`${added} of ${toAdd.length} added. ${firstError}`);
+    } else {
+      showToast(`${added} piece${added === 1 ? "" : "s"} added to bag ✦`);
+    }
   }, [visible, cartIds, addItem, showToast]);
 
   const onShare = useCallback(async () => {

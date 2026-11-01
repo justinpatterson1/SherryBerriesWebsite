@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { RelatedProduct } from "@/lib/queries/product";
+import { PreorderTag } from "./preorder-tag";
 
 export function RelatedProducts({ products }: { products: RelatedProduct[] }) {
   if (products.length === 0) return null;
@@ -49,6 +50,7 @@ export function RelatedProducts({ products }: { products: RelatedProduct[] }) {
                   className="absolute inset-0 bg-gradient-to-br from-pink to-pink-deep"
                 />
               )}
+              {p.isPreorder && <PreorderTag className="absolute top-3.5 left-3.5 z-[2]" />}
             </div>
             <div className="p-4 pb-5 flex flex-col gap-2">
               <span className="font-serif text-[17px] leading-[1.25] text-ink">

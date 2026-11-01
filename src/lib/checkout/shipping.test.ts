@@ -91,7 +91,26 @@ describe("isPaymentAllowedFor", () => {
   });
 });
 
+describe("isPaymentAllowedFor with a preorder", () => {
+  it("rules out Cash on Delivery for every shipping method", () => {
+    expect(isPaymentAllowedFor("cod", "pickup", true)).toBe(false);
+    expect(isPaymentAllowedFor("cod", "courier", true)).toBe(false);
+  });
+
+  it("keeps card and bank transfer", () => {
+    expect(isPaymentAllowedFor("card", "pickup", true)).toBe(true);
+    expect(isPaymentAllowedFor("bank", "courier", true)).toBe(true);
+  });
+});
+
 describe("paymentUnavailableReason", () => {
+  it("names the preorder when that is what blocks the cash", () => {
+    const why = paymentUnavailableReason("cod", "ttpost", true);
+    expect(why).toMatch(/preorder/i);
+    expect(why).not.toMatch(/TTPost/);
+  });
+
+
   it("names TTPost when that is what blocks the cash", () => {
     expect(paymentUnavailableReason("cod", "ttpost")).toMatch(/TTPost/);
   });

@@ -20,6 +20,7 @@ export function ProductBuyBox({
   inventory,
   lowStockThreshold,
   isDigital = false,
+  isPreorder = false,
 }: {
   productId: string;
   productName: string;
@@ -30,6 +31,8 @@ export function ProductBuyBox({
   lowStockThreshold: number;
   /** A download. Holds no stock, so it can never be out of it. */
   isDigital?: boolean;
+  /** Sold before the stock exists, so its 0 inventory is not "sold out". */
+  isPreorder?: boolean;
 }) {
   const { addItem } = useCart();
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(
@@ -52,8 +55,10 @@ export function ProductBuyBox({
   // A download is pinned to 0 inventory by design, so the stock rules have to
   // skip it — otherwise the only digital product on the site is permanently
   // "Out of stock" and cannot be bought at all.
-  const outOfStock = !isDigital && effectiveInventory <= 0;
-  const lowStock = !isDigital && !outOfStock && effectiveInventory <= lowStockThreshold;
+  // A preorder is the same: sold before the stock exists.
+  const skipStock = isDigital || isPreorder;
+  const outOfStock = !skipStock && effectiveInventory <= 0;
+  const lowStock = !skipStock && !outOfStock && effectiveInventory <= lowStockThreshold;
 
   useEffect(() => {
     if (!ctaRef.current) return;
@@ -121,7 +126,7 @@ export function ProductBuyBox({
             "inline-flex h-[7px] w-[7px] rounded-full " +
             (outOfStock
               ? "bg-[#d63a3a]"
-              : lowStock
+              : lowStock || isPreorder
               ? "bg-gold"
               : "bg-[#3aa86b]")
           }
@@ -130,7 +135,7 @@ export function ProductBuyBox({
           className={
             outOfStock
               ? "text-[#d63a3a]"
-              : lowStock
+              : lowStock || isPreorder
               ? "text-gold"
               : "text-ink-dim"
           }
@@ -141,6 +146,8 @@ export function ProductBuyBox({
             ? `Low stock, only ${effectiveInventory} left`
             : isDigital
             ? "Instant download"
+            : isPreorder
+            ? "Preorder · card or bank transfer only"
             : "In stock"}
         </span>
       </div>
@@ -152,7 +159,7 @@ export function ProductBuyBox({
           </span>
           <div role="radiogroup" aria-label={variantGroup ?? "Variant"} className="flex flex-wrap gap-2">
             {variants.map((v) => {
-              const disabled = v.inventory <= 0;
+              const disabled = !isPreorder && v.inventory <= 0;
               const active = v.id === selectedVariantId;
               return (
                 <button
@@ -220,7 +227,7 @@ export function ProductBuyBox({
           ? "Sold out"
           : busy
           ? "Adding…"
-          : `Add to bag · $${(finalUnit * qty).toFixed(2)}`}
+          : `${isPreorder ? "Preorder" : "Add to bag"} · $${(finalUnit * qty).toFixed(2)}`}
       </button>
 
       {/* Mobile sticky add bar */}
@@ -257,7 +264,7 @@ export function ProductBuyBox({
               "disabled:opacity-50 disabled:cursor-not-allowed"
             }
           >
-            {outOfStock ? "Sold out" : busy ? "Adding…" : "Add to bag"}
+            {outOfStock ? "Sold out" : busy ? "Adding…" : isPreorder ? "Preorder" : "Add to bag"}
           </button>
         </div>
       </div>

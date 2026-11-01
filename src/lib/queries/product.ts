@@ -28,6 +28,7 @@ export async function getProductBySlug(slug: string) {
     lowStockThreshold: row.lowStockThreshold,
     isDigital: row.isDigital,
     featured: row.featured,
+    isPreorder: row.isPreorder,
     active: row.active,
     material: row.material,
     careInstructions: row.careInstructions,
@@ -63,6 +64,7 @@ export type ProductListItem = {
   compareAtPrice: number | null;
   inventory: number;
   featured: boolean;
+  isPreorder: boolean;
   categoryName: string;
   categorySlug: string;
 };
@@ -101,6 +103,7 @@ export async function listProducts(opts: {
       compareAtPrice: p.compareAtPrice ? Number(p.compareAtPrice) : null,
       inventory: p.inventory,
       featured: p.featured,
+      isPreorder: p.isPreorder,
       categoryName: p.category.name,
       categorySlug: p.category.slug,
     };
@@ -113,6 +116,7 @@ export type RelatedProduct = {
   imageUrl: string | null;
   price: number;
   compareAtPrice: number | null;
+  isPreorder: boolean;
 };
 
 export async function getRelatedProducts({
@@ -145,5 +149,6 @@ export async function getRelatedProducts({
     imageUrl: p.images[0]?.imageUrl ?? null,
     price: Number(p.price),
     compareAtPrice: p.compareAtPrice ? Number(p.compareAtPrice) : null,
+    isPreorder: p.isPreorder,
   }));
 }

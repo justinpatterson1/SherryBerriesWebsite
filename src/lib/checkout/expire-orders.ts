@@ -41,6 +41,10 @@ const RELEASE_SELECT = {
       productId: true,
       variantId: true,
       quantity: true,
+      // Neither a preorder nor a download holds stock, so releaseOrderStock
+      // must skip them rather than increment a counter checkout never
+      // decremented.
+      isPreorder: true,
       // A download holds no stock, so releaseOrderStock must skip it rather
       // than increment a counter checkout never decremented.
       product: { select: { isDigital: true } },
@@ -57,6 +61,7 @@ type ReleasableOrder = {
     productId: string;
     variantId: string | null;
     quantity: number;
+    isPreorder: boolean;
     product: { isDigital: boolean };
   }[];
 };

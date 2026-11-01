@@ -191,6 +191,8 @@ const STOCK_TONE: Record<StockStatus, Tone> = {
   "Out of stock": "red",
   // A download never runs out, so it is neither healthy nor a warning.
   Digital: "pink",
+  // Gold, like the storefront's preorder tag.
+  Preorder: "gold",
 };
 
 function Badge({ tone, label }: { tone: Tone; label: string }) {
@@ -226,6 +228,10 @@ const DELIVERY_TONE: Record<DeliveryMethod["key"], Tone> = {
 
 export function DeliveryBadge({ delivery }: { delivery: DeliveryMethod }) {
   return <Badge tone={DELIVERY_TONE[delivery.key]} label={delivery.label} />;
+}
+
+export function PreorderBadge() {
+  return <Badge tone="gold" label="Preorder" />;
 }
 
 // --- Stepper -----------------------------------------------------------------

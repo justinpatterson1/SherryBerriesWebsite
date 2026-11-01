@@ -1,7 +1,15 @@
 "use client";
 
 import type { AdminData, AdminOrder } from "@/lib/queries/admin";
-import { AdminCard, KpiCard, OrderStatusBadge, money, btnGhost, ICONS } from "@/components/admin/shared";
+import {
+  AdminCard,
+  KpiCard,
+  OrderStatusBadge,
+  ProductThumb,
+  money,
+  btnGhost,
+  ICONS,
+} from "@/components/admin/shared";
 import { RevenueAreaChart, CategoryBars, AcquisitionDonut } from "@/components/admin/charts";
 
 export function OverviewView({
@@ -9,13 +17,21 @@ export function OverviewView({
   orders,
   onOpenOrder,
   onSeeAll,
+  onSeePreorders,
 }: {
   data: AdminData;
   orders: AdminOrder[];
   onOpenOrder: (id: string) => void;
   onSeeAll: () => void;
+  onSeePreorders: () => void;
 }) {
   const attention = orders.filter((o) => o.needsAction).slice(0, 6);
+  // What to order in from the supplier: every piece on preorder, most wanted
+  // first. Counts are live preorder lines, so a failed or cancelled order has
+  // already dropped out.
+  const preorders = data.products
+    .filter((p) => p.isPreorder)
+    .sort((a, b) => b.preordered - a.preordered || a.name.localeCompare(b.name));
 
   return (
     <div className="flex flex-col gap-6">
@@ -31,6 +47,49 @@ export function OverviewView({
           <KpiCard key={k.label} kpi={k} />
         ))}
       </div>
+
+      {preorders.length > 0 && (
+        <AdminCard
+          title="Preorders"
+          hint="Pieces on preorder and how many to order in"
+          action={
+            <button type="button" className={btnGhost} onClick={onSeePreorders}>
+              View orders
+              <span className="[&_svg]:w-3.5 [&_svg]:h-3.5">{ICONS.chevron}</span>
+            </button>
+          }
+          bodyClassName="p-2"
+        >
+          <ul className="flex flex-col">
+            {preorders.map((p) => {
+              const bySize = p.sizes.filter((s) => s.preordered > 0);
+              return (
+                <li key={p.id} className="flex items-center gap-4 py-3 px-4">
+                  <span className="relative w-10 h-10 rounded-lg overflow-hidden bg-canvas-2 border border-white/10 shrink-0 light:border-[rgba(26,13,18,0.1)]">
+                    <ProductThumb src={p.img} alt={p.name} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-sans text-[13px] font-medium text-ink truncate">{p.name}</span>
+                    <span className="block font-sans text-[11px] text-ink-faint truncate">
+                      {p.sku}
+                      {bySize.length > 0 &&
+                        " · " + bySize.map((s) => `${s.value} ×${s.preordered}`).join(", ")}
+                    </span>
+                  </span>
+                  <span className="text-right shrink-0">
+                    <span className="block font-display text-[20px] leading-none text-gold-soft">
+                      {p.preordered}
+                    </span>
+                    <span className="block mt-1 font-sans text-[10px] tracking-[0.08em] uppercase text-ink-faint">
+                      to order · {p.preorderedPaid} paid
+                    </span>
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </AdminCard>
+      )}
 
       <AdminCard title="Revenue trend" hint="Last 12 months">
         <RevenueAreaChart data={data.trend} />

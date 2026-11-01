@@ -24,6 +24,7 @@ export function CheckoutForm({
   payment,
   onSelectPayment,
   needsShipping = true,
+  preorder = false,
 }: {
   form: FormState;
   errors: FormErrors;
@@ -34,6 +35,8 @@ export function CheckoutForm({
   onSelectPayment: (key: PaymentKey) => void;
   /** False when the bag holds nothing but downloads — no address, no method. */
   needsShipping?: boolean;
+  /** True when the bag is preorders, which are paid up front. */
+  preorder?: boolean;
 }) {
   // The address and method sections disappear for a download-only bag, so the
   // payment card moves up rather than leaving a gap in the numbering.
@@ -47,6 +50,7 @@ export function CheckoutForm({
   const codUnavailable = paymentUnavailableReason(
     "cod",
     needsShipping ? shipping : DIGITAL_SHIPPING_KEY,
+    preorder,
   );
   const input = (key: keyof FormState, props?: Record<string, string>) => {
     const invalid = !!errors[key];

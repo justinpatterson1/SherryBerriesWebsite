@@ -5,13 +5,17 @@ import type { AdminOrder, AdminOrderStatus } from "@/lib/queries/admin";
 import {
   AdminCard,
   DeliveryBadge,
+  PreorderBadge,
   OrderStatusBadge,
   ProductThumb,
   money,
   ICONS,
 } from "@/components/admin/shared";
 
-const TABS: (AdminOrderStatus | "All")[] = [
+// "Preorders" cuts across the status tabs: a preorder can be in any of them.
+export type OrdersTab = AdminOrderStatus | "All" | "Preorders";
+
+const TABS: OrdersTab[] = [
   "All",
   "Pending",
   "Processing",
@@ -19,6 +23,7 @@ const TABS: (AdminOrderStatus | "All")[] = [
   "Delivered",
   "Cancelled",
   "Refunded",
+  "Preorders",
 ];
 
 function Thumbs({ items }: { items: AdminOrder["items"] }) {
@@ -45,23 +50,31 @@ function Thumbs({ items }: { items: AdminOrder["items"] }) {
 export function OrdersView({
   orders,
   onOpenOrder,
+  initialTab = "All",
 }: {
   orders: AdminOrder[];
   onOpenOrder: (id: string) => void;
+  /** The tab to open on, for links that arrive with a filter in mind. */
+  initialTab?: OrdersTab;
 }) {
-  const [tab, setTab] = useState<(typeof TABS)[number]>("All");
+  const [tab, setTab] = useState<OrdersTab>(initialTab);
   const [query, setQuery] = useState("");
 
   const counts = useMemo(() => {
-    const c: Record<string, number> = { All: orders.length };
-    for (const o of orders) c[o.status] = (c[o.status] ?? 0) + 1;
+    const c: Record<string, number> = { All: orders.length, Preorders: 0 };
+    for (const o of orders) {
+      c[o.status] = (c[o.status] ?? 0) + 1;
+      if (o.hasPreorder) c.Preorders += 1;
+    }
     return c;
   }, [orders]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return orders.filter((o) => {
-      if (tab !== "All" && o.status !== tab) return false;
+      if (tab === "Preorders") {
+        if (!o.hasPreorder) return false;
+      } else if (tab !== "All" && o.status !== tab) return false;
       if (!q) return true;
       return (
         o.orderNumber.toLowerCase().includes(q) ||
@@ -169,8 +182,9 @@ export function OrdersView({
                         <Thumbs items={o.items} />
                       </span>
                       <span className="font-sans text-[12px] text-ink-dim">{o.channel}</span>
-                      <span>
+                      <span className="flex flex-col items-start gap-1.5">
                         <DeliveryBadge delivery={o.delivery} />
+                        {o.hasPreorder && <PreorderBadge />}
                       </span>
                       <span>
                         <OrderStatusBadge status={o.status} />

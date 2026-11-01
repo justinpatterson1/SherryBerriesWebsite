@@ -12,6 +12,7 @@ import {
 } from "@/lib/cart/local-extras";
 import type { CartSnapshotLine } from "@/app/api/cart/snapshot/route";
 import { applyPromo } from "@/lib/checkout/promo";
+import { isMixedPreorderCart } from "@/lib/checkout/preorder";
 import { CartRow } from "./cart-row";
 import { OrderSummary, type AppliedPromo } from "./order-summary";
 import { SavedForLater } from "./saved-for-later";
@@ -277,6 +278,11 @@ export function CartClient() {
               router.push("/checkout");
             }}
             onError={showToast}
+            blockedReason={
+              isMixedPreorderCart(snapshot)
+                ? "Preorders are checked out on their own. Save the in-stock pieces for later, or the preorders, then check out."
+                : null
+            }
           />
         </div>
       )}

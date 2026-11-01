@@ -4,6 +4,7 @@ import Link from "next/link";
 import { listProducts } from "@/lib/queries/product";
 import { getHomeCategories } from "@/lib/queries/home";
 import { BackToTop } from "@/components/product/back-to-top";
+import { PreorderTag } from "@/components/product/preorder-tag";
 
 type PageProps = { searchParams: Promise<{ category?: string }> };
 
@@ -154,7 +155,8 @@ function ProductCard({
   product: Awaited<ReturnType<typeof listProducts>>[number];
   showCategory: boolean;
 }) {
-  const out = product.inventory <= 0;
+  // A preorder is sold before the stock exists, so 0 is expected, not sold out.
+  const out = !product.isPreorder && product.inventory <= 0;
   return (
     <Link
       href={`/products/${product.slug}`}
@@ -181,9 +183,14 @@ function ProductCard({
           />
         )}
 
-        {product.featured && (
-          <span className="absolute top-3.5 left-3.5 z-[2] py-[5px] px-[11px] rounded-full bg-gradient-to-br from-pink to-pink-deep text-white font-sans text-[9.5px] font-bold tracking-[0.16em] uppercase leading-none shadow-[0_6px_14px_rgba(255,79,163,0.35)]">
-            Featured
+        {(product.featured || product.isPreorder) && (
+          <span className="absolute top-3.5 left-3.5 z-[2] flex flex-col items-start gap-1.5">
+            {product.featured && (
+              <span className="py-[5px] px-[11px] rounded-full bg-gradient-to-br from-pink to-pink-deep text-white font-sans text-[9.5px] font-bold tracking-[0.16em] uppercase leading-none shadow-[0_6px_14px_rgba(255,79,163,0.35)]">
+                Featured
+              </span>
+            )}
+            {product.isPreorder && <PreorderTag />}
           </span>
         )}
 

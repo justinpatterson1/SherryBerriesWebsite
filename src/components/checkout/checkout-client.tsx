@@ -13,6 +13,7 @@ import {
   type ShippingKey,
 } from "@/lib/checkout/shipping";
 import { cartNeedsShipping } from "@/lib/checkout/digital";
+import { hasPreorder, isMixedPreorderCart } from "@/lib/checkout/preorder";
 // Aliased: this file already has an applyPromo handler for the promo box.
 import { applyPromo as promoTotals } from "@/lib/checkout/promo";
 import { findDeliveryCity, isDeliverableCity } from "@/lib/checkout/delivery-zones";
@@ -158,6 +159,9 @@ export function CheckoutClient({
   // charge. The checkout API decides this again from the database — this copy
   // only shapes the form.
   const needsShipping = useMemo(() => cartNeedsShipping(snapshot), [snapshot]);
+  // A preorder is paid up front, so it takes Cash on Delivery off the table
+  // whatever the shipping method. Also re-decided by the API.
+  const preorder = useMemo(() => hasPreorder(snapshot), [snapshot]);
 
   const totals = useMemo(() => {
     const subtotal = snapshot.reduce((s, l) => s + l.unitPrice * l.quantity, 0);
@@ -195,12 +199,12 @@ export function CheckoutClient({
   // one in `shipping` — that stays at its default and goes unused.
   const effectiveShipping: ShippingKey = needsShipping ? shipping : DIGITAL_SHIPPING_KEY;
 
-  // Payment defaults to Cash on Delivery, which a download-only bag cannot use.
-  // Whether the bag is download-only is only known once the cart snapshot
+  // Payment defaults to Cash on Delivery, which neither a download-only bag nor
+  // a preorder can use. What is in the bag is only known once the cart snapshot
   // resolves, after mount, so this is derived rather than corrected in an
   // effect: there is no first paint where the form offers a method the server
   // would refuse, and no cascading render to fix it.
-  const payment = isPaymentAllowedFor(paymentChoice, effectiveShipping)
+  const payment = isPaymentAllowedFor(paymentChoice, effectiveShipping, preorder)
     ? paymentChoice
     : "card";
 
@@ -347,6 +351,7 @@ export function CheckoutClient({
                 payment={payment}
                 onSelectPayment={setPaymentChoice}
                 needsShipping={needsShipping}
+                preorder={preorder}
               />
               <CheckoutSummary
                 items={snapshot}
@@ -360,6 +365,13 @@ export function CheckoutClient({
                 onRemovePromo={removePromo}
                 onError={showToast}
                 onPlaceOrder={placeOrder}
+                // The API refuses this bag too; this says so before the
+                // customer fills in the form, not after.
+                blockedReason={
+                  isMixedPreorderCart(snapshot)
+                    ? "Preorders are checked out on their own. Go back to your bag and save the in-stock pieces for later, or the preorders."
+                    : null
+                }
               />
             </div>
           )}

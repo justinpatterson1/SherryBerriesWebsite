@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { BestsellerProduct, BestsellerPin } from "@/lib/queries/home";
 import { WishlistButton } from "./wishlist-button";
+import { PreorderTag } from "@/components/product/preorder-tag";
 
 function tagClasses(tag: BestsellerPin) {
   const base =
@@ -48,6 +49,12 @@ export function BestsellerCard({ product }: { product: BestsellerProduct }) {
       </Link>
 
       {product.pin && <span className={tagClasses(product.pin)}>{product.pin}</span>}
+      {/* Drops below the pin when there is one, rather than covering it. */}
+      {product.isPreorder && (
+        <PreorderTag
+          className={"absolute left-3.5 z-[2] " + (product.pin ? "top-[42px]" : "top-3.5")}
+        />
+      )}
 
       <WishlistButton productId={product.id} productName={product.name} />
 

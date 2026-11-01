@@ -43,6 +43,7 @@ type Parsed = {
   isDigital: boolean;
   digitalFileKey: string | null;
   digitalFileName: string | null;
+  isPreorder: boolean;
 };
 
 function bad(error: string, status = 400) {
@@ -76,13 +77,16 @@ function parseBody(body: unknown): { data: Parsed } | { error: string } {
   if (!sized.ok) return { error: sized.error };
 
   const isDigital = b.isDigital === true;
+  const isPreorder = b.isPreorder === true;
+  // A file never runs short, so there is nothing to preorder.
+  if (isPreorder && isDigital) return { error: "A digital product can't be a preorder." };
 
   // Only meaningful with no sizes — otherwise the total comes from them, and
   // rejecting a figure the client never uses produces a baffling error about
   // a field the modal shows as read-only. A download has no stock at all, so
-  // neither figure is required of it.
+  // neither figure is required of it, and a preorder has none yet.
   const stock = typeof b.stock === "number" ? b.stock : NaN;
-  if (!isDigital && sized.sizes.length === 0 && (!Number.isInteger(stock) || stock < 0)) {
+  if (!isDigital && !isPreorder && sized.sizes.length === 0 && (!Number.isInteger(stock) || stock < 0)) {
     return { error: "Stock must be a non-negative whole number." };
   }
   const reorder = typeof b.reorder === "number" ? b.reorder : NaN;
@@ -113,8 +117,10 @@ function parseBody(body: unknown): { data: Parsed } | { error: string } {
       // in checkout (an order line with a variantId decrements the variant,
       // one without decrements the product), so letting them drift is how a
       // shop oversells. The typed-in figure only survives with no sizes, and
-      // a download is pinned to 0 — a file cannot run out.
-      stock: digital.stock,
+      // a download is pinned to 0 — a file cannot run out. So is a preorder,
+      // which is sold before the stock exists; its sizes go to 0 with it, and
+      // the admin enters real figures when it comes off preorder.
+      stock: isPreorder ? 0 : digital.stock,
       reorder: digital.reorder,
       categoryId,
       material: str(b.material),
@@ -123,10 +129,11 @@ function parseBody(body: unknown): { data: Parsed } | { error: string } {
       active: b.active !== false,
       imageUrl: str(b.imageUrl),
       sizeLabel: sized.label,
-      sizes: sized.sizes,
+      sizes: isPreorder ? sized.sizes.map((v) => ({ ...v, quantity: 0 })) : sized.sizes,
       isDigital,
       digitalFileKey: digital.digitalFileKey,
       digitalFileName: isDigital ? str(b.digitalFileName) || null : null,
+      isPreorder,
     },
   };
 }
@@ -288,6 +295,7 @@ export async function POST(request: Request) {
           isDigital: d.isDigital,
           digitalFileKey: d.digitalFileKey,
           digitalFileName: d.digitalFileName,
+          isPreorder: d.isPreorder,
           categoryId: d.categoryId,
           images: d.imageUrl ? { create: [{ imageUrl: d.imageUrl, position: 0 }] } : undefined,
         },
@@ -364,6 +372,7 @@ export async function PATCH(request: Request) {
       active: true,
       isDigital: true,
       digitalFileKey: true,
+      isPreorder: true,
       categoryId: true,
     },
   });
@@ -409,6 +418,7 @@ export async function PATCH(request: Request) {
     // a digital product's price cannot silently detach its PDF.
     digitalFileKey: d.isDigital ? d.digitalFileKey ?? existing.digitalFileKey : null,
     digitalFileName: d.digitalFileName,
+    isPreorder: d.isPreorder,
     categoryId: d.categoryId,
   };
 
@@ -427,6 +437,7 @@ export async function PATCH(request: Request) {
     "active",
     "isDigital",
     "digitalFileKey",
+    "isPreorder",
     "categoryId",
   ]);
 

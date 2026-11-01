@@ -17,7 +17,11 @@ import { ProductForm } from "@/components/admin/product-form";
 
 type Draft = Record<string, { price: number; stock: number }>;
 
-function statusFor(stock: number, reorder: number): StockStatus {
+function statusFor(p: AdminProduct, stock: number): StockStatus {
+  // Neither has stock to run out of, so neither is a warning.
+  if (p.isDigital) return "Digital";
+  if (p.isPreorder) return "Preorder";
+  const reorder = p.reorder;
   if (stock <= 0) return "Out of stock";
   if (stock <= reorder) return "Low stock";
   return "In stock";
@@ -70,7 +74,7 @@ export function InventoryView({
       healthy = 0;
     for (const p of products) {
       const { stock } = eff(p);
-      const s = statusFor(stock, p.reorder);
+      const s = statusFor(p, stock);
       if (s === "Out of stock") out++;
       else if (s === "Low stock") low++;
       else healthy++;
@@ -83,7 +87,7 @@ export function InventoryView({
     const q = query.trim().toLowerCase();
     return products.filter((p) => {
       const { stock } = eff(p);
-      if (tab === "reorder" && statusFor(stock, p.reorder) === "In stock") return false;
+      if (tab === "reorder" && !["Out of stock", "Low stock"].includes(statusFor(p, stock))) return false;
       if (!q) return true;
       return (
         p.name.toLowerCase().includes(q) ||
@@ -206,7 +210,7 @@ export function InventoryView({
               {filtered.map((p) => {
                 const v = eff(p);
                 const dirty = isDirty(p);
-                const status = statusFor(v.stock, p.reorder);
+                const status = statusFor(p, v.stock);
                 return (
                   <li
                     key={p.id}
@@ -249,16 +253,37 @@ export function InventoryView({
                       {/* A sized product's stock is the sum of its sizes, so it is
                           edited in the product modal rather than here — stepping it
                           would be silently overwritten on the next save. */}
-                      {p.sizes.length > 0 ? (
-                        <span className="font-sans text-[13px] text-ink">{p.stock}</span>
+                      {/* A preorder has no stock to edit; what matters is how
+                          many have been ordered in, to know what to buy. */}
+                      {p.isPreorder ? (
+                        <>
+                          <span className="font-sans text-[13px] text-gold-soft">
+                            {p.preordered} preordered
+                          </span>
+                          <span className="block mt-1 font-sans text-[10px] text-ink-faint">
+                            {p.preorderedPaid} paid
+                            {p.sizes.some((s) => s.preordered > 0) &&
+                              " · " +
+                                p.sizes
+                                  .filter((s) => s.preordered > 0)
+                                  .map((s) => `${s.value} ×${s.preordered}`)
+                                  .join(", ")}
+                          </span>
+                        </>
                       ) : (
-                        <Stepper value={v.stock} onChange={(stock) => setField(p, { stock })} />
+                        <>
+                          {p.sizes.length > 0 ? (
+                            <span className="font-sans text-[13px] text-ink">{p.stock}</span>
+                          ) : (
+                            <Stepper value={v.stock} onChange={(stock) => setField(p, { stock })} />
+                          )}
+                          <span className="block mt-1 font-sans text-[10px] text-ink-faint">
+                            {p.sizes.length > 0
+                              ? `${p.sizes.length} ${p.sizes.length === 1 ? "size" : "sizes"}`
+                              : `reorder ≤ ${p.reorder}`}
+                          </span>
+                        </>
                       )}
-                      <span className="block mt-1 font-sans text-[10px] text-ink-faint">
-                        {p.sizes.length > 0
-                          ? `${p.sizes.length} ${p.sizes.length === 1 ? "size" : "sizes"}`
-                          : `reorder ≤ ${p.reorder}`}
-                      </span>
                     </span>
                     <span className="flex justify-end">
                       <StockBadge status={status} />

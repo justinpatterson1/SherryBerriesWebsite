@@ -21,6 +21,8 @@ export type CartSnapshotLine = {
   lowStockThreshold: number;
   /** A download: holds no stock, ships nowhere. */
   isDigital: boolean;
+  /** Sold before the stock exists: stock is ignored, and COD is not offered. */
+  isPreorder: boolean;
 };
 
 type RequestLine = { productId: string; variantId?: string | null; quantity: number };
@@ -115,6 +117,7 @@ export async function POST(request: Request) {
         variantInventory: variant?.inventory ?? null,
         lowStockThreshold: product.lowStockThreshold,
         isDigital: product.isDigital,
+        isPreorder: product.isPreorder,
       },
     ];
   });

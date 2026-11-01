@@ -10,6 +10,7 @@ import { ProductWishlistButton } from "@/components/product/product-wishlist-but
 import { ProductAccordion } from "@/components/product/product-accordion";
 import { ProductTrustBadges } from "@/components/product/product-trust-badges";
 import { RelatedProducts } from "@/components/product/related-products";
+import { PreorderTag } from "@/components/product/preorder-tag";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -100,8 +101,11 @@ export default async function ProductPage({ params }: PageProps) {
 
         <div className="flex flex-col gap-7">
           <div className="flex flex-col gap-3">
-            <span className="font-sans text-[11px] font-medium tracking-[0.22em] uppercase text-pink">
-              {product.category.name}
+            <span className="flex items-center gap-3">
+              <span className="font-sans text-[11px] font-medium tracking-[0.22em] uppercase text-pink">
+                {product.category.name}
+              </span>
+              {product.isPreorder && <PreorderTag />}
             </span>
             <h1
               id="product-title"
@@ -123,6 +127,7 @@ export default async function ProductPage({ params }: PageProps) {
             inventory={product.inventory}
             lowStockThreshold={product.lowStockThreshold}
             isDigital={product.isDigital}
+            isPreorder={product.isPreorder}
           />
 
           <div className="flex items-center gap-3 flex-wrap">
@@ -155,7 +160,7 @@ export default async function ProductPage({ params }: PageProps) {
                     <SpecRow label="SKU" value={product.sku} />
                     <SpecRow
                       label="In stock"
-                      value={product.inventory.toString()}
+                      value={product.isPreorder ? "Preorder" : product.inventory.toString()}
                     />
                     {product.healingStage && (
                       <SpecRow

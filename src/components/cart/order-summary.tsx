@@ -26,6 +26,7 @@ export function OrderSummary({
   onRemovePromo,
   onCheckout,
   onError,
+  blockedReason = null,
 }: {
   totals: Totals;
   promo: AppliedPromo | null;
@@ -33,6 +34,8 @@ export function OrderSummary({
   onRemovePromo: () => void;
   onCheckout: () => void;
   onError: (msg: string) => void;
+  /** Why checkout can't go ahead with this bag as it stands, if it can't. */
+  blockedReason?: string | null;
 }) {
   const [code, setCode] = useState("");
   const [applying, setApplying] = useState(false);
@@ -182,7 +185,7 @@ export function OrderSummary({
       <button
         type="button"
         onClick={handleCheckout}
-        disabled={redirecting || totals.itemCount === 0}
+        disabled={redirecting || totals.itemCount === 0 || blockedReason !== null}
         className={
           "relative w-full h-14 rounded-full border-0 bg-gradient-to-br from-pink to-pink-deep " +
           "text-white font-sans text-sm font-bold tracking-[0.16em] uppercase cursor-pointer " +
@@ -195,6 +198,11 @@ export function OrderSummary({
       >
         {redirecting ? "Redirecting…" : "Secure checkout →"}
       </button>
+      {blockedReason && (
+        <p role="alert" className="m-0 font-sans text-[12px] leading-[1.5] text-gold-soft">
+          {blockedReason}
+        </p>
+      )}
 
       <ul className="flex flex-col gap-2 mt-1">
         <Perk>256-bit SSL secure checkout</Perk>

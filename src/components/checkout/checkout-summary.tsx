@@ -24,6 +24,7 @@ export function CheckoutSummary({
   onRemovePromo,
   onError,
   onPlaceOrder,
+  blockedReason = null,
 }: {
   items: CartSnapshotLine[];
   totals: { subtotal: number; discount: number; shipFee: number; total: number };
@@ -34,6 +35,8 @@ export function CheckoutSummary({
   onRemovePromo: () => void;
   onError: (msg: string) => void;
   onPlaceOrder: () => void;
+  /** Why the order can't be placed with this bag as it stands, if it can't. */
+  blockedReason?: string | null;
 }) {
   const [code, setCode] = useState("");
   const [applying, setApplying] = useState(false);
@@ -179,12 +182,13 @@ export function CheckoutSummary({
       <button
         type="button"
         onClick={onPlaceOrder}
-        disabled={placing}
+        disabled={placing || blockedReason !== null}
         className={
           "relative overflow-hidden w-full mt-5 py-4 rounded-full border-0 cursor-pointer " +
           "bg-gradient-to-br from-pink to-pink-deep text-white font-sans text-[13px] font-bold tracking-[0.14em] uppercase " +
           "shadow-[0_12px_30px_rgba(255,79,163,0.36)] transition-transform duration-200 " +
-          "hover:-translate-y-px disabled:opacity-80 disabled:cursor-wait disabled:hover:translate-y-0 " +
+          "hover:-translate-y-px disabled:opacity-80 disabled:hover:translate-y-0 " +
+          (placing ? "disabled:cursor-wait " : "disabled:cursor-not-allowed ") +
           "before:absolute before:inset-0 before:bg-gradient-to-br before:from-gold before:to-pink before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300"
         }
       >
@@ -193,6 +197,11 @@ export function CheckoutSummary({
           {placing ? "Placing your order…" : "Place order"}
         </span>
       </button>
+      {blockedReason && (
+        <p role="alert" className="mt-3 mb-0 font-sans text-[12px] leading-[1.5] text-gold-soft">
+          {blockedReason}
+        </p>
+      )}
 
       <p className="flex items-center justify-center gap-1.5 mt-3 font-sans text-[11px] text-[#5fd29a] m-0">
         <LockIcon /> Secure checkout · your details are protected

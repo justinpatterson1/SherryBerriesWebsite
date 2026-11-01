@@ -131,21 +131,30 @@ export function isPaymentKey(v: unknown): v is PaymentKey {
  * A bag holding one physical item alongside a download is not digital-only, so
  * it keeps COD on the usual terms.
  *
+ * A preorder rules COD out whatever the shipping method: the piece is ordered
+ * in on the customer's word, so it is paid for up front.
+ *
  * Used by the checkout form to grey the option out and by /api/checkout to
  * refuse the combination outright, so the rule holds whatever the browser
  * sends.
  */
-export function isPaymentAllowedFor(payment: PaymentKey, shipping: ShippingKey): boolean {
+export function isPaymentAllowedFor(
+  payment: PaymentKey,
+  shipping: ShippingKey,
+  preorder = false,
+): boolean {
   if (payment !== "cod") return true;
-  return shipping !== "ttpost" && shipping !== DIGITAL_SHIPPING_KEY;
+  return !preorder && shipping !== "ttpost" && shipping !== DIGITAL_SHIPPING_KEY;
 }
 
 /** Why a payment method is unavailable, shown on the greyed-out option. */
 export function paymentUnavailableReason(
   payment: PaymentKey,
   shipping: ShippingKey,
+  preorder = false,
 ): string | null {
-  if (isPaymentAllowedFor(payment, shipping)) return null;
+  if (isPaymentAllowedFor(payment, shipping, preorder)) return null;
+  if (preorder) return "Not available for preorders. Pay by card or bank transfer instead";
   return shipping === DIGITAL_SHIPPING_KEY
     ? "Not available for a download. Pay by card or bank transfer instead"
     : "Not available with TTPost. Nobody is there to collect the cash";

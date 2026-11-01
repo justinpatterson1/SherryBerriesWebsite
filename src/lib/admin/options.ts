@@ -59,6 +59,8 @@ export type ProductFormData = {
   digitalFileKey: string;
   /** Original upload filename, shown in the form and used for the download. */
   digitalFileName: string;
+  /** Sold before the stock exists: no stock, card or bank transfer only. */
+  isPreorder: boolean;
 };
 
 /** Shape of a key this app will serve as a digital product: `digital/<id>.pdf`. */

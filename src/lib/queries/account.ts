@@ -62,6 +62,8 @@ export type AccountOrderItem = {
   downloadReady: boolean;
   /** Where to fetch it. Null when the line is not a download. */
   downloadUrl: string | null;
+  /** Bought on preorder, so it ships once the stock arrives. */
+  isPreorder: boolean;
 };
 
 export type AccountOrder = {
@@ -317,6 +319,7 @@ export async function getAccountData(userId: string): Promise<AccountData | null
           downloadUrl: isDigital
             ? `/api/orders/${encodeURIComponent(o.orderNumber)}/download/${it.id}`
             : null,
+          isPreorder: it.isPreorder,
         };
       }),
     };

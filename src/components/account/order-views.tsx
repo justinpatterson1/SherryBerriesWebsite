@@ -4,6 +4,7 @@ import Image from "next/image";
 import type { ReactNode } from "react";
 import type { AccountOrder } from "@/lib/queries/account";
 import { StatusBadge, btnOutline, btnSolid, cardClass, money, type View } from "./shared";
+import { PreorderTag } from "@/components/product/preorder-tag";
 
 // --- shared bits ------------------------------------------------------------
 
@@ -326,6 +327,7 @@ export function OrderDetailView({
                 <p className="font-sans text-[14px] font-semibold text-ink m-0 truncate">
                   {it.name}
                 </p>
+                {it.isPreorder && <PreorderTag className="inline-block mt-1.5" />}
                 {it.variant && (
                   <p className="font-sans text-[12px] text-ink-faint m-0 mt-0.5">{it.variant}</p>
                 )}
