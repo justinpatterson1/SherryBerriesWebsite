@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { EMAIL_MAX, maskEmail, normalizeEmail, validateNewsletterEmail } from "./validate";
+import {
+  EMAIL_MAX,
+  maskEmail,
+  newsletterSource,
+  normalizeEmail,
+  validateNewsletterEmail,
+} from "./validate";
 
 describe("normalizeEmail", () => {
   it("trims and lowercases so one person cannot become two rows", () => {
@@ -55,5 +61,18 @@ describe("maskEmail", () => {
   it("returns *** when there is no local part to keep", () => {
     expect(maskEmail("@example.com")).toBe("***");
     expect(maskEmail("not-an-email")).toBe("***");
+  });
+});
+
+describe("newsletterSource", () => {
+  it("keeps a known source", () => {
+    expect(newsletterSource("popup")).toBe("popup");
+    expect(newsletterSource("checkout")).toBe("checkout");
+  });
+
+  it("falls back to the homepage for anything else", () => {
+    expect(newsletterSource(undefined)).toBe("homepage");
+    expect(newsletterSource("admin")).toBe("homepage");
+    expect(newsletterSource({})).toBe("homepage");
   });
 });

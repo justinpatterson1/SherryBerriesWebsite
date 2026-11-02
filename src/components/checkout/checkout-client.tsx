@@ -20,6 +20,7 @@ import { findDeliveryCity, isDeliverableCity } from "@/lib/checkout/delivery-zon
 import { StepIndicator } from "./shared";
 import { CheckoutForm } from "./checkout-form";
 import { CheckoutSummary, type AppliedPromo } from "./checkout-summary";
+import type { PublicPopup } from "@/lib/popups/schedule";
 import { ThankYou, type PlacedOrder } from "./thank-you";
 
 const PROMO_KEY = "sb-promo";
@@ -39,8 +40,11 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function CheckoutClient({
   initial,
+  popup,
 }: {
   initial: { firstName: string; lastName: string; email: string; phone: string; line1: string; city: string };
+  /** Opens on the thank-you screen; null when there is none to show. */
+  popup: PublicPopup | null;
 }) {
   const { items: cartLines, ready, clearCart } = useCart();
 
@@ -314,7 +318,7 @@ export function CheckoutClient({
   return (
     <main className="pt-[110px] pb-[100px] max-[900px]:pt-[100px] max-[900px]:pb-20 px-[8%] max-[900px]:px-[6%]">
       {order ? (
-        <ThankYou order={order} />
+        <ThankYou order={order} popup={popup} />
       ) : (
         <>
           <Link

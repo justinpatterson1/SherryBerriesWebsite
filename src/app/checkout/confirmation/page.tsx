@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { buildPlacedOrder } from "@/lib/checkout/order-view";
+import { getCheckoutPopup } from "@/lib/queries/popups";
 import { ThankYou } from "@/components/checkout/thank-you";
 
 export const metadata: Metadata = {
@@ -41,10 +42,12 @@ export default async function ConfirmationPage({
   if (order.paymentStatus !== "PAID") redirect("/checkout?wipay=pending");
 
   const placed = buildPlacedOrder(order);
+  // A failed lookup costs the popup, never the confirmation.
+  const popup = await getCheckoutPopup(session.user.email).catch(() => null);
 
   return (
     <main className="pt-[110px] pb-[100px] max-[900px]:pt-[100px] max-[900px]:pb-20 px-[8%] max-[900px]:px-[6%]">
-      <ThankYou order={placed} />
+      <ThankYou order={placed} popup={popup} />
     </main>
   );
 }

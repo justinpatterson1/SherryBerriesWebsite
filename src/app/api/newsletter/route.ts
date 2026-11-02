@@ -1,8 +1,9 @@
 import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { checkRateLimit, contactLimiter, getClientIp, tooManyRequests } from "@/lib/rate-limit";
-import { validateNewsletterEmail } from "@/lib/newsletter/validate";
+import { newsletterSource, validateNewsletterEmail } from "@/lib/newsletter/validate";
 import { prisma } from "@/lib/db";
+import { popupRewardCode } from "@/lib/queries/popups";
 
 // Newsletter signup. The form used to fake success with a 600 ms timer and
 // discard the address entirely (open-issues #24); it now writes to the
@@ -22,7 +23,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
-  const parsed = validateNewsletterEmail((body as { email?: unknown })?.email);
+  const b = (body ?? {}) as { email?: unknown; source?: unknown; popupId?: unknown };
+  const parsed = validateNewsletterEmail(b.email);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 });
 
   try {
@@ -34,7 +36,9 @@ export async function POST(request: Request) {
       update: { unsubscribedAt: null },
       create: {
         email: parsed.email,
-        source: "homepage",
+        // Only set on create: a returning address keeps the source it first
+        // signed up from.
+        source: newsletterSource(b.source),
         unsubscribeToken: randomBytes(24).toString("hex"),
       },
     });
@@ -46,8 +50,15 @@ export async function POST(request: Request) {
     );
   }
 
+  // A popup's reward code, revealed only now the signup has gone through. A
+  // failed lookup costs the code, not the signup that already succeeded.
+  const promoCode =
+    typeof b.popupId === "string" && b.popupId
+      ? await popupRewardCode(b.popupId).catch(() => null)
+      : null;
+
   // Deliberately identical whether the address was new, already on the list, or
   // returning: a differing reply would let anyone test whether an address is
   // subscribed. Same reasoning as the forgot-password route.
-  return NextResponse.json({ ok: true });
+  return NextResponse.json(promoCode ? { ok: true, promoCode } : { ok: true });
 }

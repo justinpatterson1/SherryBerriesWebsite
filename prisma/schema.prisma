@@ -282,6 +282,7 @@ model Product {
   orderItems     OrderItem[]
   cartItems      CartItem[]
   tags           ProductTag[]
+  popups         Popup[]
 
   @@index([categoryId])
   @@index([slug])
@@ -675,6 +676,8 @@ model DiscountCode {
   /// everything.
   excludedCategories Category[]           @relation("PromoExclusions")
   redemptions        DiscountRedemption[]
+  /// Newsletter popups that hand this code out after a signup.
+  popups             Popup[]
 
   @@index([active, expiresAt])
 }
@@ -710,4 +713,79 @@ model DiscountRedemption {
   @@unique([codeId, userId, seq])
   @@index([codeId, userId])
   @@index([userId])
+}
+
+enum PopupKind {
+  /// Image, words and a button, e.g. a preorder launch.
+  ANNOUNCEMENT
+  /// Image, words and an email field that joins the Berry List.
+  NEWSLETTER
+}
+
+enum PopupLayout {
+  /// A photo above words the admin types; the site styles the text.
+  IMAGE_TEXT
+  /// A finished design (words baked in); the site only overlays the controls.
+  FULL_GRAPHIC
+}
+
+enum PopupPlacement {
+  /// Every storefront page except /admin and /checkout.
+  SITE
+  /// The thank-you screen after an order is placed.
+  CHECKOUT_COMPLETE
+}
+
+enum PopupFrequency {
+  /// Once per browser, ever.
+  ONCE
+  /// Once per browser tab session.
+  SESSION
+  /// At most once a day.
+  DAILY
+}
+
+/// A popup an admin builds in the Popups view. Plain data rather than code, so
+/// the owner can run a new promotion with her own artwork without a deploy.
+///
+/// Only one popup shows at a time: the live one with the highest priority that
+/// the visitor has not already seen (see lib/popups/schedule.ts).
+model Popup {
+  id        String         @id @default(cuid())
+  /// Admin-only label; never shown to customers.
+  name      String
+  kind      PopupKind
+  layout    PopupLayout    @default(IMAGE_TEXT)
+  placement PopupPlacement @default(SITE)
+  imageUrl  String?
+  /// Shown as the heading on IMAGE_TEXT, and as the image alt text on
+  /// FULL_GRAPHIC, where the words are part of the picture.
+  headline  String
+  body      String?
+  ctaLabel  String?
+  /// The button links to this product's page. Wins over ctaUrl.
+  productId String?
+  product   Product?       @relation(fields: [productId], references: [id], onDelete: SetNull)
+  /// A site path ("/products") or an https link, used when no product is set.
+  ctaUrl    String?
+  /// Count down to endsAt on the popup. Requires endsAt.
+  showCountdown Boolean @default(false)
+  /// Revealed after a newsletter signup, never before. NEWSLETTER only.
+  promoCodeId   String?
+  promoCode     DiscountCode? @relation(fields: [promoCodeId], references: [id], onDelete: SetNull)
+  /// Null starts showing immediately.
+  startsAt     DateTime?
+  /// Null never ends. After this moment the popup no longer shows.
+  endsAt       DateTime?
+  frequency    PopupFrequency @default(ONCE)
+  /// Seconds after the page loads before the popup opens.
+  delaySeconds Int            @default(2)
+  /// Higher wins when more than one popup is live.
+  priority     Int            @default(0)
+  active       Boolean        @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active, placement])
 }

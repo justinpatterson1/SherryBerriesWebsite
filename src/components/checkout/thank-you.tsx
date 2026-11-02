@@ -3,6 +3,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { money } from "./shared";
+import type { PublicPopup } from "@/lib/popups/schedule";
+import { CheckoutPopup } from "@/components/popups/checkout-popup";
 
 export type PlacedOrder = {
   orderNumber: string;
@@ -30,7 +32,7 @@ export type PlacedOrder = {
   digital?: boolean;
 };
 
-export function ThankYou({ order }: { order: PlacedOrder }) {
+export function ThankYou({ order, popup }: { order: PlacedOrder; popup?: PublicPopup | null }) {
   const itemCount = order.items.reduce((n, it) => n + it.qty, 0);
   const isCod = order.paymentLabel === "Cash on Delivery";
 
@@ -155,6 +157,8 @@ export function ThankYou({ order }: { order: PlacedOrder }) {
           </Link>
         </div>
       </div>
+
+      {popup && <CheckoutPopup popup={popup} email={order.contact.email} />}
 
       <style>{`@keyframes tyPop{0%{opacity:0;transform:scale(0.4)}60%{transform:scale(1.12)}100%{opacity:1;transform:scale(1)}}`}</style>
     </div>

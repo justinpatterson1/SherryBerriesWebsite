@@ -11,11 +11,13 @@ import type {
   AdminPromo,
 
   AdminPayment,
+  AdminPopup,
   AdminSubscriber,
   AdminReturn,
 } from "@/lib/queries/admin";
 import type { CategoryFormData, ProductFormData } from "@/lib/admin/options";
 import type { PromoFormData } from "@/lib/admin/promo-validate";
+import type { PopupFormData } from "@/lib/admin/popup-validate";
 import { ICONS } from "@/components/admin/shared";
 import { OverviewView } from "@/components/admin/overview-view";
 import { OrdersView, type OrdersTab } from "@/components/admin/orders-view";
@@ -24,6 +26,7 @@ import { InventoryView } from "@/components/admin/inventory-view";
 import { CategoriesView } from "@/components/admin/categories-view";
 import { AdminReturnsView } from "@/components/admin/returns-view";
 import { PromosView } from "@/components/admin/promos-view";
+import { PopupsView } from "@/components/admin/popups-view";
 import { SubscribersView } from "@/components/admin/subscribers-view";
 import { PaymentsView } from "@/components/admin/payments-view";
 import { AnalyticsView } from "@/components/admin/analytics-view";
@@ -38,6 +41,7 @@ type View =
   | "categories"
   | "returns"
   | "promos"
+  | "popups"
   | "subscribers"
   | "payments"
   | "analytics"
@@ -51,6 +55,7 @@ const SIDEBAR: { view: View; label: string; icon: keyof typeof ICONS }[] = [
   { view: "categories", label: "Categories", icon: "categories" },
   { view: "returns", label: "Returns", icon: "returns" },
   { view: "promos", label: "Promo codes", icon: "promos" },
+  { view: "popups", label: "Popups", icon: "popups" },
   { view: "payments", label: "Payments", icon: "payments" },
   { view: "subscribers", label: "Newsletter", icon: "subscribers" },
   { view: "analytics", label: "Analytics", icon: "analytics" },
@@ -84,6 +89,7 @@ export function AdminClient({
   const [categories, setCategories] = useState<AdminCategory[]>(data.categories);
   const [returns, setReturns] = useState<AdminReturn[]>(data.returns);
   const [promos, setPromos] = useState<AdminPromo[]>(data.promos);
+  const [popups, setPopups] = useState<AdminPopup[]>(data.popups);
   const [subscribers, setSubscribers] = useState<AdminSubscriber[]>(data.subscribers);
   const [payments, setPayments] = useState<AdminPayment[]>(data.payments);
 
@@ -335,6 +341,68 @@ export function AdminClient({
         return true;
       } catch (e) {
         showToast(e instanceof Error && e.message ? e.message : "Couldn't delete the category.");
+        return false;
+      }
+    },
+    [showToast],
+  );
+
+  const createPopup = useCallback(
+    async (data: PopupFormData): Promise<boolean> => {
+      try {
+        const res = await fetch("/api/admin/popups", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        const json = await res.json();
+        if (!res.ok || !json.popup) throw new Error(json.error);
+        setPopups((prev) => [json.popup as AdminPopup, ...prev]);
+        showToast(`Created “${json.popup.name}”`);
+        return true;
+      } catch (e) {
+        showToast(e instanceof Error && e.message ? e.message : "Couldn't create the popup.");
+        return false;
+      }
+    },
+    [showToast],
+  );
+
+  const updatePopup = useCallback(
+    async (id: string, data: PopupFormData): Promise<boolean> => {
+      try {
+        const res = await fetch("/api/admin/popups", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, ...data }),
+        });
+        const json = await res.json();
+        if (!res.ok || !json.popup) throw new Error(json.error);
+        const next = json.popup as AdminPopup;
+        setPopups((prev) => prev.map((p) => (p.id === id ? next : p)));
+        showToast(`Updated “${next.name}”`);
+        return true;
+      } catch (e) {
+        showToast(e instanceof Error && e.message ? e.message : "Couldn't update the popup.");
+        return false;
+      }
+    },
+    [showToast],
+  );
+
+  const deletePopup = useCallback(
+    async (id: string): Promise<boolean> => {
+      try {
+        const res = await fetch(`/api/admin/popups?id=${encodeURIComponent(id)}`, {
+          method: "DELETE",
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error);
+        setPopups((prev) => prev.filter((p) => p.id !== id));
+        showToast("Popup deleted");
+        return true;
+      } catch (e) {
+        showToast(e instanceof Error && e.message ? e.message : "Couldn't delete the popup.");
         return false;
       }
     },
@@ -709,6 +777,16 @@ export function AdminClient({
               onCreate={createPromo}
               onUpdate={updatePromo}
               onDelete={deletePromo}
+            />
+          )}
+          {view === "popups" && (
+            <PopupsView
+              popups={popups}
+              products={products}
+              promos={promos}
+              onCreate={createPopup}
+              onUpdate={updatePopup}
+              onDelete={deletePopup}
             />
           )}
           {view === "payments" && (

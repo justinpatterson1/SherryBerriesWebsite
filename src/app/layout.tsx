@@ -9,6 +9,7 @@ import { SearchProvider } from "@/components/search/search-provider";
 import { IdleSignOut } from "@/components/auth/idle-sign-out";
 import { siteUrl } from "@/lib/seo/site-url";
 import { ThemeScript } from "@/components/providers/theme-script";
+import { SitePopup } from "@/components/popups/site-popup";
 import { Analytics } from "@vercel/analytics/next";
 
 const italiana = Italiana({
@@ -88,6 +89,7 @@ export default function RootLayout({
                 <SiteNavbar />
                 {children}
                 <SiteFooter />
+                <SitePopup />
                 <Analytics />
               </SearchProvider>
             </WishlistProvider>

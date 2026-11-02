@@ -50,3 +50,13 @@ export function maskEmail(email: string): string {
   const domain = email.slice(at + 1);
   return `${local.length > 1 ? local[0] : ""}***@${domain}`;
 }
+
+/** Where a signup can say it came from. Anything else is recorded as the homepage. */
+export const NEWSLETTER_SOURCES = ["homepage", "popup", "checkout"] as const;
+export type NewsletterSource = (typeof NEWSLETTER_SOURCES)[number];
+
+export function newsletterSource(raw: unknown): NewsletterSource {
+  return (NEWSLETTER_SOURCES as readonly unknown[]).includes(raw)
+    ? (raw as NewsletterSource)
+    : "homepage";
+}

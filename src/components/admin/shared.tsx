@@ -3,6 +3,7 @@
 import { useEffect, type ReactNode } from "react";
 import type { AdminOrderStatus, StockStatus, Kpi } from "@/lib/queries/admin";
 import type { DeliveryMethod } from "@/lib/admin/delivery";
+import type { PopupStatus } from "@/lib/popups/schedule";
 
 /**
  * Scrim + centering for a modal. The backdrop is a real button rather than a
@@ -234,6 +235,17 @@ export function PreorderBadge() {
   return <Badge tone="gold" label="Preorder" />;
 }
 
+const POPUP_TONE: Record<PopupStatus, Tone> = {
+  Live: "green",
+  Scheduled: "gold",
+  Ended: "neutral",
+  Off: "neutral",
+};
+
+export function PopupStatusBadge({ status }: { status: PopupStatus }) {
+  return <Badge tone={POPUP_TONE[status]} label={status} />;
+}
+
 // --- Stepper -----------------------------------------------------------------
 
 export function Stepper({
@@ -341,6 +353,13 @@ export const ICONS: Record<string, ReactNode> = {
       <path d="M9.5 9.5h.01" />
       <path d="M14.5 14.5h.01" />
       <path d="m9 15 6-6" />
+    </Svg>
+  ),
+  popups: (
+    <Svg>
+      <rect x="3" y="5" width="18" height="14" rx="2.5" />
+      <rect x="7" y="8.5" width="10" height="7" rx="1.5" />
+      <path d="M15.5 10l-1.5 1.5" />
     </Svg>
   ),
   activity: (

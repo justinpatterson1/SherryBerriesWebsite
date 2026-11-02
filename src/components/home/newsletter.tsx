@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { validateNewsletterEmail } from "@/lib/newsletter/validate";
+import { useNewsletterSignup } from "@/components/popups/use-newsletter-signup";
 
 // Only perks the site can actually deliver. Removed 2026-08-17: "10% off your
 // first order" (no signup discount exists — registering grants nothing, and the
@@ -11,37 +11,11 @@ const PERKS = ["Early access drops"];
 
 export function Newsletter() {
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "submitting" | "done">("idle");
-  const [error, setError] = useState<string | null>(null);
+  const { status, error, submit } = useNewsletterSignup("homepage");
 
-  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (status !== "idle") return;
-
-    // Validated here for a fast, in-place message; the API validates again,
-    // since nothing stops a request arriving without going through this form.
-    const check = validateNewsletterEmail(email);
-    if (!check.ok) return setError(check.error);
-
-    setError(null);
-    setStatus("submitting");
-    try {
-      const res = await fetch("/api/newsletter", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: check.email }),
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json.error);
-      setStatus("done");
-    } catch (err) {
-      setError(
-        err instanceof Error && err.message
-          ? err.message
-          : "We couldn't sign you up just now. Please try again.",
-      );
-      setStatus("idle");
-    }
+    submit(email);
   };
 
   return (

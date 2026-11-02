@@ -223,6 +223,17 @@ Stores:
 
 ---
 
+### Popup
+
+Admin-built storefront popups (Admin → Popups). Stores:
+
+* kind (announcement / newsletter signup) and layout (image + text / full graphic)
+* placement: every page (`GET /api/popups`, edge-cached 60s) or the checkout thank-you screen (loaded by the checkout pages)
+* optional product or link for the button, countdown to `endsAt`, promo code revealed after signup
+* schedule, frequency, delay and priority (one popup shows at a time)
+
+---
+
 # Suggested Prisma Features
 
 ## Recommended Prisma Extensions

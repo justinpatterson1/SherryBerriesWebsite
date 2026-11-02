@@ -10,6 +10,7 @@ import type { AdminOrderStatus } from "@/lib/admin/status";
 import { resolveShipTo, type OrderShipTo } from "@/lib/account/ship-to";
 import { customerName } from "@/lib/admin/customer-name";
 import { deliveryFor, type DeliveryMethod } from "@/lib/admin/delivery";
+import type { PopupFormData } from "@/lib/admin/popup-validate";
 
 // -----------------------------------------------------------------------------
 // Public shapes (everything the admin client renders)
@@ -167,6 +168,42 @@ export type AdminPromo = {
   expiresAt: string | null;
 };
 
+export type AdminPopup = PopupFormData & { id: string };
+
+/** Every column the Popups view edits, shared with the admin popups route. */
+export const POPUP_SELECT = {
+  id: true,
+  name: true,
+  kind: true,
+  layout: true,
+  placement: true,
+  imageUrl: true,
+  headline: true,
+  body: true,
+  ctaLabel: true,
+  productId: true,
+  ctaUrl: true,
+  showCountdown: true,
+  promoCodeId: true,
+  startsAt: true,
+  endsAt: true,
+  frequency: true,
+  delaySeconds: true,
+  priority: true,
+  active: true,
+} as const;
+
+/** A popup row with its dates as ISO strings, the shape the client holds. */
+export function toAdminPopup<
+  R extends Omit<AdminPopup, "startsAt" | "endsAt"> & { startsAt: Date | null; endsAt: Date | null },
+>(row: R): AdminPopup {
+  return {
+    ...row,
+    startsAt: row.startsAt?.toISOString() ?? null,
+    endsAt: row.endsAt?.toISOString() ?? null,
+  };
+}
+
 export type AdminSubscriber = {
   id: string;
   email: string;
@@ -252,6 +289,7 @@ export type AdminData = {
   topProducts: TopProduct[];
   categories: AdminCategory[];
   promos: AdminPromo[];
+  popups: AdminPopup[];
   subscribers: AdminSubscriber[];
   /** Bank transfer orders, newest first. Empty until one is placed. */
   payments: AdminPayment[];
@@ -464,6 +502,7 @@ export async function getAdminData(
     auditRows,
     returnRows,
     preorderCounts,
+    popupRows,
   ] = await Promise.all([
     // Light pass over every order — powers all-time totals + the monthly trend.
     prisma.order.findMany({
@@ -630,6 +669,8 @@ export async function getAdminData(
       },
     }),
     loadPreorderCounts(),
+    // Popups for the Popups view, newest first.
+    prisma.popup.findMany({ orderBy: { createdAt: "desc" }, select: POPUP_SELECT }),
   ]);
 
   // --- All-time + monthly trend ---------------------------------------------
@@ -953,6 +994,7 @@ export async function getAdminData(
         }),
       })),
     })),
+    popups: popupRows.map(toAdminPopup),
     subscribers: subscriberRows.map((s) => ({
       id: s.id,
       email: s.email,

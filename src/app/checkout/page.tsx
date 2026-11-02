@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
+import { getCheckoutPopup } from "@/lib/queries/popups";
 import { CheckoutClient } from "@/components/checkout/checkout-client";
 
 export const metadata: Metadata = {
@@ -33,17 +34,22 @@ export default async function CheckoutPage() {
 
   const def = user?.addresses[0];
   const nameParts = user?.name?.split(" ") ?? [];
+  const email = user?.email ?? session.user.email ?? "";
+  // Loaded now for the thank-you screen, which replaces this page in place. A
+  // failed lookup costs the popup, never the checkout.
+  const popup = await getCheckoutPopup(email).catch(() => null);
 
   return (
     <CheckoutClient
       initial={{
         firstName: user?.firstName ?? nameParts[0] ?? "",
         lastName: user?.lastName ?? nameParts.slice(1).join(" ") ?? "",
-        email: user?.email ?? session.user.email ?? "",
+        email,
         phone: user?.phoneNumber ?? "",
         line1: def?.addressLine1 ?? "",
         city: def?.city ?? "",
       }}
+      popup={popup}
     />
   );
 }
