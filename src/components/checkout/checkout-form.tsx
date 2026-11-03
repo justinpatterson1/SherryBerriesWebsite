@@ -8,6 +8,7 @@ import {
   SHIPPING_ORDER,
   feeForCity,
   paymentUnavailableReason,
+  shippingUnavailableReason,
   type PaymentKey,
   type ShippingKey,
 } from "@/lib/checkout/shipping";
@@ -162,6 +163,7 @@ export function CheckoutForm({
             const cityFee = feeForCity(key, form.city);
             const pending = opt.variesByCity && cityFee === null;
             const fee = cityFee ?? opt.fee;
+            const unavailable = shippingUnavailableReason(key, form.city);
             return (
               <div key={key} className="flex flex-col gap-1.5">
                 <OptionCard
@@ -169,7 +171,8 @@ export function CheckoutForm({
                   onSelect={() => onSelectShipping(key)}
                   icon={SHIP_ICON[key]}
                   title={opt.label}
-                  sub={opt.sub}
+                  disabled={unavailable !== null}
+                  sub={unavailable ?? opt.sub}
                   right={
                     fee === 0 ? (
                       <span className="font-sans text-[14px] font-bold text-[#5fd29a]">Free</span>
@@ -185,7 +188,7 @@ export function CheckoutForm({
                     )
                   }
                 />
-                {opt.note && (
+                {opt.note && !unavailable && (
                   <p className="m-0 pl-1 font-sans text-[12px] leading-[1.5] text-blush">
                     {opt.note}
                   </p>

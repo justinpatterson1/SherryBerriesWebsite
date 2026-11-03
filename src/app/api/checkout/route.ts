@@ -8,6 +8,7 @@ import {
   feeForCity,
   isPaymentAllowedFor,
   isPaymentKey,
+  isShippingAllowedFor,
   isShippingKey,
   type ShippingKey,
 } from "@/lib/checkout/shipping";
@@ -205,6 +206,14 @@ export async function POST(request: Request) {
     if (fee === null) {
       return NextResponse.json(
         { error: "We don't deliver to that city yet. Please choose one from the list." },
+        { status: 400 },
+      );
+    }
+    // Tobago ships by TTPost only. The form greys the other methods out; this
+    // is what holds whatever the browser sends.
+    if (!isShippingAllowedFor(b.shipping, city)) {
+      return NextResponse.json(
+        { error: `Orders to Tobago ship by TTPost. ${SHIPPING[b.shipping].label} isn't available there.` },
         { status: 400 },
       );
     }

@@ -4,8 +4,10 @@ import {
   SHIPPING_ORDER,
   feeForCity,
   isPaymentAllowedFor,
+  isShippingAllowedFor,
   isShippingKey,
   paymentUnavailableReason,
+  shippingUnavailableReason,
 } from "./shipping";
 
 describe("feeForCity", () => {
@@ -128,5 +130,37 @@ describe("paymentUnavailableReason", () => {
     expect(paymentUnavailableReason("cod", "pickup")).toBeNull();
     expect(paymentUnavailableReason("card", "ttpost")).toBeNull();
     expect(paymentUnavailableReason("bank", "digital")).toBeNull();
+  });
+});
+
+describe("isShippingAllowedFor", () => {
+  it("allows only TTPost for Tobago", () => {
+    expect(isShippingAllowedFor("ttpost", "Tobago")).toBe(true);
+    expect(isShippingAllowedFor("pickup", "Tobago")).toBe(false);
+    expect(isShippingAllowedFor("courier", "Tobago")).toBe(false);
+  });
+
+  it("matches the city however it is typed", () => {
+    expect(isShippingAllowedFor("courier", "  tobago ")).toBe(false);
+  });
+
+  it("allows every method in Trinidad, and before a city is chosen", () => {
+    for (const ship of SHIPPING_ORDER) {
+      expect(isShippingAllowedFor(ship, "Curepe")).toBe(true);
+      expect(isShippingAllowedFor(ship, "")).toBe(true);
+    }
+  });
+
+  it("leaves a download-only order alone", () => {
+    expect(isShippingAllowedFor("digital", "Tobago")).toBe(true);
+  });
+
+  it("explains the greyed-out options", () => {
+    expect(shippingUnavailableReason("courier", "Tobago")).toMatch(/TTPost/);
+    expect(shippingUnavailableReason("ttpost", "Tobago")).toBe(null);
+  });
+
+  it("leaves Tobago without Cash on Delivery, through TTPost", () => {
+    expect(isPaymentAllowedFor("cod", "ttpost")).toBe(false);
   });
 });

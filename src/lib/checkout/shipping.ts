@@ -2,7 +2,7 @@
 // and payment labels — imported by both the checkout API (authoritative totals)
 // and the client UI so fees/labels/ETAs never drift apart.
 
-import { deliveryFeeFor, MIN_DELIVERY_FEE } from "./delivery-zones";
+import { deliveryFeeFor, findDeliveryCity, MIN_DELIVERY_FEE } from "./delivery-zones";
 
 export type ShippingKey = "pickup" | "ttpost" | "courier" | "digital";
 export type PaymentKey = "cod" | "card" | "bank";
@@ -112,6 +112,27 @@ export function isShippingKey(v: unknown): v is ShippingKey {
  */
 export function isStoredShippingKey(v: unknown): v is ShippingKey {
   return isShippingKey(v) || v === DIGITAL_SHIPPING_KEY;
+}
+
+/**
+ * Whether a shipping method can be used for a delivery city.
+ *
+ * Tobago orders go by TTPost only: the courier runs on Trinidad, and pickup
+ * means a trip to Curepe. That also takes Cash on Delivery off the table, which
+ * TTPost already rules out — see isPaymentAllowedFor.
+ *
+ * Used by the checkout form to grey the options out and by /api/checkout to
+ * refuse the combination, so the rule holds whatever the browser sends.
+ */
+export function isShippingAllowedFor(shipping: ShippingKey, city: string): boolean {
+  if (shipping === DIGITAL_SHIPPING_KEY) return true;
+  return findDeliveryCity(city)?.region !== "Tobago" || shipping === "ttpost";
+}
+
+/** Why a shipping method is unavailable, shown on the greyed-out option. */
+export function shippingUnavailableReason(shipping: ShippingKey, city: string): string | null {
+  if (isShippingAllowedFor(shipping, city)) return null;
+  return "Not available in Tobago. Orders there ship by TTPost";
 }
 
 export function isPaymentKey(v: unknown): v is PaymentKey {

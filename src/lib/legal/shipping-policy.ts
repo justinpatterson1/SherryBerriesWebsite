@@ -15,7 +15,7 @@ import type { Block, LegalDocument, Section } from "@/lib/legal/types";
 import { CANONICAL_ORIGIN } from "@/lib/seo/site-url";
 import { LEGAL_CONTACT_EMAIL } from "@/lib/legal/contact";
 
-export const LAST_UPDATED = "August 3, 2026";
+export const LAST_UPDATED = "November 2, 2026";
 
 // Re-exported from the SEO module rather than retyped: this value was a
 // literal in each of the four legal files and had drifted to a domain the
@@ -81,6 +81,10 @@ const SECTIONS: Section[] = [
       {
         kind: "p",
         text: "We currently deliver within Trinidad and Tobago only, and offer in-store collection in Curepe.",
+      },
+      {
+        kind: "p",
+        text: "Orders to Tobago are sent by TTPost and paid for by card or bank transfer. Courier delivery, in-store collection and Cash on Delivery are not available for Tobago addresses.",
       },
       {
         kind: "p",

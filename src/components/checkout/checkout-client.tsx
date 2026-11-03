@@ -9,6 +9,7 @@ import {
   SHIPPING,
   feeForCity,
   isPaymentAllowedFor,
+  isShippingAllowedFor,
   type PaymentKey,
   type ShippingKey,
 } from "@/lib/checkout/shipping";
@@ -64,7 +65,10 @@ export function CheckoutClient({
     landmark: "",
   });
   const [errors, setErrors] = useState<FormErrors>({});
-  const [shipping, setShipping] = useState<ShippingKey>("pickup");
+  // A saved Tobago address starts on TTPost, the only method that goes there.
+  const [shipping, setShipping] = useState<ShippingKey>(() =>
+    isShippingAllowedFor("pickup", initial.city) ? "pickup" : "ttpost",
+  );
   // What the customer picked. What is actually used is `payment` below, which
   // is this filtered through the methods the settled shipping key allows.
   const [paymentChoice, setPaymentChoice] = useState<PaymentKey>("cod");
@@ -187,6 +191,24 @@ export function CheckoutClient({
     setForm((f) => ({ ...f, [key]: value }));
     setErrors((e) => (e[key] ? { ...e, [key]: undefined } : e));
   }, []);
+
+  // Choosing Tobago rules out pickup and courier, and with them Cash on
+  // Delivery. Both are switched here and said out loud, for the same reason as
+  // selectShipping below: how someone receives and pays is not changed quietly.
+  const onField = useCallback(
+    (key: keyof FormState, value: string) => {
+      setField(key, value);
+      if (key !== "city" || isShippingAllowedFor(shipping, value)) return;
+      setShipping("ttpost");
+      if (paymentChoice === "cod") {
+        setPaymentChoice("card");
+        showToast("Tobago orders ship by TTPost, so we've switched you to TTPost and Credit Card");
+      } else {
+        showToast("Tobago orders ship by TTPost, so we've switched you to TTPost");
+      }
+    },
+    [setField, shipping, paymentChoice, showToast],
+  );
 
   const applyPromo = useCallback(
     (p: AppliedPromo) => {
@@ -349,7 +371,7 @@ export function CheckoutClient({
               <CheckoutForm
                 form={form}
                 errors={errors}
-                onField={setField}
+                onField={onField}
                 shipping={shipping}
                 onSelectShipping={selectShipping}
                 payment={payment}
