@@ -157,7 +157,8 @@ model User {
   wishlistItems  Wishlist[]
   cart           Cart?
 
-  promoRedemptions DiscountRedemption[]
+  promoRedemptions  DiscountRedemption[]
+  chatConversations ChatConversation[]
 
   @@index([email])
 }
@@ -217,18 +218,18 @@ model Category {
 }
 
 model Product {
-  id                String        @id @default(cuid())
+  id                String   @id @default(cuid())
   name              String
-  slug              String        @unique
+  slug              String   @unique
   shortDescription  String
-  description       String        @db.Text
-  sku               String        @unique
-  price             Decimal       @db.Decimal(10, 2)
-  compareAtPrice    Decimal?      @db.Decimal(10, 2)
-  inventory         Int           @default(0)
-  lowStockThreshold Int           @default(5)
-  featured          Boolean       @default(false)
-  active            Boolean       @default(true)
+  description       String   @db.Text
+  sku               String   @unique
+  price             Decimal  @db.Decimal(10, 2)
+  compareAtPrice    Decimal? @db.Decimal(10, 2)
+  inventory         Int      @default(0)
+  lowStockThreshold Int      @default(5)
+  featured          Boolean  @default(false)
+  active            Boolean  @default(true)
   material          String?
 
   /// Per-product care and cleaning copy, shown in the PDP accordion.
@@ -236,16 +237,16 @@ model Product {
   /// Nullable on purpose: that section already had generic house copy, which
   /// still shows when this is blank. A 14k gold piece and a titanium starter
   /// need different advice, but most products do not need their own.
-  careInstructions  String?       @db.Text
+  careInstructions String? @db.Text
 
-  healingStage      HealingStage?
-  seoTitle          String?
-  seoDescription    String?
+  healingStage   HealingStage?
+  seoTitle       String?
+  seoDescription String?
 
   /// A downloadable product (a PDF), delivered from the order page rather than
   /// shipped. Digital products hold no stock: `inventory` is meaningless for
   /// them and is forced to 0, because a file cannot sell out.
-  isDigital         Boolean       @default(false)
+  isDigital Boolean @default(false)
 
   /// Private R2 object key, always `digital/<uuid>.pdf` — never a URL, and
   /// never public. The only way to read it is the per-request authorized route
@@ -254,10 +255,10 @@ model Product {
   /// Validated against that exact shape on write (`isDigitalFileKey`): an
   /// unchecked key could be pointed at the `payments/` prefix, which would sell
   /// other customers' uploaded bank receipts.
-  digitalFileKey    String?
+  digitalFileKey String?
 
   /// Original upload filename, used for the download's Content-Disposition.
-  digitalFileName   String?
+  digitalFileName String?
 
   /// Sold before the stock exists. While set, `inventory` is ignored — never
   /// checked, never decremented, forced to 0 on save — and the order can only
@@ -266,7 +267,7 @@ model Product {
   ///
   /// Orders snapshot this on `OrderItem.isPreorder`; read that, not this, for
   /// anything about an order already placed.
-  isPreorder        Boolean       @default(false)
+  isPreorder Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -274,15 +275,15 @@ model Product {
   categoryId String
   category   Category @relation(fields: [categoryId], references: [id])
 
-  images         ProductImage[]
-  colors         ProductColor[]
-  variants       ProductVariant[]
-  reviews        Review[]
-  wishlistItems  Wishlist[]
-  orderItems     OrderItem[]
-  cartItems      CartItem[]
-  tags           ProductTag[]
-  popups         Popup[]
+  images        ProductImage[]
+  colors        ProductColor[]
+  variants      ProductVariant[]
+  reviews       Review[]
+  wishlistItems Wishlist[]
+  orderItems    OrderItem[]
+  cartItems     CartItem[]
+  tags          ProductTag[]
+  popups        Popup[]
 
   @@index([categoryId])
   @@index([slug])
@@ -442,10 +443,10 @@ model Order {
   /// Bank transfer only. When the reservation lapses; null for every other
   /// method. An order whose payment is PAYMENT_SUBMITTED is never expired on
   /// this timestamp — a receipt filed before the deadline waits for review.
-  paymentExpiresAt DateTime?
+  paymentExpiresAt       DateTime?
   /// Set when an admin confirms the money actually arrived.
-  paymentVerifiedAt   DateTime?
-  paymentVerifiedById String?
+  paymentVerifiedAt      DateTime?
+  paymentVerifiedById    String?
   /// Why a submitted receipt was refused, shown back to the customer.
   paymentRejectionReason String?
 
@@ -476,9 +477,9 @@ model Order {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user           User            @relation(fields: [userId], references: [id])
-  orderItems     OrderItem[]
-  returnRequests ReturnRequest[]
+  user            User                @relation(fields: [userId], references: [id])
+  orderItems      OrderItem[]
+  returnRequests  ReturnRequest[]
   paymentReceipts PaymentReceipt[]
   promoRedemption DiscountRedemption?
 
@@ -607,12 +608,12 @@ model Blog {
 /// a later re-signup is a reactivation and there is a record of when consent
 /// was given and withdrawn.
 model NewsletterSubscriber {
-  id String @id @default(cuid())
+  id               String    @id @default(cuid())
   /// Stored lowercased and trimmed; uniqueness is on that normalised form.
-  email        String   @unique
-  subscribedAt DateTime @default(now())
+  email            String    @unique
+  subscribedAt     DateTime  @default(now())
   /// Where the signup came from, e.g. "homepage".
-  source String?
+  source           String?
   /// Secret in the unsubscribe link, so the link identifies exactly one row.
   unsubscribeToken String    @unique
   unsubscribedAt   DateTime?
@@ -632,19 +633,19 @@ model NewsletterSubscriber {
 /// There is no relation to User: the actor's email is copied in, so the log
 /// still says who did something after that account is renamed or deleted.
 model AdminAuditLog {
-  id         String @id @default(cuid())
+  id         String  @id @default(cuid())
   actorId    String
   actorEmail String
   /// Verb, e.g. "order.status_change" or "category.delete".
-  action String
+  action     String
   /// What was acted on, e.g. "Order" + the order's id.
   entityType String
   entityId   String
   /// Human-readable one-liner for the Activity screen.
-  summary String
+  summary    String
   /// Machine-readable detail, e.g. {"price":{"from":45,"to":39}}.
-  changes Json?
-  ip      String?
+  changes    Json?
+  ip         String?
 
   createdAt DateTime @default(now())
 
@@ -689,9 +690,9 @@ model DiscountCode {
 /// even when the order is later cancelled — the redemption happened, and a
 /// customer should not get a one-per-person code back by cancelling.
 model DiscountRedemption {
-  id     String @id @default(cuid())
-  codeId String
-  userId String
+  id      String @id @default(cuid())
+  codeId  String
+  userId  String
   /// The order the code was applied to. Unique: an order redeems a code once.
   orderId String @unique
 
@@ -751,41 +752,80 @@ enum PopupFrequency {
 /// Only one popup shows at a time: the live one with the highest priority that
 /// the visitor has not already seen (see lib/popups/schedule.ts).
 model Popup {
-  id        String         @id @default(cuid())
+  id            String         @id @default(cuid())
   /// Admin-only label; never shown to customers.
-  name      String
-  kind      PopupKind
-  layout    PopupLayout    @default(IMAGE_TEXT)
-  placement PopupPlacement @default(SITE)
-  imageUrl  String?
+  name          String
+  kind          PopupKind
+  layout        PopupLayout    @default(IMAGE_TEXT)
+  placement     PopupPlacement @default(SITE)
+  imageUrl      String?
   /// Shown as the heading on IMAGE_TEXT, and as the image alt text on
   /// FULL_GRAPHIC, where the words are part of the picture.
-  headline  String
-  body      String?
-  ctaLabel  String?
+  headline      String
+  body          String?
+  ctaLabel      String?
   /// The button links to this product's page. Wins over ctaUrl.
-  productId String?
-  product   Product?       @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productId     String?
+  product       Product?       @relation(fields: [productId], references: [id], onDelete: SetNull)
   /// A site path ("/products") or an https link, used when no product is set.
-  ctaUrl    String?
+  ctaUrl        String?
   /// Count down to endsAt on the popup. Requires endsAt.
-  showCountdown Boolean @default(false)
+  showCountdown Boolean        @default(false)
   /// Revealed after a newsletter signup, never before. NEWSLETTER only.
   promoCodeId   String?
-  promoCode     DiscountCode? @relation(fields: [promoCodeId], references: [id], onDelete: SetNull)
+  promoCode     DiscountCode?  @relation(fields: [promoCodeId], references: [id], onDelete: SetNull)
   /// Null starts showing immediately.
-  startsAt     DateTime?
+  startsAt      DateTime?
   /// Null never ends. After this moment the popup no longer shows.
-  endsAt       DateTime?
-  frequency    PopupFrequency @default(ONCE)
+  endsAt        DateTime?
+  frequency     PopupFrequency @default(ONCE)
   /// Seconds after the page loads before the popup opens.
-  delaySeconds Int            @default(2)
+  delaySeconds  Int            @default(2)
   /// Higher wins when more than one popup is live.
-  priority     Int            @default(0)
-  active       Boolean        @default(true)
+  priority      Int            @default(0)
+  active        Boolean        @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([active, placement])
+}
+
+// -----------------------------------------------------------------------------
+// Shopping assistant chat
+// -----------------------------------------------------------------------------
+
+/// One storefront chat with the shopping assistant. Kept so the admin can read
+/// what customers ask for. Guests are identified only by `anonId`, a random id
+/// their browser holds, never by IP or email.
+model ChatConversation {
+  id           String   @id @default(cuid())
+  anonId       String
+  /// Set when the customer was signed in. SetNull so deleting the account
+  /// keeps the (anonymous) transcript rather than blocking the delete.
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  messageCount Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  messages ChatMessage[]
+
+  @@index([updatedAt])
+  @@index([anonId])
+}
+
+model ChatMessage {
+  id             String           @id @default(cuid())
+  conversationId String
+  conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  /// "user" or "assistant".
+  role           String
+  /// The visible text only; tool calls are summarised in `productSlugs`.
+  content        String           @db.Text
+  /// Products the assistant showed as cards in this reply.
+  productSlugs   String[]
+  createdAt      DateTime         @default(now())
+
+  @@index([conversationId, createdAt])
 }

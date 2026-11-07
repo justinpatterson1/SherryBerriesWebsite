@@ -103,6 +103,10 @@ export const searchLimiter = makeLimiter(30, "1 h", "search");
 // looping a multi-MB file as cheap bandwidth amplification.
 export const downloadLimiter = makeLimiter(60, "1 h", "download");
 
+// Shopping assistant. Every message is a paid model call, so this is what caps
+// the bill if someone scripts the chat. 30 an hour is a long, real conversation.
+export const chatLimiter = makeLimiter(30, "1 h", "chat");
+
 export type RateLimitResult = {
   success: boolean;
   remaining: number;

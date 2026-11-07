@@ -31,6 +31,7 @@ import { SubscribersView } from "@/components/admin/subscribers-view";
 import { PaymentsView } from "@/components/admin/payments-view";
 import { AnalyticsView } from "@/components/admin/analytics-view";
 import { ActivityView } from "@/components/admin/activity-view";
+import { ConversationsView } from "@/components/admin/conversations-view";
 import { useTheme } from "@/components/providers/use-theme";
 
 type View =
@@ -43,6 +44,7 @@ type View =
   | "promos"
   | "popups"
   | "subscribers"
+  | "conversations"
   | "payments"
   | "analytics"
   | "activity";
@@ -58,6 +60,7 @@ const SIDEBAR: { view: View; label: string; icon: keyof typeof ICONS }[] = [
   { view: "popups", label: "Popups", icon: "popups" },
   { view: "payments", label: "Payments", icon: "payments" },
   { view: "subscribers", label: "Newsletter", icon: "subscribers" },
+  { view: "conversations", label: "Conversations", icon: "conversations" },
   { view: "analytics", label: "Analytics", icon: "analytics" },
   { view: "activity", label: "Activity", icon: "activity" },
 ];
@@ -806,6 +809,7 @@ export function AdminClient({
               onDelete={deleteSubscriber}
             />
           )}
+          {view === "conversations" && <ConversationsView />}
           {view === "analytics" && <AnalyticsView data={data} />}
           {view === "activity" && canSeeActivity && (
             <ActivityView entries={data.auditLog} />

@@ -29,7 +29,7 @@ Read these for full project context:
 - NextAuth v5 (Email + GitHub)
 - Tailwind CSS v4 + shadcn/ui
 - Cloudflare R2 (file storage)
-- OpenAI gpt-5-nano
+- Anthropic Claude Haiku 5.5 (`claude-haiku-5-5`) — shopping assistant, see `src/lib/chat/`
 - wipay (payments)
 
 ## Quick Commands

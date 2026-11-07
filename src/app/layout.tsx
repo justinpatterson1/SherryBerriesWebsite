@@ -10,6 +10,7 @@ import { IdleSignOut } from "@/components/auth/idle-sign-out";
 import { siteUrl } from "@/lib/seo/site-url";
 import { ThemeScript } from "@/components/providers/theme-script";
 import { SitePopup } from "@/components/popups/site-popup";
+import { ChatWidget } from "@/components/chat/chat-widget";
 import { Analytics } from "@vercel/analytics/next";
 
 const italiana = Italiana({
@@ -90,6 +91,7 @@ export default function RootLayout({
                 {children}
                 <SiteFooter />
                 <SitePopup />
+                <ChatWidget />
                 <Analytics />
               </SearchProvider>
             </WishlistProvider>
