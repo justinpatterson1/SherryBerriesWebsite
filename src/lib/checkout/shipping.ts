@@ -39,7 +39,7 @@ export const SHIPPING: Record<ShippingKey, ShippingOption> = {
   pickup: {
     key: "pickup",
     label: "Pickup (Curepe)",
-    sub: "Collect in-store · ready in 24h",
+    sub: "Pickup at location · ready in 24h",
     fee: 0,
     eta: "Ready for pickup within 24 hours",
     note: "Only select pickup if you can collect within 24-48 hours.",
