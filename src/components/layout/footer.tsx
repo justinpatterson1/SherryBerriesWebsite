@@ -33,8 +33,8 @@ const FOLLOW = [
 export function Footer() {
   return (
     <footer className="bg-[#050505] border-t border-white/[0.06] px-[8%] pt-20 pb-8 text-ink-dim font-sans light:bg-[#1a0d12] light:text-[#cfc6c9] light:border-white/[0.05]">
-      <div className="grid grid-cols-[1.5fr_1fr_1fr_1fr_1fr] gap-14 max-[980px]:grid-cols-2 max-[980px]:gap-10 max-[560px]:grid-cols-1 max-[560px]:gap-9">
-        <div className="flex items-start gap-6 max-w-[440px] max-[980px]:col-span-full max-[560px]:gap-4">
+      <div className="grid grid-cols-[3fr_1fr_1fr_1fr_1fr] gap-14 max-[1200px]:gap-10 max-[1080px]:grid-cols-2 max-[560px]:grid-cols-1 max-[560px]:gap-9">
+        <div className="flex items-start gap-6 max-w-[480px] pr-10 max-[1080px]:pr-0 max-[1080px]:col-span-full max-[560px]:gap-4">
           {/* Decorative: the wordmark link beside it already names the brand,
               so alt text here would only make a screen reader say it twice. */}
           <Image
@@ -77,7 +77,15 @@ export function Footer() {
         <span>
           © 2026 SherryBerries · Made with{" "}
           <span className="text-pink" aria-hidden="true">♡</span> in Trinidad &amp;
-          Tobago
+          Tobago · Site by{" "}
+          <a
+            href="https://kaisorasystems.com"
+            target="_blank"
+            rel="noopener"
+            className="text-inherit no-underline transition-colors duration-200 hover:text-blush"
+          >
+            Kaisora Systems
+          </a>
         </span>
         <nav className="flex gap-7 text-sm" aria-label="Legal">
           <Link href="/privacy" className="text-[#8a8084] no-underline transition-colors duration-200 hover:text-blush">
