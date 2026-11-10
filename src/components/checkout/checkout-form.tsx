@@ -215,8 +215,8 @@ export function CheckoutForm({
             selected={payment === "card"}
             onSelect={() => onSelectPayment("card")}
             icon={PAY_ICON.card}
-            title="Credit Card"
-            sub="Secure payment via WiPay"
+            title="Debit or Credit Card"
+            sub="Visa debit & credit cards accepted · secure via WiPay"
             right={
               <span className="font-sans text-[10px] font-bold tracking-[0.1em] uppercase text-blush bg-pink/[0.12] border border-pink/30 rounded-full py-1 px-2.5">
                 WiPay
@@ -240,7 +240,8 @@ export function CheckoutForm({
                 <p className="font-sans text-[12.5px] leading-[1.6] text-ink-dim m-0">
                   When you place your order you&apos;ll be taken to{" "}
                   <span className="text-ink font-semibold">WiPay&apos;s secure page</span>{" "}
-                  to enter your card. We never see or store your card details. You&apos;ll
+                  to enter your Visa debit or credit card. We never see or store your card
+                  details. You&apos;ll
                   return here once payment is confirmed.
                 </p>
               </div>
