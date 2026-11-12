@@ -77,12 +77,12 @@ export function Footer() {
         <span>
           © 2026 SherryBerries · Made with{" "}
           <span className="text-pink" aria-hidden="true">♡</span> in Trinidad &amp;
-          Tobago · Site by{" "}
+          Tobago · Powered by{" "}
           <a
             href="https://kaisorasystems.com"
             target="_blank"
             rel="noopener"
-            className="text-inherit no-underline transition-colors duration-200 hover:text-blush"
+            className="text-blush font-medium underline underline-offset-2 decoration-pink/40 transition-colors duration-200 hover:text-pink hover:decoration-pink"
           >
             Kaisora Systems
           </a>
