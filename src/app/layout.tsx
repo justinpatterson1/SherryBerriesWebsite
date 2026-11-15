@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Italiana, Playfair_Display, Inter, Caveat } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { SiteNavbar, SiteFooter } from "@/components/layout/site-chrome";
 import { AuthSessionProvider } from "@/components/providers/session-provider";
@@ -13,29 +13,38 @@ import { SitePopup } from "@/components/popups/site-popup";
 import { ChatWidget } from "@/components/chat/chat-widget";
 import { Analytics } from "@vercel/analytics/next";
 
-const italiana = Italiana({
+// Self-hosted (latin subset, variable where the family is) rather than
+// next/font/google: Google intermittently serves `/l/font?kit=…` URLs, which
+// Turbopack's font loader rejects ("queries have exactly one entry"), failing
+// the whole build. Files downloaded from fonts.gstatic.com on 2026-11-15.
+const italiana = localFont({
   variable: "--font-italiana",
-  subsets: ["latin"],
+  src: "./fonts/Italiana-normal.woff2",
   weight: "400",
+  display: "swap",
 });
 
-const playfair = Playfair_Display({
+const playfair = localFont({
   variable: "--font-playfair",
-  subsets: ["latin"],
-  style: ["normal", "italic"],
-  weight: ["400", "500", "600", "700"],
+  src: [
+    { path: "./fonts/Playfair-normal.woff2", weight: "400 700", style: "normal" },
+    { path: "./fonts/Playfair-italic.woff2", weight: "400 700", style: "italic" },
+  ],
+  display: "swap",
 });
 
-const inter = Inter({
+const inter = localFont({
   variable: "--font-inter",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  src: "./fonts/Inter-normal.woff2",
+  weight: "300 700",
+  display: "swap",
 });
 
-const caveat = Caveat({
+const caveat = localFont({
   variable: "--font-caveat",
-  subsets: ["latin"],
-  weight: ["500", "600"],
+  src: "./fonts/Caveat-normal.woff2",
+  weight: "500 600",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
