@@ -44,7 +44,7 @@ export const metadata: Metadata = {
   // absolute URLs disagree with the page's own canonical. Set from the same
   // helper the sitemap uses, so the two can never drift apart.
   metadataBase: new URL(siteUrl()),
-  title: "SherryBerries",
+  title: "Body Jewelry and Aftercare in Trinidad & Tobago | SherryBerries",
   description: "Luxury body jewelry and aftercare from Trinidad and Tobago.",
 };
 

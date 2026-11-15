@@ -43,12 +43,12 @@ export function Hero() {
       <div className="hero-glow" aria-hidden="true" />
 
       <div className="w-full px-[8%] flex justify-center max-[900px]:px-[6%]">
-        <span className="inline-flex items-center gap-2.5 py-2 px-4 rounded-full border border-pink/[0.28] bg-pink/[0.06] text-blush font-sans text-[11px] font-medium tracking-[0.18em] uppercase">
+        <span className="inline-flex items-center gap-2.5 py-2 px-4 rounded-full border border-pink/[0.28] bg-pink/[0.06] text-blush font-sans text-[11px] font-medium tracking-[0.18em] uppercase text-center leading-[1.5]">
           <span
             aria-hidden="true"
             className="w-[7px] h-[7px] rounded-full bg-pink animate-hero-pulse"
           />
-          Luxury Body Jewelry · Piercing Aftercare · Est. 2017
+          Body Jewelry &amp; Piercing Aftercare in Trinidad &amp; Tobago · Est. 2017
         </span>
       </div>
 
