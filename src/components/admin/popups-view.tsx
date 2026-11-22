@@ -13,6 +13,7 @@ import {
 } from "@/lib/admin/popup-validate";
 import { popupStatus, type PublicPopup } from "@/lib/popups/schedule";
 import { PopupCard } from "@/components/popups/popup-card";
+import { SeasonalCard } from "@/components/admin/seasonal-card";
 import {
   ProductThumb,
   ModalShell,
@@ -92,6 +93,7 @@ export function PopupsView({
 
   return (
     <div className="flex flex-col gap-5">
+      <SeasonalCard />
       <div className={cardPadded}>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>

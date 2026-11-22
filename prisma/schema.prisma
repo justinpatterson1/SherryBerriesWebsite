@@ -829,3 +829,17 @@ model ChatMessage {
 
   @@index([conversationId, createdAt])
 }
+
+// -----------------------------------------------------------------------------
+// Site settings
+// -----------------------------------------------------------------------------
+
+/// Owner-controlled switches for the whole storefront. A single row with
+/// id "site"; a missing row means every setting is at its default.
+model SiteSettings {
+  id              String   @id @default("site")
+  /// Seasonal decorations (e.g. snow from 1 Dec to 6 Jan). The dates decide
+  /// WHEN; this lets the owner turn them off entirely.
+  seasonalEffects Boolean  @default(true)
+  updatedAt       DateTime @updatedAt
+}

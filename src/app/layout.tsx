@@ -11,6 +11,7 @@ import { siteUrl } from "@/lib/seo/site-url";
 import { ThemeScript } from "@/components/providers/theme-script";
 import { SitePopup } from "@/components/popups/site-popup";
 import { ChatWidget } from "@/components/chat/chat-widget";
+import { SeasonalEffects } from "@/components/seasonal/seasonal-effects";
 import { Analytics } from "@vercel/analytics/next";
 
 // Self-hosted (latin subset, variable where the family is) rather than
@@ -100,6 +101,7 @@ export default function RootLayout({
                 {children}
                 <SiteFooter />
                 <SitePopup />
+                <SeasonalEffects />
                 <ChatWidget />
                 <Analytics />
               </SearchProvider>

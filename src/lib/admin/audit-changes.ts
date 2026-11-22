@@ -29,6 +29,7 @@ export const AUDIT_ACTIONS = {
   paymentRejected: "payment.rejected",
   paymentExpired: "payment.expired",
   paymentMarkedPaid: "payment.marked_paid",
+  settingsUpdate: "settings.update",
 } as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];
